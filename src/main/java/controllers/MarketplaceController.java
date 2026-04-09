@@ -6,8 +6,11 @@ import entities.Produit;
 import entities.WishlistItem;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -21,10 +24,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Priority;
@@ -37,8 +43,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.Window;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -51,6 +60,8 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MarketplaceController implements Initializable {
+
+    @FXML private BorderPane mainContent;
 
     @FXML private TableView<Produit> produitTable;
     @FXML private TableColumn<Produit, Integer> colId;
@@ -106,11 +117,19 @@ public class MarketplaceController implements Initializable {
     @FXML private TextArea fldDescription;
     @FXML private TextField fldPrix;
     @FXML private TextField fldStock;
-    @FXML private TextField fldCategorie;
+    @FXML private ComboBox<String> fldCategorie;
     @FXML private TextField fldImage;
     @FXML private ComboBox<String> fldType;
     @FXML private CheckBox chkPromo;
     @FXML private TextField fldPromoPrice;
+
+    @FXML private Label publishPreviewCategory;
+    @FXML private Label publishPreviewTitle;
+    @FXML private Label publishPreviewPrice;
+    @FXML private Label publishPreviewStock;
+    @FXML private Label publishPreviewLocation;
+    @FXML private Label publishPreviewDescription;
+    @FXML private ImageView publishPreviewImage;
 
     // Dynamic Details Fields
     @FXML private StackPane detailsOverlay;
@@ -118,8 +137,13 @@ public class MarketplaceController implements Initializable {
     @FXML private Label detailsCategory;
     @FXML private Label detailsPrice;
     @FXML private Label detailsOldPrice;
+    @FXML private Label detailsConvertedPrice;
     @FXML private Label detailsDesc;
     @FXML private Label detailsStock;
+    @FXML private Label detailsLocation;
+    @FXML private Label detailsId;
+    @FXML private ImageView detailsImageView;
+    @FXML private Spinner<Integer> detailsQuantitySpinner;
     
     private Produit currentEditProduit = null;
 
@@ -178,6 +202,24 @@ public class MarketplaceController implements Initializable {
             fldType.getItems().setAll("vente", "location");
             fldType.setValue("vente");
         }
+
+        if (fldCategorie != null) {
+            fldCategorie.getItems().setAll(
+                    "Choisir...",
+                    "Legumes",
+                    "Fruits",
+                    "Cereales",
+                    "Engrais",
+                    "Semences",
+                    "Materiel",
+                    "Irrigation",
+                    "Services",
+                    "Autre"
+            );
+            fldCategorie.setValue("Choisir...");
+        }
+
+        updatePublishPreview();
     }
 
     private void setupProduitTable() {
@@ -435,20 +477,67 @@ public class MarketplaceController implements Initializable {
     public void openAjouterProduit() {
         if (modalOverlay == null) return;
         currentEditProduit = null; // Important for ADD
-        modalTitle.setText("Ajouter un Produit");
+        modalTitle.setText("Nouvelle Annonce");
         chkPromo.setSelected(false);
         fldNom.clear();
         fldDescription.clear();
         fldPrix.clear();
         fldStock.clear();
-        fldCategorie.clear();
+        if (fldCategorie != null) {
+            fldCategorie.setValue("Choisir...");
+        }
         if (fldImage != null) {
             fldImage.clear();
         }
         fldPromoPrice.clear();
         fldType.setValue("vente");
+        updatePublishPreview();
         modalOverlay.setVisible(true);
         modalOverlay.toFront();
+    }
+
+    @FXML
+    public void updatePublishPreview() {
+        if (publishPreviewTitle != null) {
+            String name = safe(fldNom == null ? "" : fldNom.getText()).trim();
+            publishPreviewTitle.setText(name.isEmpty() ? "Nom de l'annonce" : normalizeText(name));
+        }
+
+        if (publishPreviewCategory != null) {
+            String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+            publishPreviewCategory.setText(category.isEmpty() || "Choisir...".equals(category) ? "CHOISIR..." : normalizeText(category));
+        }
+
+        if (publishPreviewPrice != null) {
+            Double price = parseDouble(fldPrix == null ? "" : fldPrix.getText());
+            publishPreviewPrice.setText(price == null ? "0 TND" : String.format("%.2f TND", price));
+        }
+
+        if (publishPreviewStock != null) {
+            Integer stock = parseInteger(fldStock == null ? "" : fldStock.getText());
+            if (stock == null) {
+                publishPreviewStock.setText("Stock: Non defini");
+            } else if (stock <= 0) {
+                publishPreviewStock.setText("Stock: Rupture");
+            } else if (stock <= 5) {
+                publishPreviewStock.setText("Stock: Faible (" + stock + ")");
+            } else {
+                publishPreviewStock.setText("Stock: " + stock + " disponibles");
+            }
+        }
+
+        if (publishPreviewLocation != null) {
+            publishPreviewLocation.setText("Ville / Region non definie");
+        }
+
+        if (publishPreviewDescription != null) {
+            String desc = safe(fldDescription == null ? "" : fldDescription.getText()).trim();
+            publishPreviewDescription.setText(desc.isEmpty() ? "Description..." : normalizeText(desc));
+        }
+
+        if (publishPreviewImage != null) {
+            publishPreviewImage.setImage(resolveProductImage(fldImage == null ? "" : fldImage.getText()));
+        }
     }
 
     @FXML
@@ -470,6 +559,7 @@ public class MarketplaceController implements Initializable {
             if (statusLabel != null) {
                 statusLabel.setText("Image selectionnee: " + selected.getName());
             }
+            updatePublishPreview();
         }
     }
 
@@ -481,13 +571,20 @@ public class MarketplaceController implements Initializable {
         fldDescription.setText(produit.getDescription());
         fldPrix.setText(String.valueOf(produit.getPrix()));
         fldStock.setText(String.valueOf(produit.getQuantiteStock()));
-        fldCategorie.setText(produit.getCategorie());
+        if (fldCategorie != null) {
+            String category = safe(produit.getCategorie());
+            if (!fldCategorie.getItems().contains(category)) {
+                fldCategorie.getItems().add(category);
+            }
+            fldCategorie.setValue(category);
+        }
         if (fldImage != null) {
             fldImage.setText(safe(produit.getImage()));
         }
         fldType.setValue(produit.getType());
         chkPromo.setSelected(produit.isPromotion());
         fldPromoPrice.setText(String.valueOf(produit.getPromotionPrice()));
+        updatePublishPreview();
         modalOverlay.setVisible(true);
         modalOverlay.toFront();
     }
@@ -504,11 +601,17 @@ public class MarketplaceController implements Initializable {
         }
         
         Produit p = currentEditProduit == null ? new Produit() : currentEditProduit;
+        String selectedCategory = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+        if (selectedCategory.isEmpty() || "Choisir...".equals(selectedCategory)) {
+            showAlert("Erreur", "Veuillez choisir une categorie");
+            return;
+        }
+
         p.setNom(fldNom.getText().trim());
         p.setDescription(fldDescription.getText().trim());
         p.setPrix(prix);
         p.setQuantiteStock(stock);
-        p.setCategorie(fldCategorie.getText().trim());
+        p.setCategorie(selectedCategory);
         p.setType(fldType.getValue());
         if (fldImage != null) {
             p.setImage(fldImage.getText() == null ? "" : fldImage.getText().trim());
@@ -537,23 +640,26 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void showProductDetails(Produit p) {
-        if (detailsOverlay == null) return;
-        detailsTitle.setText(normalizeText(safe(p.getNom())));
-        detailsCategory.setText(normalizeText(safe(p.getCategorie())) + " - " + normalizeText(safe(p.getType())));
-        detailsDesc.setText(normalizeText(safe(p.getDescription())));
-        detailsStock.setText(p.getQuantiteStock() + " unites disponibles");
-        if (p.isPromotion()) {
-            detailsPrice.setText(String.format("%.2f TND", p.getPromotionPrice()));
-            detailsOldPrice.setText(String.format("%.2f TND", p.getPrix()));
-            detailsOldPrice.setVisible(true);
-            detailsOldPrice.setManaged(true);
-        } else {
-            detailsPrice.setText(String.format("%.2f TND", p.getPrix()));
-            detailsOldPrice.setVisible(false);
-            detailsOldPrice.setManaged(false);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ProductDetailsView.fxml"));
+            Parent root = loader.load();
+
+            ProductDetailsController controller = loader.getController();
+            controller.setProduct(p);
+
+            Stage stage = new Stage();
+            stage.setTitle("Details Produit");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            if (mainContent != null && mainContent.getScene() != null) {
+                stage.initOwner(mainContent.getScene().getWindow());
+            }
+            stage.setScene(new Scene(root));
+            stage.setMinWidth(1100);
+            stage.setMinHeight(760);
+            stage.show();
+        } catch (IOException ex) {
+            showAlert("Erreur", "Impossible d'ouvrir la page details: " + ex.getMessage());
         }
-        detailsOverlay.setVisible(true);
-        detailsOverlay.toFront();
     }
 
     // legacy build dialog intact in case needed
@@ -911,10 +1017,21 @@ public class MarketplaceController implements Initializable {
 
     private Image loadPlaceholderImage() {
         try {
-            URL resource = getClass().getResource("/images/product_placeholder.png");
-            if (resource != null) {
+            String[] candidates = {
+                    "/images/placeholder_agrismart.png",
+                    "/images/product_placeholder.png",
+                    "/images/logo.png"
+            };
+
+            for (String candidate : candidates) {
+                URL resource = getClass().getResource(candidate);
+                if (resource == null) {
+                    continue;
+                }
                 Image placeholder = new Image(resource.toExternalForm(), true);
-                return placeholder.isError() ? null : placeholder;
+                if (!placeholder.isError()) {
+                    return placeholder;
+                }
             }
         } catch (Exception ignored) {
             return null;

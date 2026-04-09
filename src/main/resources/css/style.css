@@ -627,3 +627,201 @@
     -fx-pref-height: 150;
     -fx-max-height: 150;
 }
+
+.details-shell {
+    -fx-background-color: #f3f4f6;
+    -fx-background-radius: 12;
+    -fx-border-color: #d8dde3;
+    -fx-border-radius: 12;
+}
+
+.details-topbar {
+    -fx-background-color: linear-gradient(to right, #eaf4ee, #f4efdd);
+    -fx-padding: 14 20;
+    -fx-border-color: transparent transparent #dde3e8 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.details-page-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.details-pill-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #c7ced6;
+    -fx-border-radius: 22;
+    -fx-background-radius: 22;
+    -fx-padding: 8 16;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1f2937;
+}
+
+.details-pill-button.primary {
+    -fx-background-color: #184f36;
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+.details-pill-button.gold {
+    -fx-background-color: #fff8e5;
+    -fx-border-color: #efc96a;
+}
+
+.details-left-panel {
+    -fx-padding: 0;
+}
+
+.details-image-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: #dfe4ea;
+}
+
+.details-badge-primary {
+    -fx-background-color: #184f36;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 8 14;
+    -fx-background-radius: 18;
+}
+
+.details-badge-secondary {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #111827;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-padding: 8 14;
+    -fx-background-radius: 18;
+    -fx-border-color: #cdd4dd;
+    -fx-border-radius: 18;
+}
+
+.details-description-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 20;
+    -fx-border-color: #dfe4ea;
+    -fx-border-radius: 20;
+    -fx-padding: 22;
+}
+
+.details-section-title {
+    -fx-font-size: 36px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.details-id-pill {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #d8e0e8;
+    -fx-border-radius: 26;
+    -fx-background-radius: 26;
+    -fx-padding: 10 14;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.details-description-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #475569;
+    -fx-line-spacing: 3;
+}
+
+.details-meta-box {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #d8e0e8;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 14;
+}
+
+.details-meta-text {
+    -fx-font-size: 16px;
+    -fx-text-fill: #334155;
+    -fx-font-weight: 700;
+}
+
+.details-right-panel {
+    -fx-padding: 0;
+}
+
+.details-price-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 20;
+    -fx-border-color: #dfe4ea;
+    -fx-border-radius: 20;
+    -fx-padding: 22;
+}
+
+.details-label-muted {
+    -fx-font-size: 14px;
+    -fx-text-fill: #6b7280;
+}
+
+.details-type-pill {
+    -fx-background-color: #f3f4f6;
+    -fx-border-color: #d5dae1;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 6 12;
+    -fx-font-size: 12px;
+    -fx-text-fill: #3f3f46;
+}
+
+.details-price-main {
+    -fx-font-size: 56px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0f172a;
+}
+
+.details-currency {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4b5563;
+}
+
+.details-old-price {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9ca3af;
+    -fx-strikethrough: true;
+}
+
+.details-converted-price {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b7280;
+}
+
+.details-outline-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #f2c14e;
+    -fx-border-radius: 28;
+    -fx-background-radius: 28;
+    -fx-padding: 10 14;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.details-primary-button {
+    -fx-background-color: #184f36;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 28;
+    -fx-padding: 10 14;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
+
+.details-outline-dark-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #aeb6bf;
+    -fx-border-radius: 28;
+    -fx-background-radius: 28;
+    -fx-padding: 10 14;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
