@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" spacing="14" styleClass="feature-page">
+
+    <VBox styleClass="feature-hero" spacing="10">
+        <Label text="Gestion Culture" styleClass="feature-title"/>
+        <Label text="Planification des cultures, suivi des cycles et alertes meteo" styleClass="feature-subtitle"/>
+        <HBox spacing="10">
+            <Button text="Nouveau cycle" styleClass="action-chip primary"/>
+            <Button text="Calendrier" styleClass="action-chip"/>
+            <Button text="Parcelles" styleClass="action-chip"/>
+            <Button text="Rapports" styleClass="action-chip gold"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Cultures actives" styleClass="stat-title"/>
+            <Label text="18" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Recoltes ce mois" styleClass="stat-title"/>
+            <Label text="6" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Alertes meteo" styleClass="stat-title"/>
+            <Label text="2" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" VBox.vgrow="ALWAYS">
+        <VBox styleClass="panel-card" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" spacing="10">
+            <Label text="Planning hebdomadaire" styleClass="panel-title"/>
+            <Label text="Irrigation, semis et fertilisation planifies par parcelle" styleClass="panel-muted"/>
+            <TableView VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn text="Parcelle" prefWidth="180"/>
+                    <TableColumn text="Culture" prefWidth="170"/>
+                    <TableColumn text="Action" prefWidth="150"/>
+                    <TableColumn text="Date" prefWidth="140"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <VBox styleClass="panel-card" prefWidth="320" spacing="8">
+            <Label text="Actions rapides" styleClass="panel-title"/>
+            <Button text="Ajouter une parcelle" styleClass="btn-primary"/>
+            <Button text="Creer une alerte" styleClass="action-chip"/>
+            <Button text="Exporter suivi" styleClass="action-chip"/>
+        </VBox>
+    </HBox>
+</VBox>

@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -16,6 +17,11 @@ public class MainController {
     @FXML private TextField globalSearchField;
     @FXML private Label footerStatusLabel;
     @FXML private Label currentModuleLabel;
+    @FXML private Button btnMarketplace;
+    @FXML private Button btnCulture;
+    @FXML private Button btnTaches;
+    @FXML private Button btnEmployes;
+    @FXML private Button btnUsers;
 
     @FXML
     public void initialize() {
@@ -24,27 +30,27 @@ public class MainController {
 
     @FXML
     public void openMarketplace() {
-        loadView("/Views/MarketplaceView.fxml", "Marketplace loaded", "Marketplace");
+        loadView("/Views/MarketplaceView.fxml", "Marketplace loaded", "Marketplace", btnMarketplace);
     }
 
     @FXML
     public void openCulture() {
-        loadView("/Views/CultureView.fxml", "Culture module not available yet", "Gestion Culture");
+        loadView("/Views/CultureView.fxml", "Culture module loaded", "Gestion Culture", btnCulture);
     }
 
     @FXML
     public void openTaches() {
-        loadView("/Views/TachesView.fxml", "Tasks module not available yet", "Gestion Taches");
+        loadView("/Views/TachesView.fxml", "Tasks module loaded", "Gestion Taches", btnTaches);
     }
 
     @FXML
     public void openEmployes() {
-        loadView("/Views/EmployesView.fxml", "Employees module not available yet", "Gestion Employes");
+        loadView("/Views/EmployesView.fxml", "Employees module loaded", "Gestion Employes", btnEmployes);
     }
 
     @FXML
     public void openUsers() {
-        loadView("/Views/UsersView.fxml", "Users module not available yet", "Utilisateurs");
+        loadView("/Views/UsersView.fxml", "Users module loaded", "Utilisateurs", btnUsers);
     }
 
     @FXML
@@ -75,15 +81,30 @@ public class MainController {
         alert.showAndWait();
     }
 
-    private void loadView(String fxmlPath, String statusMessage, String moduleName) {
+    private void loadView(String fxmlPath, String statusMessage, String moduleName, Button activeButton) {
         try {
             Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
             contentArea.getChildren().setAll(view);
             footerStatusLabel.setText(statusMessage);
             currentModuleLabel.setText("Current: " + moduleName);
+            applyActiveModuleStyle(activeButton);
         } catch (IOException e) {
-            footerStatusLabel.setText(statusMessage);
+            e.printStackTrace();
+            footerStatusLabel.setText("View unavailable: " + moduleName);
             currentModuleLabel.setText("Current: " + moduleName);
+            applyActiveModuleStyle(activeButton);
+        }
+    }
+
+    private void applyActiveModuleStyle(Button activeButton) {
+        Button[] moduleButtons = {btnMarketplace, btnCulture, btnTaches, btnEmployes, btnUsers};
+        for (Button button : moduleButtons) {
+            if (button != null) {
+                button.getStyleClass().remove("active");
+            }
+        }
+        if (activeButton != null && !activeButton.getStyleClass().contains("active")) {
+            activeButton.getStyleClass().add("active");
         }
     }
 }

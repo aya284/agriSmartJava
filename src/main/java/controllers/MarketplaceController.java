@@ -21,15 +21,29 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
 import services.CommandeService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
 import services.WishlistService;
-
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
+import java.io.File;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +62,10 @@ public class MarketplaceController implements Initializable {
     @FXML private TableColumn<Produit, Boolean> colPromo;
     @FXML private TableColumn<Produit, Void> colActions;
 
+    @FXML private FlowPane productGrid;
+    @FXML private ComboBox<String> categorieFilter;
+    @FXML private ComboBox<String> typeFilter;
+    @FXML private ComboBox<String> sortCombo;
     @FXML private TableView<Commande> commandeTable;
     @FXML private TableColumn<Commande, Integer> colCmdId;
     @FXML private TableColumn<Commande, String> colCmdStatut;
@@ -74,15 +92,51 @@ public class MarketplaceController implements Initializable {
     @FXML private ComboBox<String> promoFilterCombo;
     @FXML private Label statusLabel;
 
-    @FXML private Label statProduits;
-    @FXML private Label statCommandes;
-    @FXML private Label statWishlist;
-    @FXML private Label statMessages;
+    
 
     private final ProduitService produitService = new ProduitService();
     private final CommandeService commandeService = new CommandeService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
+
+    // Dynamic Modal Fields
+    @FXML private StackPane modalOverlay;
+    @FXML private Label modalTitle;
+    @FXML private TextField fldNom;
+    @FXML private TextArea fldDescription;
+    @FXML private TextField fldPrix;
+    @FXML private TextField fldStock;
+    @FXML private TextField fldCategorie;
+    @FXML private TextField fldImage;
+    @FXML private ComboBox<String> fldType;
+    @FXML private CheckBox chkPromo;
+    @FXML private TextField fldPromoPrice;
+
+    // Dynamic Details Fields
+    @FXML private StackPane detailsOverlay;
+    @FXML private Label detailsTitle;
+    @FXML private Label detailsCategory;
+    @FXML private Label detailsPrice;
+    @FXML private Label detailsOldPrice;
+    @FXML private Label detailsDesc;
+    @FXML private Label detailsStock;
+    
+    private Produit currentEditProduit = null;
+
+    @FXML
+    public void closeModal() {
+        if (modalOverlay != null) {
+            modalOverlay.setVisible(false);
+        }
+        currentEditProduit = null;
+    }
+
+    @FXML
+    public void closeDetails() {
+        if (detailsOverlay != null) {
+            detailsOverlay.setVisible(false);
+        }
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -100,14 +154,39 @@ public class MarketplaceController implements Initializable {
     }
 
     private void setupFilters() {
-        typeFilterCombo.getItems().setAll("Tous", "vente", "location");
-        typeFilterCombo.setValue("Tous");
+        if (typeFilterCombo != null) {
+            typeFilterCombo.getItems().setAll("Tous", "vente", "location");
+            typeFilterCombo.setValue("Tous");
+        }
 
-        promoFilterCombo.getItems().setAll("Tous", "En promotion", "Sans promotion");
-        promoFilterCombo.setValue("Tous");
+        if (promoFilterCombo != null) {
+            promoFilterCombo.getItems().setAll("Tous", "En promotion", "Sans promotion");
+            promoFilterCombo.setValue("Tous");
+        }
+
+        if (typeFilter != null) {
+            typeFilter.getItems().setAll("Tous", "vente", "location");
+            typeFilter.setValue("Tous");
+        }
+
+        if (sortCombo != null) {
+            sortCombo.getItems().setAll("A-Z", "Prix croissant", "Prix decroissant");
+            sortCombo.setValue("A-Z");
+        }
+
+        if (fldType != null) {
+            fldType.getItems().setAll("vente", "location");
+            fldType.setValue("vente");
+        }
     }
 
     private void setupProduitTable() {
+        if (produitTable == null || colId == null || colNom == null || colType == null
+                || colCategorie == null || colPrix == null || colStock == null
+                || colPromo == null || colActions == null) {
+            return;
+        }
+
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNom.setCellValueFactory(new PropertyValueFactory<>("nom"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
@@ -139,6 +218,11 @@ public class MarketplaceController implements Initializable {
     }
 
     private void setupCommandeTable() {
+        if (commandeTable == null || colCmdId == null || colCmdStatut == null || colCmdMontant == null
+                || colCmdPaiement == null || colCmdActions == null) {
+            return;
+        }
+
         colCmdId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colCmdStatut.setCellValueFactory(new PropertyValueFactory<>("statut"));
         colCmdMontant.setCellValueFactory(new PropertyValueFactory<>("montantTotal"));
@@ -167,6 +251,11 @@ public class MarketplaceController implements Initializable {
     }
 
     private void setupWishlistTable() {
+        if (wishlistTable == null || colWishId == null || colWishUser == null
+                || colWishProduit == null || colWishActions == null) {
+            return;
+        }
+
         colWishId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colWishUser.setCellValueFactory(new PropertyValueFactory<>("userId"));
         colWishProduit.setCellValueFactory(new PropertyValueFactory<>("produitId"));
@@ -194,6 +283,12 @@ public class MarketplaceController implements Initializable {
     }
 
     private void setupMessageTable() {
+        if (messageTable == null || colMsgId == null || colMsgConversation == null
+                || colMsgSender == null || colMsgContent == null || colMsgRead == null
+                || colMsgActions == null) {
+            return;
+        }
+
         colMsgId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colMsgConversation.setCellValueFactory(new PropertyValueFactory<>("conversationId"));
         colMsgSender.setCellValueFactory(new PropertyValueFactory<>("senderId"));
@@ -225,14 +320,22 @@ public class MarketplaceController implements Initializable {
     private void loadProduits() {
         try {
             List<Produit> produits = produitService.afficher();
-            produitTable.setItems(FXCollections.observableArrayList(produits));
-            statusLabel.setText(produits.size() + " produits charges");
+            if (produitTable != null) {
+                produitTable.setItems(FXCollections.observableArrayList(produits));
+            }
+            if (productGrid != null) populateProductGrid(produits);
+            if (statusLabel != null) {
+                statusLabel.setText(produits.size() + " produits charges");
+            }
         } catch (SQLException e) {
             showSqlAlert(e);
         }
     }
 
     private void loadCommandes() {
+        if (commandeTable == null) {
+            return;
+        }
         try {
             List<Commande> commandes = commandeService.afficher();
             commandeTable.setItems(FXCollections.observableArrayList(commandes));
@@ -242,6 +345,9 @@ public class MarketplaceController implements Initializable {
     }
 
     private void loadWishlist() {
+        if (wishlistTable == null) {
+            return;
+        }
         try {
             List<WishlistItem> items = wishlistService.afficher();
             wishlistTable.setItems(FXCollections.observableArrayList(items));
@@ -251,6 +357,9 @@ public class MarketplaceController implements Initializable {
     }
 
     private void loadMessages() {
+        if (messageTable == null) {
+            return;
+        }
         try {
             List<MarketplaceMessage> messages = messageService.afficher();
             messageTable.setItems(FXCollections.observableArrayList(messages));
@@ -259,16 +368,7 @@ public class MarketplaceController implements Initializable {
         }
     }
 
-    private void refreshStats() {
-        try {
-            statProduits.setText(String.valueOf(produitService.countAll()));
-            statCommandes.setText(String.valueOf(commandeService.countAll()));
-            statWishlist.setText(String.valueOf(wishlistService.countAll()));
-            statMessages.setText(String.valueOf(messageService.countAll()));
-        } catch (SQLException e) {
-            showSqlAlert(e);
-        }
-    }
+    private void refreshStats() { }
 
     @FXML
     public void handleSearch() {
@@ -283,27 +383,49 @@ public class MarketplaceController implements Initializable {
     private void applyProduitFilters() {
         try {
             List<Produit> base = produitService.afficher();
-            String keyword = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
-            String typeFilter = typeFilterCombo.getValue();
-            String promoFilter = promoFilterCombo.getValue();
+            String keyword = "";
+            if (searchField != null && searchField.getText() != null) {
+                keyword = searchField.getText().trim().toLowerCase();
+            }
+
+            String selectedType = "Tous";
+            if (typeFilter != null && typeFilter.getValue() != null) {
+                selectedType = typeFilter.getValue();
+            } else if (typeFilterCombo != null && typeFilterCombo.getValue() != null) {
+                selectedType = typeFilterCombo.getValue();
+            }
+
+            String selectedPromo = "Tous";
+            if (promoFilterCombo != null && promoFilterCombo.getValue() != null) {
+                selectedPromo = promoFilterCombo.getValue();
+            }
 
             List<Produit> filtered = new ArrayList<>();
             for (Produit p : base) {
+                String nom = p.getNom() == null ? "" : p.getNom().toLowerCase();
+                String categorie = p.getCategorie() == null ? "" : p.getCategorie().toLowerCase();
+                String type = p.getType() == null ? "" : p.getType();
+
                 boolean matchesKeyword = keyword.isEmpty()
-                        || p.getNom().toLowerCase().contains(keyword)
-                        || p.getCategorie().toLowerCase().contains(keyword);
-                boolean matchesType = "Tous".equals(typeFilter) || p.getType().equalsIgnoreCase(typeFilter);
-                boolean matchesPromo = "Tous".equals(promoFilter)
-                        || ("En promotion".equals(promoFilter) && p.isPromotion())
-                        || ("Sans promotion".equals(promoFilter) && !p.isPromotion());
+                        || nom.contains(keyword)
+                        || categorie.contains(keyword);
+                boolean matchesType = "Tous".equals(selectedType) || type.equalsIgnoreCase(selectedType);
+                boolean matchesPromo = "Tous".equals(selectedPromo)
+                        || ("En promotion".equals(selectedPromo) && p.isPromotion())
+                        || ("Sans promotion".equals(selectedPromo) && !p.isPromotion());
 
                 if (matchesKeyword && matchesType && matchesPromo) {
                     filtered.add(p);
                 }
             }
 
-            produitTable.setItems(FXCollections.observableArrayList(filtered));
-            statusLabel.setText(filtered.size() + " resultat(s)");
+            if (produitTable != null) {
+                produitTable.setItems(FXCollections.observableArrayList(filtered));
+            }
+            if (productGrid != null) populateProductGrid(filtered);
+            if (statusLabel != null) {
+                statusLabel.setText(filtered.size() + " resultat(s)");
+            }
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -311,106 +433,130 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void openAjouterProduit() {
-        Dialog<Produit> dialog = buildProduitDialog(null);
-        Optional<Produit> result = dialog.showAndWait();
-        result.ifPresent(p -> {
-            try {
-                produitService.ajouter(p);
-                loadProduits();
-                refreshStats();
-            } catch (SQLException e) {
-                showSqlAlert(e);
+        if (modalOverlay == null) return;
+        currentEditProduit = null; // Important for ADD
+        modalTitle.setText("Ajouter un Produit");
+        chkPromo.setSelected(false);
+        fldNom.clear();
+        fldDescription.clear();
+        fldPrix.clear();
+        fldStock.clear();
+        fldCategorie.clear();
+        if (fldImage != null) {
+            fldImage.clear();
+        }
+        fldPromoPrice.clear();
+        fldType.setValue("vente");
+        modalOverlay.setVisible(true);
+        modalOverlay.toFront();
+    }
+
+    @FXML
+    public void chooseImageFile() {
+        if (fldImage == null || fldImage.getScene() == null) {
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Choisir une image produit");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp")
+        );
+
+        Window owner = fldImage.getScene().getWindow();
+        File selected = chooser.showOpenDialog(owner);
+        if (selected != null) {
+            fldImage.setText(selected.getAbsolutePath());
+            if (statusLabel != null) {
+                statusLabel.setText("Image selectionnee: " + selected.getName());
             }
-        });
+        }
     }
 
     private void openModifierProduit(Produit produit) {
-        Dialog<Produit> dialog = buildProduitDialog(produit);
-        Optional<Produit> result = dialog.showAndWait();
-        result.ifPresent(updated -> {
-            updated.setId(produit.getId());
-            try {
-                produitService.modifier(updated);
-                loadProduits();
-            } catch (SQLException e) {
-                showSqlAlert(e);
-            }
-        });
+        if (modalOverlay == null) return;
+        currentEditProduit = produit;
+        modalTitle.setText("Modifier " + produit.getNom());
+        fldNom.setText(produit.getNom());
+        fldDescription.setText(produit.getDescription());
+        fldPrix.setText(String.valueOf(produit.getPrix()));
+        fldStock.setText(String.valueOf(produit.getQuantiteStock()));
+        fldCategorie.setText(produit.getCategorie());
+        if (fldImage != null) {
+            fldImage.setText(safe(produit.getImage()));
+        }
+        fldType.setValue(produit.getType());
+        chkPromo.setSelected(produit.isPromotion());
+        fldPromoPrice.setText(String.valueOf(produit.getPromotionPrice()));
+        modalOverlay.setVisible(true);
+        modalOverlay.toFront();
     }
 
-    private Dialog<Produit> buildProduitDialog(Produit existing) {
-        Dialog<Produit> dialog = new Dialog<>();
-        dialog.setTitle(existing == null ? "Ajouter Produit" : "Modifier Produit");
-
-        ButtonType saveBtn = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
-
-        TextField nomField = new TextField(existing == null ? "" : existing.getNom());
-        TextArea descriptionField = new TextArea(existing == null ? "" : existing.getDescription());
-        descriptionField.setPrefRowCount(3);
-        ComboBox<String> typeCombo = new ComboBox<>();
-        typeCombo.getItems().addAll("vente", "location");
-        typeCombo.setValue(existing == null ? "vente" : existing.getType());
-        TextField prixField = new TextField(existing == null ? "" : String.valueOf(existing.getPrix()));
-        TextField categorieField = new TextField(existing == null ? "" : existing.getCategorie());
-        TextField stockField = new TextField(existing == null ? "" : String.valueOf(existing.getQuantiteStock()));
-        CheckBox promoCheck = new CheckBox("Promotion");
-        promoCheck.setSelected(existing != null && existing.isPromotion());
-        TextField promoPriceField = new TextField(existing == null ? "0" : String.valueOf(existing.getPromotionPrice()));
-        TextField locationAddressField = new TextField(existing == null ? "" : safe(existing.getLocationAddress()));
-        TextField vendeurIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getVendeurId()));
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(18));
-
-        grid.add(new Label("Nom"), 0, 0); grid.add(nomField, 1, 0);
-        grid.add(new Label("Description"), 0, 1); grid.add(descriptionField, 1, 1);
-        grid.add(new Label("Type"), 0, 2); grid.add(typeCombo, 1, 2);
-        grid.add(new Label("Prix"), 0, 3); grid.add(prixField, 1, 3);
-        grid.add(new Label("Categorie"), 0, 4); grid.add(categorieField, 1, 4);
-        grid.add(new Label("Stock"), 0, 5); grid.add(stockField, 1, 5);
-        grid.add(new Label("Prix promo"), 0, 6); grid.add(promoPriceField, 1, 6);
-        grid.add(promoCheck, 1, 7);
-        grid.add(new Label("Adresse"), 0, 8); grid.add(locationAddressField, 1, 8);
-        grid.add(new Label("Vendeur ID"), 0, 9); grid.add(vendeurIdField, 1, 9);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(btn -> {
-            if (btn != saveBtn) {
-                return null;
+    @FXML
+    public void saveFormProduct() {
+        Double prix = parseDouble(fldPrix.getText());
+        Double promoPrix = parseDouble(fldPromoPrice.getText());
+        Integer stock = parseInteger(fldStock.getText());
+        
+        if (prix == null || stock == null || fldNom.getText().isBlank()) {
+            showAlert("Erreur", "Champs invalides");
+            return;
+        }
+        
+        Produit p = currentEditProduit == null ? new Produit() : currentEditProduit;
+        p.setNom(fldNom.getText().trim());
+        p.setDescription(fldDescription.getText().trim());
+        p.setPrix(prix);
+        p.setQuantiteStock(stock);
+        p.setCategorie(fldCategorie.getText().trim());
+        p.setType(fldType.getValue());
+        if (fldImage != null) {
+            p.setImage(fldImage.getText() == null ? "" : fldImage.getText().trim());
+        }
+        p.setPromotion(chkPromo.isSelected());
+        if(promoPrix != null && chkPromo.isSelected()){
+            p.setPromotionPrice(promoPrix);
+        } else {
+            p.setPromotionPrice(0.0);
+        }
+        p.setVendeurId(1); // placeholder
+        
+        try {
+            if (currentEditProduit == null) {
+                produitService.ajouter(p);
+            } else {
+                produitService.modifier(p);
             }
-
-            Integer stock = parseInteger(stockField.getText());
-            Double prix = parseDouble(prixField.getText());
-            Double prixPromo = parseDouble(promoPriceField.getText());
-            Integer vendeurId = parseInteger(vendeurIdField.getText());
-            if (stock == null || prix == null || prixPromo == null || vendeurId == null || nomField.getText().isBlank()) {
-                showAlert("Validation", "Champs invalides pour le produit.");
-                return null;
-            }
-
-            Produit p = new Produit();
-            p.setNom(nomField.getText().trim());
-            p.setDescription(descriptionField.getText().trim());
-            p.setType(typeCombo.getValue());
-            p.setPrix(prix);
-            p.setCategorie(categorieField.getText().trim());
-            p.setQuantiteStock(stock);
-            p.setImage("");
-            p.setPromotion(promoCheck.isSelected());
-            p.setPromotionPrice(prixPromo);
-            p.setLocationAddress(locationAddressField.getText().trim());
-            p.setBanned(false);
-            p.setVendeurId(vendeurId);
-            return p;
-        });
-
-        return dialog;
+            loadProduits();
+            refreshStats();
+            closeModal();
+        } catch (SQLException e) {
+            showSqlAlert(e);
+        }
     }
 
+    @FXML
+    public void showProductDetails(Produit p) {
+        if (detailsOverlay == null) return;
+        detailsTitle.setText(normalizeText(safe(p.getNom())));
+        detailsCategory.setText(normalizeText(safe(p.getCategorie())) + " - " + normalizeText(safe(p.getType())));
+        detailsDesc.setText(normalizeText(safe(p.getDescription())));
+        detailsStock.setText(p.getQuantiteStock() + " unites disponibles");
+        if (p.isPromotion()) {
+            detailsPrice.setText(String.format("%.2f TND", p.getPromotionPrice()));
+            detailsOldPrice.setText(String.format("%.2f TND", p.getPrix()));
+            detailsOldPrice.setVisible(true);
+            detailsOldPrice.setManaged(true);
+        } else {
+            detailsPrice.setText(String.format("%.2f TND", p.getPrix()));
+            detailsOldPrice.setVisible(false);
+            detailsOldPrice.setManaged(false);
+        }
+        detailsOverlay.setVisible(true);
+        detailsOverlay.toFront();
+    }
+
+    // legacy build dialog intact in case needed
     private void handleDeleteProduit(Produit produit) {
         if (!confirm("Supprimer produit", "Supprimer " + produit.getNom() + " ?")) {
             return;
@@ -714,10 +860,216 @@ public class MarketplaceController implements Initializable {
         alert.setHeaderText("Operation base de donnees echouee");
         alert.setContentText(exception.getMessage());
         alert.showAndWait();
-        statusLabel.setText("Erreur SQL detectee");
+        if (statusLabel != null) {
+            statusLabel.setText("Erreur SQL detectee");
+        }
     }
 
     private String safe(String value) {
         return value == null ? "" : value;
     }
+    private String normalizeText(String input) {
+        if (input == null) {
+            return "";
+        }
+        String trimmed = input.trim();
+        if (trimmed.contains("Ã") || trimmed.contains("Â")) {
+            return new String(trimmed.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        }
+        return trimmed;
+    }
+
+    private Image resolveProductImage(String rawImagePath) {
+        String raw = safe(rawImagePath).trim();
+        if (raw.isEmpty()) {
+            return loadPlaceholderImage();
+        }
+
+        try {
+            if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("file:")) {
+                Image direct = new Image(raw, true);
+                return direct.isError() ? null : direct;
+            }
+
+            Path absolutePath = Paths.get(raw).toAbsolutePath();
+            if (Files.exists(absolutePath)) {
+                Image local = new Image(absolutePath.toUri().toString(), true);
+                return local.isError() ? null : local;
+            }
+
+            Path projectRelative = Paths.get(System.getProperty("user.dir"), raw).toAbsolutePath();
+            if (Files.exists(projectRelative)) {
+                Image local = new Image(projectRelative.toUri().toString(), true);
+                return local.isError() ? null : local;
+            }
+        } catch (Exception ignored) {
+            return loadPlaceholderImage();
+        }
+
+        return loadPlaceholderImage();
+    }
+
+    private Image loadPlaceholderImage() {
+        try {
+            URL resource = getClass().getResource("/images/product_placeholder.png");
+            if (resource != null) {
+                Image placeholder = new Image(resource.toExternalForm(), true);
+                return placeholder.isError() ? null : placeholder;
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+        return null;
+    }
+
+    private void populateProductGrid(java.util.List<Produit> produits) {
+        if (productGrid == null) return;
+        productGrid.getChildren().clear();
+        
+        if (produits == null || produits.isEmpty()) {
+            Label emptyLabel = new Label("Aucun produit trouve dans la base de donnees. Ajoutez-en un pour les voir apparaitre ici.");
+            emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #888; -fx-padding: 30;");
+            productGrid.getChildren().add(emptyLabel);
+            return;
+        }
+
+        for (Produit p : produits) {
+            VBox card = new VBox();
+            card.getStyleClass().add("product-card");
+            card.setSpacing(5);
+            card.setStyle("-fx-cursor: hand;");
+            card.setMinWidth(260);
+            card.setPrefWidth(260);
+            card.setMaxWidth(260);
+            card.setMinHeight(320);
+            card.setPrefHeight(320);
+            card.setMaxHeight(320);
+
+            StackPane imageContainer = new StackPane();
+            imageContainer.getStyleClass().add("product-image-container");
+            imageContainer.setMinWidth(260);
+            imageContainer.setPrefWidth(260);
+            imageContainer.setMaxWidth(260);
+            imageContainer.setMinHeight(150);
+            imageContainer.setPrefHeight(150);
+            imageContainer.setMaxHeight(150);
+            
+            try {
+                Image loadedImage = resolveProductImage(p.getImage());
+                if (loadedImage != null) {
+                    ImageView imgView = new ImageView(loadedImage);
+                    imgView.setFitHeight(150);
+                    imgView.setFitWidth(260);
+                    imgView.setPreserveRatio(false);
+                    imgView.setSmooth(true);
+                    imageContainer.getChildren().add(imgView);
+                } else {
+                    Label fallback = new Label("No image");
+                    fallback.setStyle("-fx-font-size: 16px; -fx-text-fill: #999;");
+                    imageContainer.getChildren().add(fallback);
+                }
+            } catch (Exception e) {
+                 Label fallback = new Label("No image");
+                 fallback.setStyle("-fx-text-fill: #aaa;");
+                 imageContainer.getChildren().add(fallback);
+            }
+
+            Button btnHeart = new Button("\u2661");
+            btnHeart.getStyleClass().add("wishlist-heart-btn");
+            btnHeart.setOnAction(e -> {
+                boolean active = btnHeart.getStyleClass().contains("active");
+                if (active) {
+                    btnHeart.getStyleClass().remove("active");
+                    btnHeart.setText("\u2661");
+                } else {
+                    btnHeart.getStyleClass().add("active");
+                    btnHeart.setText("\u2665");
+                }
+                if (statusLabel != null) {
+                    statusLabel.setText(active
+                            ? normalizeText(safe(p.getNom())) + " retire de la wishlist"
+                            : normalizeText(safe(p.getNom())) + " ajoute a la wishlist");
+                }
+                e.consume();
+            });
+            StackPane.setAlignment(btnHeart, javafx.geometry.Pos.TOP_LEFT);
+            StackPane.setMargin(btnHeart, new javafx.geometry.Insets(8, 0, 0, 8));
+            imageContainer.getChildren().add(btnHeart);
+            
+            if (p.isPromotion()) {
+                Label promoBadge = new Label("PROMO");
+                promoBadge.getStyleClass().add("promo-badge");
+                StackPane.setAlignment(promoBadge, javafx.geometry.Pos.TOP_RIGHT);
+                StackPane.setMargin(promoBadge, new javafx.geometry.Insets(8, 8, 0, 0));
+                imageContainer.getChildren().add(promoBadge);
+            }
+
+            VBox infoBox = new VBox(6);
+            infoBox.setPadding(new javafx.geometry.Insets(12));
+            VBox.setVgrow(infoBox, Priority.ALWAYS);
+            infoBox.setPrefHeight(170);
+
+            Label titre = new Label(normalizeText(safe(p.getNom())));
+            titre.getStyleClass().add("product-title-text");
+            titre.setWrapText(false);
+            titre.setTextOverrun(OverrunStyle.ELLIPSIS);
+            titre.setMaxWidth(230);
+
+            Label categorieLib = new Label(normalizeText(safe(p.getCategorie())) + " - " + normalizeText(safe(p.getType())));
+            categorieLib.getStyleClass().add("product-category-text");
+            categorieLib.setWrapText(false);
+            categorieLib.setTextOverrun(OverrunStyle.ELLIPSIS);
+            categorieLib.setMaxWidth(230);
+            
+            HBox priceRow = new HBox(8);
+            priceRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            if (p.isPromotion()) {
+                Label oldPrice = new Label(p.getPrix() + " TND");
+                oldPrice.getStyleClass().add("product-old-price");
+                Label newPrice = new Label(p.getPromotionPrice() + " TND");
+                newPrice.getStyleClass().add("product-new-price");
+                priceRow.getChildren().addAll(newPrice, oldPrice);
+            } else {
+                Label price = new Label(p.getPrix() + " TND");
+                price.getStyleClass().add("product-price");
+                priceRow.getChildren().add(price);
+            }
+
+            HBox actions = new HBox(8);
+            actions.getStyleClass().add("product-bottom-actions");
+            actions.setAlignment(javafx.geometry.Pos.CENTER);
+
+            Button btnAddCart = new Button("Ajouter au panier");
+            btnAddCart.getStyleClass().add("btn-cart-small");
+            btnAddCart.setOnAction(e -> {
+                if (statusLabel != null) {
+                    statusLabel.setText(normalizeText(safe(p.getNom())) + " ajoute au panier");
+                }
+                e.consume();
+            });
+
+            Button btnView = new Button("Voir");
+            btnView.getStyleClass().add("btn-primary-small");
+            btnView.setOnAction(e -> {
+                showProductDetails(p);
+                e.consume();
+            });
+            
+            HBox.setHgrow(btnAddCart, Priority.ALWAYS);
+            HBox.setHgrow(btnView, Priority.ALWAYS);
+            btnAddCart.setMaxWidth(Double.MAX_VALUE);
+            btnView.setMaxWidth(Double.MAX_VALUE);
+            actions.getChildren().addAll(btnAddCart, btnView);
+
+            Region spacer = new Region();
+            VBox.setVgrow(spacer, Priority.ALWAYS);
+            
+            infoBox.getChildren().addAll(titre, categorieLib, spacer, priceRow, actions);
+            card.getChildren().addAll(imageContainer, infoBox);
+            card.setOnMouseClicked(e -> showProductDetails(p));
+            
+            productGrid.getChildren().add(card);
+        }
+    }
 }
+

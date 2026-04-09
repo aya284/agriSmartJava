@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" spacing="14" styleClass="feature-page">
+
+    <VBox styleClass="feature-hero" spacing="10">
+        <Label text="Gestion Employes" styleClass="feature-title"/>
+        <Label text="Presence, planning equipe et performances operationnelles" styleClass="feature-subtitle"/>
+        <HBox spacing="10">
+            <Button text="Ajouter employe" styleClass="action-chip primary"/>
+            <Button text="Planning" styleClass="action-chip"/>
+            <Button text="Pointage" styleClass="action-chip"/>
+            <Button text="Rapports RH" styleClass="action-chip gold"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Effectif total" styleClass="stat-title"/>
+            <Label text="52" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="En mission" styleClass="stat-title"/>
+            <Label text="29" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Conges" styleClass="stat-title"/>
+            <Label text="4" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Equipe et disponibilites" styleClass="panel-title"/>
+        <Label text="Suivi des ressources humaines par zone et specialite" styleClass="panel-muted"/>
+        <TableView VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Nom" prefWidth="220"/>
+                <TableColumn text="Poste" prefWidth="170"/>
+                <TableColumn text="Zone" prefWidth="140"/>
+                <TableColumn text="Etat" prefWidth="120"/>
+                <TableColumn text="Actions" prefWidth="170"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>
