@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.MainController"
+            styleClass="root-pane">
+
+    <top>
+        <VBox styleClass="app-header-wrap" spacing="10">
+            <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
+
+            <HBox spacing="14" alignment="CENTER_LEFT" styleClass="app-header-top">
+                <VBox spacing="2">
+                    <Label text="AgriSmart" styleClass="logo-text"/>
+                    <Label text="Smart agriculture operations workspace" styleClass="logo-subtext"/>
+                </VBox>
+
+                <HBox HBox.hgrow="ALWAYS"/>
+
+                <TextField fx:id="globalSearchField" promptText="Search module, order, product..." onKeyReleased="#handleGlobalSearch" prefWidth="280"/>
+                <Button text="Notifications" styleClass="header-icon-btn" onAction="#showNotifications"/>
+                <Button text="Profile" styleClass="header-icon-btn" onAction="#showProfile"/>
+            </HBox>
+
+            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="module-pill-row">
+                <Label text="Modules" styleClass="module-label"/>
+                <Button text="Marketplace" styleClass="module-pill" onAction="#openMarketplace"/>
+                <Button text="Gestion Culture" styleClass="module-pill" onAction="#openCulture"/>
+                <Button text="Gestion Taches" styleClass="module-pill" onAction="#openTaches"/>
+                <Button text="Gestion Employes" styleClass="module-pill" onAction="#openEmployes"/>
+                <Button text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="currentModuleLabel" text="Current: Marketplace" styleClass="current-module-label"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <left>
+        <VBox spacing="8" styleClass="sidebar">
+            <padding><Insets top="20" right="12" bottom="20" left="12"/></padding>
+            <Label text="Quick Access" styleClass="sidebar-title"/>
+            <Button text="Marketplace Hub" styleClass="nav-btn" maxWidth="Infinity" onAction="#openMarketplace"/>
+            <Button text="Culture Control" styleClass="nav-btn" maxWidth="Infinity" onAction="#openCulture"/>
+            <Button text="Task Studio" styleClass="nav-btn" maxWidth="Infinity" onAction="#openTaches"/>
+            <Button text="Employee Desk" styleClass="nav-btn" maxWidth="Infinity" onAction="#openEmployes"/>
+            <Button text="User Center" styleClass="nav-btn" maxWidth="Infinity" onAction="#openUsers"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Label text="Flow: Plan, Track, Grow" styleClass="sidebar-note"/>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area" BorderPane.alignment="CENTER"/>
+    </center>
+
+    <bottom>
+        <HBox styleClass="app-footer" alignment="CENTER_LEFT">
+            <padding><Insets top="8" right="14" bottom="8" left="14"/></padding>
+            <Label text="AgriSmart Platform" styleClass="footer-version"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Label fx:id="footerStatusLabel" text="Ready" styleClass="footer-status"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
