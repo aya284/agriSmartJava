@@ -33,6 +33,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
+import javafx.geometry.Pos;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
 import services.CommandeService;
@@ -130,6 +131,7 @@ public class MarketplaceController implements Initializable {
 
     // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
+    @FXML private StackPane sellerOverlay;
     @FXML private Label modalTitle;
     @FXML private TextField fldNom;
     @FXML private TextArea fldDescription;
@@ -172,6 +174,22 @@ public class MarketplaceController implements Initializable {
             modalOverlay.setVisible(false);
         }
         currentEditProduit = null;
+    }
+
+    @FXML
+    public void openSellerSpace() {
+        loadProduits();
+        if (sellerOverlay != null) {
+            sellerOverlay.setVisible(true);
+            sellerOverlay.toFront();
+        }
+    }
+
+    @FXML
+    public void closeSellerSpace() {
+        if (sellerOverlay != null) {
+            sellerOverlay.setVisible(false);
+        }
     }
 
     @FXML
@@ -252,16 +270,109 @@ public class MarketplaceController implements Initializable {
         colStock.setCellValueFactory(new PropertyValueFactory<>("quantiteStock"));
         colPromo.setCellValueFactory(new PropertyValueFactory<>("promotion"));
 
+        colNom.setCellFactory(col -> new TableCell<>() {
+            private final ImageView thumb = new ImageView();
+            private final Label nameLabel = new Label();
+            private final Label descLabel = new Label();
+            private final VBox textBox = new VBox(2, nameLabel, descLabel);
+            private final HBox row = new HBox(10, thumb, textBox);
+
+            {
+                row.setAlignment(Pos.CENTER_LEFT);
+                thumb.setFitWidth(64);
+                thumb.setFitHeight(44);
+                thumb.setPreserveRatio(false);
+                thumb.setSmooth(true);
+                nameLabel.getStyleClass().add("seller-name");
+                descLabel.getStyleClass().add("seller-desc");
+                descLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
+                descLabel.setMaxWidth(300);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
+                    setGraphic(null);
+                    return;
+                }
+
+                Produit p = getTableView().getItems().get(getIndex());
+                Image img = resolveProductImage(p.getImage());
+                thumb.setImage(img);
+                nameLabel.setText(normalizeText(safe(p.getNom())));
+                descLabel.setText(normalizeText(safe(p.getDescription())));
+                setGraphic(row);
+            }
+        });
+
+        colCategorie.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                Label badge = new Label(normalizeText(item));
+                badge.getStyleClass().add("seller-pill");
+                setGraphic(badge);
+            }
+        });
+
+        colType.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                Label badge = new Label(normalizeTypeForDisplay(item));
+                badge.getStyleClass().add("seller-type-pill");
+                if (TYPE_LOCATION.equalsIgnoreCase(normalizeTypeForDisplay(item))) {
+                    badge.getStyleClass().add("location");
+                }
+                setGraphic(badge);
+            }
+        });
+
+        colPrix.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : String.format("%.2f TND", item));
+            }
+        });
+
+        colStock.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                Label badge = new Label(item > 5 ? "OK (" + item + ")" : "Faible (" + item + ")");
+                badge.getStyleClass().add(item > 5 ? "seller-stock-ok" : "seller-stock-low");
+                setGraphic(badge);
+            }
+        });
+
         produitTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit = new Button("Edit");
-            private final Button btnDelete = new Button("Delete");
-            private final HBox box = new HBox(8, btnEdit, btnDelete);
+            private final Button btnView = new Button("\u25ce");
+            private final Button btnEdit = new Button("\u270e");
+            private final Button btnDelete = new Button("\ud83d\uddd1");
+            private final HBox box = new HBox(8, btnView, btnEdit, btnDelete);
 
             {
-                btnEdit.getStyleClass().add("btn-gold");
-                btnDelete.getStyleClass().add("btn-danger");
+                box.setAlignment(Pos.CENTER_LEFT);
+                btnView.getStyleClass().addAll("seller-action-btn", "view");
+                btnEdit.getStyleClass().addAll("seller-action-btn", "edit");
+                btnDelete.getStyleClass().addAll("seller-action-btn", "delete");
+                btnView.setOnAction(e -> showProductDetails(getTableView().getItems().get(getIndex())));
                 btnEdit.setOnAction(e -> openModifierProduit(getTableView().getItems().get(getIndex())));
                 btnDelete.setOnAction(e -> handleDeleteProduit(getTableView().getItems().get(getIndex())));
             }
@@ -582,12 +693,18 @@ public class MarketplaceController implements Initializable {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Choisir une image produit");
         chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp")
+            new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp")
         );
 
         Window owner = fldImage.getScene().getWindow();
         File selected = chooser.showOpenDialog(owner);
         if (selected != null) {
+            String lowerName = selected.getName().toLowerCase();
+            if (lowerName.endsWith(".webp")) {
+                showAlert("Format non supporte", "Le format WEBP n'est pas supporte par JavaFX. Choisissez une image PNG, JPG, JPEG, GIF ou BMP.");
+                return;
+            }
+
             fldImage.setText(selected.getAbsolutePath());
             if (statusLabel != null) {
                 statusLabel.setText("Image selectionnee: " + selected.getName());
@@ -1041,26 +1158,27 @@ public class MarketplaceController implements Initializable {
 
     private Image resolveProductImage(String rawImagePath) {
         String raw = safe(rawImagePath).trim();
+        raw = raw.replace("\"", "");
         if (raw.isEmpty()) {
             return loadPlaceholderImage();
         }
 
         try {
             if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("file:")) {
-                Image direct = new Image(raw, true);
-                return direct.isError() ? null : direct;
+                Image direct = new Image(raw, false);
+                return direct.isError() ? loadPlaceholderImage() : direct;
             }
 
             Path absolutePath = Paths.get(raw).toAbsolutePath();
             if (Files.exists(absolutePath)) {
-                Image local = new Image(absolutePath.toUri().toString(), true);
-                return local.isError() ? null : local;
+                Image local = new Image(absolutePath.toUri().toString(), false);
+                return local.isError() ? loadPlaceholderImage() : local;
             }
 
             Path projectRelative = Paths.get(System.getProperty("user.dir"), raw).toAbsolutePath();
             if (Files.exists(projectRelative)) {
-                Image local = new Image(projectRelative.toUri().toString(), true);
-                return local.isError() ? null : local;
+                Image local = new Image(projectRelative.toUri().toString(), false);
+                return local.isError() ? loadPlaceholderImage() : local;
             }
         } catch (Exception ignored) {
             return loadPlaceholderImage();

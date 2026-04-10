@@ -957,3 +957,162 @@
     -fx-font-size: 14px;
     -fx-text-fill: #64748b;
 }
+
+/* Seller space */
+.seller-shell {
+    -fx-background-color: linear-gradient(to bottom, #fbfdfb, #f4f8f6);
+    -fx-background-radius: 20;
+    -fx-border-color: #d6e4db;
+    -fx-border-radius: 20;
+    -fx-padding: 24 26;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.22), 22, 0.2, 0, 6);
+}
+
+.seller-title {
+    -fx-font-size: 46px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #091b42;
+}
+
+.seller-subtitle {
+    -fx-font-size: 16px;
+    -fx-text-fill: #7f8da1;
+    -fx-font-weight: 800;
+}
+
+.seller-add-btn {
+    -fx-background-color: linear-gradient(to right, #15593a, #1b6a45);
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 17px;
+    -fx-font-weight: 800;
+    -fx-background-radius: 26;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+}
+
+.seller-add-btn:hover {
+    -fx-background-color: linear-gradient(to right, #1b6a45, #247f54);
+}
+
+.seller-table-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 20;
+    -fx-border-color: #e0e8e3;
+    -fx-border-radius: 20;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(20,45,31,0.08), 14, 0.16, 0, 2);
+}
+
+.seller-table {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #e7ede9;
+}
+
+.seller-table .column-header {
+    -fx-background-color: linear-gradient(to right, #165b3b, #1a6641);
+    -fx-size: 58;
+}
+
+.seller-table .column-header .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+}
+
+.seller-table .table-row-cell {
+    -fx-cell-size: 96;
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #ebf1ed transparent;
+}
+
+.seller-table .table-row-cell:filled:selected,
+.seller-table .table-row-cell:filled:hover {
+    -fx-background-color: #f6faf8;
+}
+
+.seller-name {
+    -fx-font-size: 17px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #111827;
+}
+
+.seller-desc {
+    -fx-font-size: 13px;
+    -fx-text-fill: #98a2b3;
+}
+
+.seller-pill {
+    -fx-background-color: #f3f5f8;
+    -fx-text-fill: #1f2937;
+    -fx-background-radius: 11;
+    -fx-padding: 7 14;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+}
+
+.seller-type-pill {
+    -fx-background-color: #10b981;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 11;
+    -fx-padding: 7 14;
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+}
+
+.seller-type-pill.location {
+    -fx-background-color: #22a6c3;
+}
+
+.seller-stock-ok {
+    -fx-background-color: #bfe7de;
+    -fx-text-fill: #0f3f37;
+    -fx-background-radius: 11;
+    -fx-padding: 7 12;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+}
+
+.seller-stock-low {
+    -fx-background-color: #f7c948;
+    -fx-text-fill: #3d2f00;
+    -fx-background-radius: 11;
+    -fx-padding: 7 12;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+}
+
+.seller-action-btn {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-max-width: 40;
+    -fx-max-height: 40;
+    -fx-background-radius: 20;
+    -fx-background-color: #ffffff;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+
+.seller-action-btn.view {
+    -fx-border-color: #cfd8de;
+    -fx-text-fill: #7a8792;
+    -fx-border-radius: 20;
+}
+
+.seller-action-btn.edit {
+    -fx-border-color: #8e86ff;
+    -fx-text-fill: #6d5efc;
+    -fx-border-radius: 20;
+}
+
+.seller-action-btn.delete {
+    -fx-border-color: #ff5a6f;
+    -fx-text-fill: #ff3551;
+    -fx-border-radius: 20;
+    -fx-background-color: #fff5f7;
+}
+
+.seller-action-btn:hover {
+    -fx-background-color: #f2f6f9;
+}

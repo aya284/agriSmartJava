@@ -19,7 +19,7 @@
                     <Label text="Produits agricoles en vente ou en location." styleClass="feature-subtitle"/>
 
                     <HBox spacing="10">
-                        <Button text="Espace vendeur" styleClass="action-chip"/>
+                        <Button text="Espace vendeur" styleClass="action-chip" onAction="#openSellerSpace"/>
                         <Button text="Messagerie 6" styleClass="action-chip gold"/>
                         <Button text="Publier une annonce" styleClass="action-chip primary" onAction="#openAjouterProduit"/>
                         <Button text="Panier" styleClass="action-chip"/>
@@ -87,6 +87,35 @@
         </center>
         
     </BorderPane>
+
+    <StackPane fx:id="sellerOverlay" style="-fx-background-color: rgba(15,23,42,0.55);" visible="false">
+        <VBox styleClass="seller-shell" maxWidth="1360" maxHeight="900" spacing="16">
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <VBox spacing="4">
+                    <Label text="Mes Annonces" styleClass="seller-title"/>
+                    <Label text="Gerez vos produits (edition, suppression, suivi du stock)." styleClass="seller-subtitle"/>
+                </VBox>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Button text="Ajouter une offre" styleClass="seller-add-btn" onAction="#openAjouterProduit"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeSellerSpace"/>
+            </HBox>
+
+            <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
+                <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
+                    <columns>
+                        <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
+                        <TableColumn fx:id="colNom" text="Produit" prefWidth="500"/>
+                        <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="150"/>
+                        <TableColumn fx:id="colType" text="Type" prefWidth="130"/>
+                        <TableColumn fx:id="colPrix" text="Prix" prefWidth="180"/>
+                        <TableColumn fx:id="colStock" text="Stock" prefWidth="170"/>
+                        <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
+                        <TableColumn fx:id="colActions" text="Actions" prefWidth="220"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
+    </StackPane>
 
     <!-- MODAL ADD PRODUCT -->
     <StackPane fx:id="modalOverlay" style="-fx-background-color: rgba(15,23,42,0.62);" visible="false">
