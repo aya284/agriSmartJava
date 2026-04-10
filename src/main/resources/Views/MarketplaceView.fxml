@@ -26,16 +26,16 @@
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">
-                        <Button text="Toutes" styleClass="module-chip active"/>
-                        <Button text="legumes" styleClass="module-chip"/>
-                        <Button text="fruits" styleClass="module-chip"/>
-                        <Button text="cereales" styleClass="module-chip"/>
-                        <Button text="engrais" styleClass="module-chip"/>
-                        <Button text="semences" styleClass="module-chip"/>
-                        <Button text="materiel" styleClass="module-chip"/>
-                        <Button text="irrigation" styleClass="module-chip"/>
-                        <Button text="services" styleClass="module-chip"/>
-                        <Button text="autre" styleClass="module-chip"/>
+                        <Button text="Toutes" styleClass="module-chip active" onAction="#handleCategoryChipFilter"/>
+                        <Button text="legumes" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="fruits" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="cereales" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="engrais" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="semences" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="materiel" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="irrigation" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="services" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="autre" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
                     </HBox>
                     </VBox>
 
@@ -80,6 +80,12 @@
                             </HBox>
 
                             <FlowPane fx:id="productGrid" hgap="25" vgap="25"/>
+
+                            <HBox alignment="CENTER_RIGHT" spacing="8" style="-fx-padding: 8 6 0 6;">
+                                <Button fx:id="prevPageButton" text="Precedent" onAction="#handlePrevPage" styleClass="action-chip"/>
+                                <Label fx:id="pageInfoLabel" text="Page 1 / 1" style="-fx-text-fill: #555; -fx-font-weight: bold;"/>
+                                <Button fx:id="nextPageButton" text="Suivant" onAction="#handleNextPage" styleClass="action-chip"/>
+                            </HBox>
                         </VBox>
                     </HBox>
                 </VBox>

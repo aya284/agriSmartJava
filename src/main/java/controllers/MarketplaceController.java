@@ -9,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -57,6 +59,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -68,6 +71,7 @@ public class MarketplaceController implements Initializable {
     private static final String TYPE_ALL = "Tous";
     private static final String TYPE_VENTE = "Vente";
     private static final String TYPE_LOCATION = "Location";
+    private static final int PAGE_SIZE = 8;
     private static final List<String> CATEGORIES = Arrays.asList(
             "Legumes",
             "Fruits",
@@ -121,6 +125,9 @@ public class MarketplaceController implements Initializable {
     @FXML private ComboBox<String> typeFilterCombo;
     @FXML private ComboBox<String> promoFilterCombo;
     @FXML private Label statusLabel;
+    @FXML private Button prevPageButton;
+    @FXML private Button nextPageButton;
+    @FXML private Label pageInfoLabel;
 
     
 
@@ -128,6 +135,8 @@ public class MarketplaceController implements Initializable {
     private final CommandeService commandeService = new CommandeService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
+    private List<Produit> filteredProduits = new ArrayList<>();
+    private int currentPage = 0;
 
     // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
@@ -488,13 +497,9 @@ public class MarketplaceController implements Initializable {
     private void loadProduits() {
         try {
             List<Produit> produits = produitService.afficher();
-            if (produitTable != null) {
-                produitTable.setItems(FXCollections.observableArrayList(produits));
-            }
-            if (productGrid != null) populateProductGrid(produits);
-            if (statusLabel != null) {
-                statusLabel.setText(produits.size() + " produits charges");
-            }
+            filteredProduits = new ArrayList<>(produits);
+            currentPage = 0;
+            renderCurrentPage();
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -548,6 +553,36 @@ public class MarketplaceController implements Initializable {
         applyProduitFilters();
     }
 
+    @FXML
+    public void handleCategoryChipFilter(ActionEvent event) {
+        if (!(event.getSource() instanceof Button)) {
+            return;
+        }
+
+        Button selectedButton = (Button) event.getSource();
+        String rawLabel = safe(selectedButton.getText()).trim();
+        String selectedCategory = resolveCategoryFromChipLabel(rawLabel);
+
+        if (categorieFilter != null) {
+            categorieFilter.setValue(selectedCategory);
+        }
+
+        Node parent = selectedButton.getParent();
+        if (parent instanceof HBox) {
+            HBox row = (HBox) parent;
+            for (Node node : row.getChildren()) {
+                if (node instanceof Button) {
+                    node.getStyleClass().remove("active");
+                }
+            }
+            if (!selectedButton.getStyleClass().contains("active")) {
+                selectedButton.getStyleClass().add("active");
+            }
+        }
+
+        applyProduitFilters();
+    }
+
     private void applyProduitFilters() {
         try {
             List<Produit> base = produitService.afficher();
@@ -595,15 +630,76 @@ public class MarketplaceController implements Initializable {
                 }
             }
 
-            if (produitTable != null) {
-                produitTable.setItems(FXCollections.observableArrayList(filtered));
+            String selectedSort = sortCombo == null || sortCombo.getValue() == null ? "A-Z" : sortCombo.getValue();
+            if ("Prix croissant".equals(selectedSort)) {
+                filtered.sort(Comparator.comparingDouble(Produit::getPrix));
+            } else if ("Prix decroissant".equals(selectedSort)) {
+                filtered.sort(Comparator.comparingDouble(Produit::getPrix).reversed());
+            } else {
+                filtered.sort(Comparator.comparing(p -> safe(p.getNom()).toLowerCase()));
             }
-            if (productGrid != null) populateProductGrid(filtered);
-            if (statusLabel != null) {
-                statusLabel.setText(filtered.size() + " resultat(s)");
-            }
+
+            filteredProduits = filtered;
+            currentPage = 0;
+            renderCurrentPage();
         } catch (SQLException e) {
             showSqlAlert(e);
+        }
+    }
+
+    @FXML
+    public void handlePrevPage() {
+        if (currentPage > 0) {
+            currentPage--;
+            renderCurrentPage();
+        }
+    }
+
+    @FXML
+    public void handleNextPage() {
+        int totalPages = getTotalPages();
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            renderCurrentPage();
+        }
+    }
+
+    private int getTotalPages() {
+        if (filteredProduits == null || filteredProduits.isEmpty()) {
+            return 1;
+        }
+        return (int) Math.ceil(filteredProduits.size() / (double) PAGE_SIZE);
+    }
+
+    private void renderCurrentPage() {
+        List<Produit> source = filteredProduits == null ? new ArrayList<>() : filteredProduits;
+        int totalPages = getTotalPages();
+        if (currentPage >= totalPages) {
+            currentPage = Math.max(0, totalPages - 1);
+        }
+
+        int fromIndex = currentPage * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, source.size());
+        List<Produit> pageSlice = fromIndex < source.size() ? source.subList(fromIndex, toIndex) : new ArrayList<>();
+
+        if (produitTable != null) {
+            produitTable.setItems(FXCollections.observableArrayList(source));
+        }
+        if (productGrid != null) {
+            populateProductGrid(pageSlice);
+        }
+
+        if (pageInfoLabel != null) {
+            pageInfoLabel.setText("Page " + (currentPage + 1) + " / " + totalPages);
+        }
+        if (prevPageButton != null) {
+            prevPageButton.setDisable(currentPage <= 0);
+        }
+        if (nextPageButton != null) {
+            nextPageButton.setDisable(currentPage >= totalPages - 1);
+        }
+        if (statusLabel != null) {
+            statusLabel.setText(source.size() + " resultat(s)");
         }
     }
 
@@ -1143,6 +1239,21 @@ public class MarketplaceController implements Initializable {
 
     private String normalizeTypeForStorage(String type) {
         return TYPE_LOCATION.equalsIgnoreCase(safe(type).trim()) ? "location" : "vente";
+    }
+
+    private String resolveCategoryFromChipLabel(String label) {
+        String normalized = safe(label).trim();
+        if (normalized.isEmpty() || "toutes".equalsIgnoreCase(normalized)) {
+            return CATEGORY_ALL;
+        }
+
+        for (String category : CATEGORIES) {
+            if (category.equalsIgnoreCase(normalized)) {
+                return category;
+            }
+        }
+
+        return CATEGORY_ALL;
     }
 
     private String normalizeText(String input) {
