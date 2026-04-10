@@ -89,77 +89,77 @@
     </BorderPane>
 
     <!-- MODAL ADD PRODUCT -->
-    <StackPane fx:id="modalOverlay" style="-fx-background-color: rgba(0,0,0,0.5);" visible="false">
-        <VBox styleClass="modal-window" maxWidth="1460" maxHeight="900" spacing="0" alignment="CENTER_LEFT">
-            <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 14 18; -fx-background-color: #f8faf8; -fx-border-color: transparent transparent #dce8df transparent; -fx-border-width: 0 0 1 0;">
-                <Label fx:id="modalTitle" text="Nouvelle Annonce" style="-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: #184f36;"/>
+    <StackPane fx:id="modalOverlay" style="-fx-background-color: rgba(15,23,42,0.62);" visible="false">
+        <VBox styleClass="publish-modal-shell" maxWidth="1280" maxHeight="860" spacing="0" alignment="TOP_LEFT">
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="publish-modal-header">
+                <Label fx:id="modalTitle" text="Nouvelle Annonce" styleClass="publish-modal-title"/>
                 <HBox HBox.hgrow="ALWAYS"/>
-                <Button text="Retour" styleClass="action-chip" onAction="#closeModal"/>
-                <Button text="X" styleClass="btn-close" onAction="#closeModal"/>
+                <Button text="Retour" styleClass="publish-header-btn" onAction="#closeModal"/>
+                <Button text="X" styleClass="publish-header-btn danger" onAction="#closeModal"/>
             </HBox>
 
-            <HBox spacing="16" style="-fx-padding: 14;" VBox.vgrow="ALWAYS">
-                <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="invisible-scrollpane">
-                    <VBox spacing="12" styleClass="panel-card" prefWidth="780">
-                        <Label text="Nom de l'annonce *" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
+            <ScrollPane fitToWidth="true" styleClass="invisible-scrollpane" VBox.vgrow="ALWAYS">
+                <HBox spacing="18" styleClass="publish-modal-body">
+                    <VBox spacing="12" styleClass="publish-form-card" HBox.hgrow="ALWAYS" prefWidth="770">
+                        <Label text="Nom de l'annonce *" styleClass="publish-field-label"/>
                         <TextField fx:id="fldNom" promptText="Ex: Tracteur, Panier de legumes..." onKeyReleased="#updatePublishPreview"/>
 
                         <HBox spacing="12">
                             <VBox spacing="8" HBox.hgrow="ALWAYS">
-                                <Label text="Categorie *" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
-                                <ComboBox fx:id="fldCategorie" promptText="Choisir..." onAction="#updatePublishPreview" prefWidth="Infinity"/>
+                                <Label text="Categorie *" styleClass="publish-field-label"/>
+                                <ComboBox fx:id="fldCategorie" promptText="Choisir..." onAction="#updatePublishPreview" maxWidth="1.7976931348623157E308"/>
                             </VBox>
                             <VBox spacing="8" HBox.hgrow="ALWAYS">
-                                <Label text="Type d'offre *" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
-                                <ComboBox fx:id="fldType" promptText="Choisir..." onAction="#updatePublishPreview" prefWidth="Infinity"/>
+                                <Label text="Type d'offre *" styleClass="publish-field-label"/>
+                                <ComboBox fx:id="fldType" promptText="Choisir..." onAction="#updatePublishPreview" maxWidth="1.7976931348623157E308"/>
                             </VBox>
                         </HBox>
 
                         <HBox spacing="12">
                             <VBox spacing="8" HBox.hgrow="ALWAYS">
-                                <Label text="Prix (TND) *" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
+                                <Label text="Prix (TND) *" styleClass="publish-field-label"/>
                                 <TextField fx:id="fldPrix" promptText="0.00" onKeyReleased="#updatePublishPreview"/>
                             </VBox>
                             <VBox spacing="8" HBox.hgrow="ALWAYS">
-                                <Label text="Stock disponible" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
+                                <Label text="Stock disponible" styleClass="publish-field-label"/>
                                 <TextField fx:id="fldStock" promptText="Ex: 12" onKeyReleased="#updatePublishPreview"/>
                             </VBox>
                         </HBox>
 
-                        <Label text="Description" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
-                        <TextArea fx:id="fldDescription" promptText="Decrivez votre produit..." wrapText="true" prefRowCount="4" onKeyReleased="#updatePublishPreview"/>
+                        <Label text="Description" styleClass="publish-field-label"/>
+                        <TextArea fx:id="fldDescription" promptText="Decrivez votre produit..." wrapText="true" prefRowCount="5" onKeyReleased="#updatePublishPreview"/>
 
-                        <VBox spacing="8" style="-fx-background-color: #f8fafc; -fx-border-color: #dbe4ee; -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 14;">
+                        <VBox spacing="8" styleClass="publish-promo-box">
                             <CheckBox fx:id="chkPromo" text="Activer un prix promotionnel" onAction="#updatePublishPreview"/>
                             <TextField fx:id="fldPromoPrice" promptText="Prix promotionnel" onKeyReleased="#updatePublishPreview"/>
                         </VBox>
 
-                        <Label text="Image du produit" style="-fx-font-size: 14px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
+                        <Label text="Image du produit" styleClass="publish-field-label"/>
                         <HBox spacing="8" alignment="CENTER_LEFT">
                             <TextField fx:id="fldImage" promptText="Aucune image selectionnee" editable="false" HBox.hgrow="ALWAYS"/>
                             <Button text="Choose File" styleClass="btn-secondary" onAction="#chooseImageFile"/>
                         </HBox>
 
-                        <Button text="Publier l'annonce" styleClass="btn-primary" onAction="#saveFormProduct"/>
+                        <Button text="Publier l'annonce" styleClass="publish-submit-btn" onAction="#saveFormProduct"/>
                     </VBox>
-                </ScrollPane>
 
-                <VBox spacing="12" prefWidth="420" minWidth="420" maxWidth="420">
-                    <Label text="APERCU EN TEMPS REEL" style="-fx-font-size: 14px; -fx-font-weight: 800; -fx-text-fill: #94a3b8;"/>
-                    <VBox styleClass="panel-card" spacing="10">
-                        <StackPane style="-fx-background-color: #f6f2ea; -fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #e3ddd3;">
-                            <ImageView fx:id="publishPreviewImage" fitWidth="360" fitHeight="230" preserveRatio="false" smooth="true"/>
-                            <Label text="VENTE" styleClass="details-badge-primary" StackPane.alignment="TOP_RIGHT" style="-fx-padding: 6 12;"/>
-                        </StackPane>
-                        <Label fx:id="publishPreviewCategory" text="CHOISIR..." style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #10b981;"/>
-                        <Label fx:id="publishPreviewTitle" text="Nom de l'annonce" style="-fx-font-size: 34px; -fx-font-weight: 800; -fx-text-fill: #0f172a;"/>
-                        <Label fx:id="publishPreviewPrice" text="0 TND" style="-fx-font-size: 38px; -fx-font-weight: 900; -fx-text-fill: #0f172a;"/>
-                        <Label fx:id="publishPreviewLocation" text="Ville / Region non definie" style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
-                        <Label fx:id="publishPreviewStock" text="Stock: Non defini" style="-fx-font-size: 16px; -fx-font-weight: 700; -fx-text-fill: #64748b;"/>
-                        <Label fx:id="publishPreviewDescription" text="Description..." wrapText="true" style="-fx-font-size: 15px; -fx-text-fill: #64748b;"/>
+                    <VBox spacing="12" styleClass="publish-preview-wrap" prefWidth="390" minWidth="390" maxWidth="390">
+                        <Label text="APERCU EN TEMPS REEL" styleClass="publish-preview-heading"/>
+                        <VBox styleClass="publish-preview-card" spacing="10">
+                            <StackPane styleClass="publish-preview-image-frame">
+                                <ImageView fx:id="publishPreviewImage" fitWidth="350" fitHeight="220" preserveRatio="false" smooth="true"/>
+                                <Label fx:id="publishPreviewTypeBadge" text="VENTE" styleClass="details-badge-primary" StackPane.alignment="TOP_RIGHT" style="-fx-padding: 6 12;"/>
+                            </StackPane>
+                            <Label fx:id="publishPreviewCategory" text="CHOISIR..." styleClass="publish-preview-category"/>
+                            <Label fx:id="publishPreviewTitle" text="Nom de l'annonce" styleClass="publish-preview-title" wrapText="true"/>
+                            <Label fx:id="publishPreviewPrice" text="0 TND" styleClass="publish-preview-price"/>
+                            <Label fx:id="publishPreviewLocation" text="Ville / Region non definie" styleClass="publish-preview-meta"/>
+                            <Label fx:id="publishPreviewStock" text="Stock: Non defini" styleClass="publish-preview-meta"/>
+                            <Label fx:id="publishPreviewDescription" text="Description..." wrapText="true" styleClass="publish-preview-desc"/>
+                        </VBox>
                     </VBox>
-                </VBox>
-            </HBox>
+                </HBox>
+            </ScrollPane>
         </VBox>
     </StackPane>
 

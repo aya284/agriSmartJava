@@ -55,11 +55,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MarketplaceController implements Initializable {
+
+    private static final String CATEGORY_PLACEHOLDER = "Choisir...";
+    private static final String CATEGORY_ALL = "Toutes";
+    private static final String TYPE_ALL = "Tous";
+    private static final String TYPE_VENTE = "Vente";
+    private static final String TYPE_LOCATION = "Location";
+    private static final List<String> CATEGORIES = Arrays.asList(
+            "Legumes",
+            "Fruits",
+            "Cereales",
+            "Engrais",
+            "Semences",
+            "Materiel",
+            "Irrigation",
+            "Services",
+            "Autre"
+    );
 
     @FXML private BorderPane mainContent;
 
@@ -124,6 +142,7 @@ public class MarketplaceController implements Initializable {
     @FXML private TextField fldPromoPrice;
 
     @FXML private Label publishPreviewCategory;
+    @FXML private Label publishPreviewTypeBadge;
     @FXML private Label publishPreviewTitle;
     @FXML private Label publishPreviewPrice;
     @FXML private Label publishPreviewStock;
@@ -179,8 +198,8 @@ public class MarketplaceController implements Initializable {
 
     private void setupFilters() {
         if (typeFilterCombo != null) {
-            typeFilterCombo.getItems().setAll("Tous", "vente", "location");
-            typeFilterCombo.setValue("Tous");
+            typeFilterCombo.getItems().setAll(TYPE_ALL, TYPE_VENTE, TYPE_LOCATION);
+            typeFilterCombo.setValue(TYPE_ALL);
         }
 
         if (promoFilterCombo != null) {
@@ -189,8 +208,14 @@ public class MarketplaceController implements Initializable {
         }
 
         if (typeFilter != null) {
-            typeFilter.getItems().setAll("Tous", "vente", "location");
-            typeFilter.setValue("Tous");
+            typeFilter.getItems().setAll(TYPE_ALL, TYPE_VENTE, TYPE_LOCATION);
+            typeFilter.setValue(TYPE_ALL);
+        }
+
+        if (categorieFilter != null) {
+            categorieFilter.getItems().setAll(CATEGORY_ALL);
+            categorieFilter.getItems().addAll(CATEGORIES);
+            categorieFilter.setValue(CATEGORY_ALL);
         }
 
         if (sortCombo != null) {
@@ -199,24 +224,14 @@ public class MarketplaceController implements Initializable {
         }
 
         if (fldType != null) {
-            fldType.getItems().setAll("vente", "location");
-            fldType.setValue("vente");
+            fldType.getItems().setAll(TYPE_VENTE, TYPE_LOCATION);
+            fldType.setValue(TYPE_VENTE);
         }
 
         if (fldCategorie != null) {
-            fldCategorie.getItems().setAll(
-                    "Choisir...",
-                    "Legumes",
-                    "Fruits",
-                    "Cereales",
-                    "Engrais",
-                    "Semences",
-                    "Materiel",
-                    "Irrigation",
-                    "Services",
-                    "Autre"
-            );
-            fldCategorie.setValue("Choisir...");
+            fldCategorie.getItems().setAll(CATEGORY_PLACEHOLDER);
+            fldCategorie.getItems().addAll(CATEGORIES);
+            fldCategorie.setValue(CATEGORY_PLACEHOLDER);
         }
 
         updatePublishPreview();
@@ -437,6 +452,11 @@ public class MarketplaceController implements Initializable {
                 selectedType = typeFilterCombo.getValue();
             }
 
+            String selectedCategory = CATEGORY_ALL;
+            if (categorieFilter != null && categorieFilter.getValue() != null) {
+                selectedCategory = categorieFilter.getValue();
+            }
+
             String selectedPromo = "Tous";
             if (promoFilterCombo != null && promoFilterCombo.getValue() != null) {
                 selectedPromo = promoFilterCombo.getValue();
@@ -451,12 +471,15 @@ public class MarketplaceController implements Initializable {
                 boolean matchesKeyword = keyword.isEmpty()
                         || nom.contains(keyword)
                         || categorie.contains(keyword);
-                boolean matchesType = "Tous".equals(selectedType) || type.equalsIgnoreCase(selectedType);
+                boolean matchesType = TYPE_ALL.equals(selectedType)
+                        || normalizeTypeForDisplay(type).equalsIgnoreCase(selectedType);
+                boolean matchesCategory = CATEGORY_ALL.equals(selectedCategory)
+                        || categorie.equalsIgnoreCase(selectedCategory);
                 boolean matchesPromo = "Tous".equals(selectedPromo)
                         || ("En promotion".equals(selectedPromo) && p.isPromotion())
                         || ("Sans promotion".equals(selectedPromo) && !p.isPromotion());
 
-                if (matchesKeyword && matchesType && matchesPromo) {
+                if (matchesKeyword && matchesType && matchesCategory && matchesPromo) {
                     filtered.add(p);
                 }
             }
@@ -484,13 +507,15 @@ public class MarketplaceController implements Initializable {
         fldPrix.clear();
         fldStock.clear();
         if (fldCategorie != null) {
-            fldCategorie.setValue("Choisir...");
+            fldCategorie.setValue(CATEGORY_PLACEHOLDER);
         }
         if (fldImage != null) {
             fldImage.clear();
         }
         fldPromoPrice.clear();
-        fldType.setValue("vente");
+        if (fldType != null) {
+            fldType.setValue(TYPE_VENTE);
+        }
         updatePublishPreview();
         modalOverlay.setVisible(true);
         modalOverlay.toFront();
@@ -498,6 +523,14 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void updatePublishPreview() {
+        if (publishPreviewTypeBadge != null) {
+            String displayType = fldType == null ? TYPE_VENTE : safe(fldType.getValue()).trim();
+            if (displayType.isEmpty()) {
+                displayType = TYPE_VENTE;
+            }
+            publishPreviewTypeBadge.setText(displayType.toUpperCase());
+        }
+
         if (publishPreviewTitle != null) {
             String name = safe(fldNom == null ? "" : fldNom.getText()).trim();
             publishPreviewTitle.setText(name.isEmpty() ? "Nom de l'annonce" : normalizeText(name));
@@ -505,7 +538,7 @@ public class MarketplaceController implements Initializable {
 
         if (publishPreviewCategory != null) {
             String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
-            publishPreviewCategory.setText(category.isEmpty() || "Choisir...".equals(category) ? "CHOISIR..." : normalizeText(category));
+            publishPreviewCategory.setText(category.isEmpty() || CATEGORY_PLACEHOLDER.equals(category) ? "CHOISIR..." : normalizeText(category));
         }
 
         if (publishPreviewPrice != null) {
@@ -581,7 +614,9 @@ public class MarketplaceController implements Initializable {
         if (fldImage != null) {
             fldImage.setText(safe(produit.getImage()));
         }
-        fldType.setValue(produit.getType());
+        if (fldType != null) {
+            fldType.setValue(normalizeTypeForDisplay(produit.getType()));
+        }
         chkPromo.setSelected(produit.isPromotion());
         fldPromoPrice.setText(String.valueOf(produit.getPromotionPrice()));
         updatePublishPreview();
@@ -602,8 +637,14 @@ public class MarketplaceController implements Initializable {
         
         Produit p = currentEditProduit == null ? new Produit() : currentEditProduit;
         String selectedCategory = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
-        if (selectedCategory.isEmpty() || "Choisir...".equals(selectedCategory)) {
+        if (selectedCategory.isEmpty() || CATEGORY_PLACEHOLDER.equals(selectedCategory)) {
             showAlert("Erreur", "Veuillez choisir une categorie");
+            return;
+        }
+
+        String selectedType = fldType == null ? "" : safe(fldType.getValue()).trim();
+        if (selectedType.isEmpty()) {
+            showAlert("Erreur", "Veuillez choisir un type d'offre");
             return;
         }
 
@@ -612,7 +653,7 @@ public class MarketplaceController implements Initializable {
         p.setPrix(prix);
         p.setQuantiteStock(stock);
         p.setCategorie(selectedCategory);
-        p.setType(fldType.getValue());
+        p.setType(normalizeTypeForStorage(selectedType));
         if (fldImage != null) {
             p.setImage(fldImage.getText() == null ? "" : fldImage.getText().trim());
         }
@@ -974,6 +1015,19 @@ public class MarketplaceController implements Initializable {
     private String safe(String value) {
         return value == null ? "" : value;
     }
+
+    private String normalizeTypeForDisplay(String type) {
+        String value = safe(type).trim().toLowerCase();
+        if ("location".equals(value)) {
+            return TYPE_LOCATION;
+        }
+        return TYPE_VENTE;
+    }
+
+    private String normalizeTypeForStorage(String type) {
+        return TYPE_LOCATION.equalsIgnoreCase(safe(type).trim()) ? "location" : "vente";
+    }
+
     private String normalizeText(String input) {
         if (input == null) {
             return "";
