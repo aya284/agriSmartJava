@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20" style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.AdminOffreController">
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20" />
+    </padding>
+
+    <HBox spacing="20">
+        <HBox spacing="15" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 0);">
+            <Label style="-fx-font-size: 24;" text="🕒" />
+            <VBox>
+                <Label style="-fx-text-fill: #7f8c8d;" text="En attente" />
+                <Label fx:id="statAttente" style="-fx-font-size: 20; -fx-font-weight: bold;" text="0" />
+            </VBox>
+        </HBox>
+        <HBox spacing="15" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 0);">
+            <Label style="-fx-font-size: 24;" text="✅" />
+            <VBox>
+                <Label style="-fx-text-fill: #7f8c8d;" text="Approuvées" />
+                <Label fx:id="statApprouvee" style="-fx-font-size: 20; -fx-font-weight: bold;" text="0" />
+            </VBox>
+        </HBox>
+        <HBox spacing="15" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 0);">
+            <Label style="-fx-font-size: 24;" text="❌" />
+            <VBox>
+                <Label style="-fx-text-fill: #7f8c8d;" text="Refusées" />
+                <Label fx:id="statRefusee" style="-fx-font-size: 20; -fx-font-weight: bold;" text="0" />
+            </VBox>
+        </HBox>
+    </HBox>
+
+    <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10;" VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableOffres" VBox.vgrow="ALWAYS" style="-fx-background-radius: 10; -fx-border-color: #ecf0f1; -fx-border-radius: 10;">
+            <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            </columnResizePolicy>
+            <columns>
+                <TableColumn fx:id="colTitre" text="Titre / Lieu" />
+                <TableColumn fx:id="colType" text="Type" maxWidth="2000" />
+                <TableColumn fx:id="colSalaire" text="Salaire" maxWidth="2500" />
+                <TableColumn fx:id="colValidation" text="Validation" />
+                <TableColumn fx:id="colActions" text="Actions" minWidth="200" />
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

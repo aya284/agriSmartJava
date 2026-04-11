@@ -4,7 +4,38 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
+    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/AdminController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/AdminOffreController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/CandidatOffreController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/CandidateManagementController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/FrontController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/MesCandidaturesController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreDetailAdminController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/entities/Demande.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/entities/Offre.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/main/AppLauncher.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/services/DemandeService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/services/OffreService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/AdminView.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/FrontLayout.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/AdminOffreDetail.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/AdminOffreList.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/CandidatOffreList.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/CandidateManagement.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/MesCandidaturesList.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreDetailAdmin.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreDetailView.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreForm.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreList.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/PostulerForm.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,11 +45,19 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
+        <option value="CSS File" />
         <option value="Class" />
         <option value="FxmlFile" />
-        <option value="CSS File" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JsbtTreeLayoutManager">
+    <layout place="tools.popupGrunt">
+      <scroll-view-position x="0" y="0" />
+    </layout>
   </component>
   <component name="McpProjectServerCommands">
     <commands />
@@ -35,12 +74,16 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.AppLauncher.executor": "Run",
     "Application.MainApp.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "condidature",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/aya/Desktop/agriSmartJava",
     "list.type.of.created.stylesheet": "CSS",
@@ -56,18 +99,32 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\USER\Documents\Esprit\PI JAVA\agriSmartJava\src\main\resources\Views" />
+      <recent name="C:\Users\USER\Documents\Esprit\PI JAVA\agriSmartJava\src\main\resources\Views\Offres" />
+    </key>
+  </component>
   <component name="RunManager">
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="agriSmartJava" />
+    <configuration name="AppLauncher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="main.AppLauncher" />
+      <module name="agrismart" />
+      <option name="VM_PARAMETERS" value="--module-path &quot;C:\Users\USER\.m2\repository\org\openjfx&quot; --add-modules javafx.controls,javafx.fxml" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="main.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="agriSmartJava" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.AppLauncher" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -79,6 +136,9 @@
       <workItem from="1775745484470" duration="21000" />
       <workItem from="1775745518901" duration="5350000" />
       <workItem from="1775751716719" duration="877000" />
+      <workItem from="1775816919915" duration="2021000" />
+      <workItem from="1775819113798" duration="891000" />
+      <workItem from="1775923099488" duration="17851000" />
     </task>
     <servers />
   </component>

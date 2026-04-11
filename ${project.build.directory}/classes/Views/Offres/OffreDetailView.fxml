@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox spacing="0.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CandidatOffreController">
+
+    <HBox alignment="CENTER_LEFT" prefHeight="100.0" spacing="20.0" style="-fx-padding: 0 40;">
+        <VBox alignment="CENTER_LEFT" spacing="5">
+            <Label fx:id="detailTitle" text="Titre de l'offre" style="-fx-font-size: 32; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Ouvert" style="-fx-background-color: #e8f5e9; -fx-text-fill: #27ae60; -fx-padding: 3 10; -fx-background-radius: 15; -fx-font-weight: bold; -fx-font-size: 12;" />
+                <Label fx:id="detailSubHeader" text="CDI · Lieu" style="-fx-text-fill: #7f8c8d;" />
+            </HBox>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#showListPage" prefHeight="40.0" style="-fx-background-radius: 20; -fx-background-color: #f1f2f6; -fx-text-fill: #2c3e50; -fx-font-weight: bold;" text="← Retour aux offres" />
+    </HBox>
+
+    <Separator />
+
+    <HBox spacing="40.0" VBox.vgrow="ALWAYS">
+        <padding>
+            <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+        </padding>
+
+        <VBox spacing="30.0" HBox.hgrow="ALWAYS">
+            <VBox spacing="15">
+                <Label text="Description du poste" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #1a3323;" />
+                <Label fx:id="detailDesc" text="Texte de description ici..." wrapText="true" style="-fx-font-size: 15; -fx-line-spacing: 5; -fx-text-fill: #34495e;" />
+            </VBox>
+
+            <Label text="Détails" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #1a3323;" />
+
+            <GridPane hgap="20.0" vgap="20.0">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                </columnConstraints>
+
+                <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 10;">
+                    <Label text="Lieu" style="-fx-text-fill: #95a5a6; -fx-font-size: 12;" />
+                    <Label fx:id="detailLieu" text="Béja" style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                </VBox>
+                <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 10;">
+                    <Label text="Salaire" style="-fx-text-fill: #95a5a6; -fx-font-size: 12;" />
+                    <Label fx:id="detailSalaire" text="3 000 TND" style="-fx-font-weight: bold; -fx-font-size: 14; -fx-text-fill: #27ae60;" />
+                </VBox>
+                <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 10;">
+                    <Label text="Début" style="-fx-text-fill: #95a5a6; -fx-font-size: 12;" />
+                    <Label fx:id="detailDebut" text="01/06/2026" style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                </VBox>
+                <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-background-radius: 10;">
+                    <Label text="Fin / Limite" style="-fx-text-fill: #95a5a6; -fx-font-size: 12;" />
+                    <Label fx:id="detailFin" text="31/12/2026" style="-fx-font-weight: bold; -fx-font-size: 14;" />
+                </VBox>
+            </GridPane>
+        </VBox>
+
+        <VBox prefWidth="350.0" spacing="20.0" style="-fx-background-color: white; -fx-padding: 25; -fx-background-radius: 15; -fx-border-color: #eee; -fx-border-radius: 15;">
+            <Label text="Résumé" style="-fx-font-size: 18; -fx-font-weight: bold;" />
+            <Separator />
+
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Statut" style="-fx-text-fill: #7f8c8d;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label text="Ouvert" style="-fx-text-fill: #27ae60; -fx-font-weight: bold;" />
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Date limite" style="-fx-text-fill: #7f8c8d;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="dateLimitLabel" text="31/12/2026" style="-fx-font-weight: bold;" />
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Candidatures" style="-fx-text-fill: #7f8c8d;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label text="0" style="-fx-font-weight: bold;" />
+            </HBox>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <Button fx:id="btnPostuler" onAction="#handlePostuler" maxWidth="Infinity" prefHeight="55.0" style="-fx-background-color: #1a3323; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-background-radius: 10;" text="🚀 Postuler" />
+
+            <Label fx:id="clotureNotice" alignment="CENTER" maxWidth="Infinity" text="Clôture le 31/12/2026" style="-fx-text-fill: #95a5a6; -fx-font-size: 12;" />
+        </VBox>
+    </HBox>
+</VBox>

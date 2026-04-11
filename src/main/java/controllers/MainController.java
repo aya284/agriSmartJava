@@ -39,9 +39,7 @@ public class MainController {
 
     @FXML
     public void openEmployes() {
-        loadView("/Views/EmployesView.fxml", "Employees module not available yet", "Gestion Employes");
-    }
-
+        loadView("/Views/Offres/OffreList.fxml", " liste des offres", "Gestion des Offres");}
     @FXML
     public void openUsers() {
         loadView("/Views/UsersView.fxml", "Users module not available yet", "Utilisateurs");

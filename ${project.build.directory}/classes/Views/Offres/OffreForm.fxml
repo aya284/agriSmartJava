@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20.0" style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.OffreController">
+    <padding><Insets bottom="30.0" left="100.0" right="100.0" top="30.0" /></padding>
+
+    <Button onAction="#showListPage" text="← Retour" style="-fx-background-color: transparent; -fx-text-fill: #2c3e50; -fx-font-weight: bold; -fx-cursor: hand;" />
+    <Label fx:id="formTitle" text="+ Nouvelle offre d'emploi" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a3323;" />
+
+    <VBox spacing="15.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-border-color: #27ae60; -fx-border-width: 5 0 0 0;">
+
+        <Label text="Titre de l'offre *" style="-fx-font-weight: bold;" />
+        <TextField fx:id="titleF" promptText="Ex: Ingénieur agriculture" prefHeight="40.0" />
+
+        <HBox spacing="20.0">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Type poste *" style="-fx-font-weight: bold;" />
+                <TextField fx:id="typePosteF" prefHeight="40.0" />
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Type contrat *" style="-fx-font-weight: bold;" />
+                <ComboBox fx:id="typeContratC" prefHeight="40.0" maxWidth="Infinity" />
+            </VBox>
+        </HBox>
+
+        <Label text="Description *" style="-fx-font-weight: bold;" />
+        <TextArea fx:id="descF" prefHeight="100.0" wrapText="true" />
+
+        <HBox spacing="20.0">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Lieu *" style="-fx-font-weight: bold;" />
+                <TextField fx:id="lieuF" prefHeight="40.0" />
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Salaire (TND) *" style="-fx-font-weight: bold;" />
+                <TextField fx:id="salaireF" prefHeight="40.0" />
+            </VBox>
+        </HBox>
+
+        <HBox spacing="20.0">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Date Début *" style="-fx-font-weight: bold;" />
+                <DatePicker fx:id="dateDebutP" prefHeight="40.0" maxWidth="Infinity" />
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Date Fin *" style="-fx-font-weight: bold;" />
+                <DatePicker fx:id="dateFinP" prefHeight="40.0" maxWidth="Infinity" />
+            </VBox>
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Statut Offre *" style="-fx-font-weight: bold;" />
+                <ComboBox fx:id="statutC" prefHeight="40.0" maxWidth="Infinity" />
+            </VBox>
+        </HBox>
+
+        <Button fx:id="submitBtn" onAction="#handleSave" maxWidth="Infinity" prefHeight="50.0"
+                style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-cursor: hand;" text="Publier l'offre" />
+    </VBox>
+</VBox>
