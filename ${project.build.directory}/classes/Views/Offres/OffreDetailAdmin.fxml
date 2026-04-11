@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20.0" style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.OffreDetailAdminController">
+    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
+
+    <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+        <VBox spacing="15.0" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);" prefWidth="400.0">
+            <Label fx:id="titleL" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a3323;" text="Titre de l'offre" />
+            <Label fx:id="lieuL" style="-fx-text-fill: #7f8c8d;" text="📍 Lieu" />
+            <Label fx:id="salaireL" style="-fx-font-weight: bold; -fx-text-fill: #27ae60;" text="0 DT" />
+            <Separator />
+            <Label style="-fx-font-weight: bold;" text="Description" />
+            <Label fx:id="descL" wrapText="true" text="Détails de la description..." />
+            <Region VBox.vgrow="ALWAYS" />
+        </VBox>
+
+        <VBox spacing="15.0" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;">
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="countL" style="-fx-font-size: 18; -fx-font-weight: bold;" text="Candidatures (0)" />
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: white;">
+                <VBox fx:id="demandesContainer" spacing="10.0" />
+            </ScrollPane>
+        </VBox>
+    </HBox>
+</VBox>
