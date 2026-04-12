@@ -28,6 +28,7 @@
                 <Label text="Modules" styleClass="module-label"/>
                 <Button text="Marketplace" styleClass="module-pill" onAction="#openMarketplace"/>
                 <Button text="Gestion Culture" styleClass="module-pill" onAction="#openCulture"/>
+                <Button text="Gestion Ressource" styleClass="module-pill" onAction="#openResources"/>
                 <Button text="Gestion Taches" styleClass="module-pill" onAction="#openTaches"/>
                 <Button text="Gestion Employes" styleClass="module-pill" onAction="#openEmployes"/>
                 <Button text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
@@ -43,6 +44,7 @@
             <Label text="Quick Access" styleClass="sidebar-title"/>
             <Button text="Marketplace Hub" styleClass="nav-btn" maxWidth="Infinity" onAction="#openMarketplace"/>
             <Button text="Culture Control" styleClass="nav-btn" maxWidth="Infinity" onAction="#openCulture"/>
+            <Button text="Resource Hub" styleClass="nav-btn" maxWidth="Infinity" onAction="#openResources"/>
             <Button text="Task Studio" styleClass="nav-btn" maxWidth="Infinity" onAction="#openTaches"/>
             <Button text="Employee Desk" styleClass="nav-btn" maxWidth="Infinity" onAction="#openEmployes"/>
             <Button text="User Center" styleClass="nav-btn" maxWidth="Infinity" onAction="#openUsers"/>

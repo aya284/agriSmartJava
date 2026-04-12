@@ -338,3 +338,165 @@
     -fx-text-fill: #244f3a;
     -fx-font-weight: 700;
 }
+
+/* --- PARCELLE MODULE STYLES --- */
+
+/* Custom Parcel Card in ListView */
+.parcel-list-card {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dce8df;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-spacing: 16;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 10, 0, 0, 4);
+}
+
+.parcel-list-card:hover {
+    -fx-border-color: #74C69D;
+    -fx-background-color: #f9fffb;
+}
+
+.list-cell:selected .parcel-list-card {
+    -fx-background-color: #e6f5ec;
+    -fx-border-color: #2D6A4F;
+    -fx-border-width: 1.5;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 10 12;
+}
+
+.parcel-icon {
+    -fx-font-size: 24px;
+    -fx-text-fill: #2D6A4F;
+}
+
+.parcel-name {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1f3f30;
+}
+
+.parcel-subtext {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6d7f72;
+}
+
+/* Validation Style */
+.danger-field {
+    -fx-border-color: #dc3545 !important;
+    -fx-border-width: 1.5 !important;
+    -fx-border-radius: 9;
+}
+
+.error-label {
+    -fx-text-fill: #dc3545 !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 3 0 0 0;
+}
+
+/* --- CULTURE MODULE STYLES --- */
+
+.culture-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0, 0, 3);
+    -fx-border-color: #f0f0f0;
+    -fx-border-radius: 12;
+}
+
+.culture-icon-box {
+    -fx-background-color: #eef8f2;
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+    -fx-font-size: 20px;
+    -fx-min-width: 45;
+    -fx-min-height: 45;
+    -fx-alignment: center;
+}
+
+.culture-card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1a1a1a;
+}
+
+.culture-card-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #999999;
+}
+
+.culture-date-grid {
+    -fx-background-color: #f7f9fb;
+    -fx-background-radius: 10;
+    -fx-padding: 8;
+    -fx-border-color: transparent;
+}
+
+.culture-date-label {
+    -fx-text-fill: #b3b3b3;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.culture-date-value {
+    -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.culture-status-badge {
+    -fx-background-color: #e1f1ff;
+    -fx-text-fill: #007bff;
+    -fx-padding: 6 20;
+    -fx-background-radius: 15;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-max-width: Infinity;
+}
+
+.status-harvested {
+    -fx-background-color: #ecf5ef;
+    -fx-text-fill: #2D6A4F;
+}
+
+.status-planted {
+    -fx-background-color: #fff3e0;
+    -fx-text-fill: #e67e22;
+}
+
+.culture-action-btn {
+    -fx-background-color: #f8f9fa;
+    -fx-text-fill: #666;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+}
+
+.culture-action-btn:hover {
+    -fx-background-color: #eef2f5;
+    -fx-text-fill: #007bff;
+}
+
+.culture-action-btn-danger {
+    -fx-background-color: #f8f9fa;
+    -fx-text-fill: #666;
+    -fx-font-size: 12px;
+    -fx-background-radius: 20;
+    -fx-cursor: hand;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+}
+
+.culture-action-btn-danger:hover {
+    -fx-background-color: #fff5f5;
+    -fx-text-fill: #dc3545;
+}

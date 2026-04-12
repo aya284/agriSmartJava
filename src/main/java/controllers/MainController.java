@@ -29,12 +29,22 @@ public class MainController {
 
     @FXML
     public void openCulture() {
-        loadView("/Views/CultureView.fxml", "Culture module not available yet", "Gestion Culture");
+        loadView("/Views/ParcelleView.fxml", "Gestion des Parcelles chargée", "Gestion Culture");
+    }
+
+    @FXML
+    public void openResources() {
+        loadView("/Views/RessourceView.fxml", "Gestion des Ressources chargée", "Gestion Ressource");
     }
 
     @FXML
     public void openTaches() {
         loadView("/Views/TachesView.fxml", "Tasks module not available yet", "Gestion Taches");
+    }
+
+    @FXML
+    public void openParcelles() {
+        // Redundant - Parcelle is now integrated into openCulture
     }
 
     @FXML

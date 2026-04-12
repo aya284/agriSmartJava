@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.FormulaireCultureController" spacing="20" prefWidth="400" styleClass="panel-card">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="5">
+        <Label fx:id="lblTitle" text="Ajouter une Culture" styleClass="module-title" style="-fx-font-size: 20px;"/>
+        <Label text="Veuillez renseigner les détails de la plantation." styleClass="status-label"/>
+    </VBox>
+
+    <VBox spacing="15">
+        <VBox spacing="5">
+            <Label text="Type de Culture" styleClass="panel-muted"/>
+            <TextField fx:id="txtType" promptText="Ex: Blé, Tomates..."/>
+            <Label fx:id="lblErrorType" styleClass="error-label" visible="false" managed="false"/>
+        </VBox>
+
+        <VBox spacing="5">
+            <Label text="Variété" styleClass="panel-muted"/>
+            <TextField fx:id="txtVariete" promptText="Ex: Spunté, Ceres..."/>
+            <Label fx:id="lblErrorVariete" styleClass="error-label" visible="false" managed="false"/>
+        </VBox>
+
+        <HBox spacing="15">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Date Plantation" styleClass="panel-muted"/>
+                <DatePicker fx:id="dpPlantation" maxWidth="Infinity"/>
+                <Label fx:id="lblErrorPlantation" styleClass="error-label" visible="false" managed="false"/>
+            </VBox>
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Récolte Prévue" styleClass="panel-muted"/>
+                <DatePicker fx:id="dpRecolte" maxWidth="Infinity"/>
+                <Label fx:id="lblErrorRecolte" styleClass="error-label" visible="false" managed="false"/>
+            </VBox>
+        </HBox>
+
+        <VBox spacing="5">
+            <Label text="Statut actuel" styleClass="panel-muted"/>
+            <ComboBox fx:id="cbStatut" maxWidth="Infinity" promptText="Sélectionner le statut"/>
+            <Label fx:id="lblErrorStatut" styleClass="error-label" visible="false" managed="false"/>
+        </VBox>
+    </VBox>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#cancel" styleClass="btn-danger" style="-fx-background-color: transparent; -fx-text-fill: #c94f52;"/>
+        <Button text="Enregistrer" onAction="#save" styleClass="btn-primary" prefWidth="120"/>
+    </HBox>
+</VBox>
