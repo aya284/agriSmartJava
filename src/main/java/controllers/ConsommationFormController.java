@@ -26,6 +26,7 @@ public class ConsommationFormController {
     private ConsommationService cs = new ConsommationService();
     private RessourceService rs = new RessourceService();
     private int cultureId;
+    private Consommation currentConsommation;
 
     @FXML
     public void initialize() {
@@ -68,6 +69,22 @@ public class ConsommationFormController {
         lblCultureName.setText("Culture : " + c.getTypeCulture() + " (" + c.getVariete() + ")");
     }
 
+    public void setConsommationData(Consommation cons, Culture c) {
+        this.currentConsommation = cons;
+        this.cultureId = c.getId();
+        lblCultureName.setText("Modifier l'Usage : " + c.getTypeCulture());
+        txtQuantite.setText(String.valueOf(cons.getQuantite()));
+        dpDate.setValue(cons.getDateConsommation());
+        
+        // Sélectionner la ressource correspondante
+        for (Ressource r : cbRessource.getItems()) {
+            if (r.getId() == cons.getRessourceId()) {
+                cbRessource.setValue(r);
+                break;
+            }
+        }
+    }
+
     @FXML
     private void save() {
         clearErrors();
@@ -77,15 +94,23 @@ public class ConsommationFormController {
             Ressource selectedRessource = cbRessource.getValue();
             double quantite = Double.parseDouble(txtQuantite.getText().replace(",", "."));
             
-            Consommation c = new Consommation(
-                quantite,
-                dpDate.getValue(),
-                selectedRessource.getId(),
-                cultureId
-            );
-
-            cs.ajouter(c);
-            showAlert(Alert.AlertType.INFORMATION, "Succès", "Consommation enregistrée et stock mis à jour !");
+            if (currentConsommation == null) {
+                Consommation c = new Consommation(
+                    quantite,
+                    dpDate.getValue(),
+                    selectedRessource.getId(),
+                    cultureId
+                );
+                cs.ajouter(c);
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Consommation enregistrée !");
+            } else {
+                currentConsommation.setQuantite(quantite);
+                currentConsommation.setDateConsommation(dpDate.getValue());
+                currentConsommation.setRessourceId(selectedRessource.getId());
+                
+                cs.modifier(currentConsommation);
+                showAlert(Alert.AlertType.INFORMATION, "Succès", "Consommation mise à jour !");
+            }
             close();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", e.getMessage());

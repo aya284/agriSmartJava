@@ -79,26 +79,102 @@ public class ConsommationService implements IService<Consommation> {
         return list;
     }
 
+    public Consommation getById(int id) throws SQLException {
+        String query = "SELECT * FROM consommation WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Consommation cons = new Consommation(
+                            rs.getInt("id"),
+                            rs.getDouble("quantite"),
+                            rs.getDate("date_consommation").toLocalDate(),
+                            rs.getInt("ressource_id"),
+                            rs.getInt("culture_id")
+                    );
+                    return cons;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void modifier(Consommation c) throws SQLException {
-        // Modification non demandée explicitement mais implémentée pour IService
-        String query = "UPDATE consommation SET quantite=?, date_consommation=?, ressource_id=?, culture_id=? WHERE id=?";
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setDouble(1, c.getQuantite());
-            ps.setDate(2, Date.valueOf(c.getDateConsommation()));
-            ps.setInt(3, c.getRessourceId());
-            ps.setInt(4, c.getCultureId());
-            ps.setInt(5, c.getId());
-            ps.executeUpdate();
+        Consommation old = getById(c.getId());
+        if (old == null) throw new SQLException("Enregistrement introuvable.");
+
+        conn.setAutoCommit(false);
+        try {
+            if (old.getRessourceId() != c.getRessourceId()) {
+                // Changer de ressource : rendre à l'ancienne, prendre à la nouvelle
+                String returnOld = "UPDATE ressource SET stock_restan = stock_restan + ? WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(returnOld)) {
+                    ps.setDouble(1, old.getQuantite());
+                    ps.setInt(2, old.getRessourceId());
+                    ps.executeUpdate();
+                }
+                String deductNew = "UPDATE ressource SET stock_restan = stock_restan - ? WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(deductNew)) {
+                    ps.setDouble(1, c.getQuantite());
+                    ps.setInt(2, c.getRessourceId());
+                    ps.executeUpdate();
+                }
+            } else {
+                // Même ressource : ajuster par la différence (delta)
+                double delta = c.getQuantite() - old.getQuantite();
+                String adjustStock = "UPDATE ressource SET stock_restan = stock_restan - ? WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(adjustStock)) {
+                    ps.setDouble(1, delta);
+                    ps.setInt(2, c.getRessourceId());
+                    ps.executeUpdate();
+                }
+            }
+
+            String query = "UPDATE consommation SET quantite=?, date_consommation=?, ressource_id=?, culture_id=? WHERE id=?";
+            try (PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setDouble(1, c.getQuantite());
+                ps.setDate(2, Date.valueOf(c.getDateConsommation()));
+                ps.setInt(3, c.getRessourceId());
+                ps.setInt(4, c.getCultureId());
+                ps.setInt(5, c.getId());
+                ps.executeUpdate();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 
     @Override
     public void supprimer(int id) throws SQLException {
-        String query = "DELETE FROM consommation WHERE id=?";
-        try (PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
+        Consommation old = getById(id);
+        if (old == null) return;
+
+        conn.setAutoCommit(false);
+        try {
+            // Restituer le stock
+            String returnStock = "UPDATE ressource SET stock_restan = stock_restan + ? WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(returnStock)) {
+                ps.setDouble(1, old.getQuantite());
+                ps.setInt(2, old.getRessourceId());
+                ps.executeUpdate();
+            }
+
+            String delete = "DELETE FROM consommation WHERE id=?";
+            try (PreparedStatement ps = conn.prepareStatement(delete)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
         }
     }
 

@@ -222,9 +222,27 @@ public class ParcelleController {
                 consumptionBox.getChildren().add(consTitle);
                 
                 for (Consommation cons : consumptions) {
+                    HBox row = new HBox(5);
+                    row.setAlignment(Pos.CENTER_LEFT);
+
                     Label l = new Label("• " + cons.getQuantite() + " " + cons.getUnite() + " " + cons.getRessourceNom() + " (" + cons.getDateConsommation().format(DateTimeFormatter.ofPattern("dd/MM")) + ")");
                     l.setStyle("-fx-font-size: 10.5px; -fx-text-fill: #555;");
-                    consumptionBox.getChildren().add(l);
+                    
+                    Region rSpacer = new Region();
+                    HBox.setHgrow(rSpacer, Priority.ALWAYS);
+
+                    Button btnMiniEdit = new Button("✎");
+                    btnMiniEdit.getStyleClass().add("culture-action-btn");
+                    btnMiniEdit.setStyle("-fx-font-size: 8px; -fx-padding: 2 5;");
+                    btnMiniEdit.setOnAction(e -> openEditConsommationModal(cons, c));
+
+                    Button btnMiniDel = new Button("🗑");
+                    btnMiniDel.getStyleClass().add("culture-action-btn-danger");
+                    btnMiniDel.setStyle("-fx-font-size: 8px; -fx-padding: 2 5;");
+                    btnMiniDel.setOnAction(e -> handleConsommationDelete(cons, c));
+
+                    row.getChildren().addAll(l, rSpacer, btnMiniEdit, btnMiniDel);
+                    consumptionBox.getChildren().add(row);
                 }
             }
         } catch (SQLException e) {
@@ -291,6 +309,41 @@ public class ParcelleController {
             if (selected != null) loadCultures(selected.getId());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void openEditConsommationModal(Consommation cons, Culture c) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ConsommationForm.fxml"));
+            Parent root = loader.load();
+            ConsommationFormController controller = loader.getController();
+            controller.setConsommationData(cons, c);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Modifier la Consommation");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+            
+            loadCultures(c.getParcelleId());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleConsommationDelete(Consommation cons, Culture c) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Suppression");
+        alert.setHeaderText("Supprimer cette consommation ?");
+        alert.setContentText("Le stock consommé (" + cons.getQuantite() + " " + cons.getUnite() + ") sera restitué à l'inventaire.");
+        
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            try {
+                consS.supprimer(cons.getId());
+                loadCultures(c.getParcelleId());
+            } catch (SQLException e) {
+                showError("Erreur", e.getMessage());
+            }
         }
     }
 
