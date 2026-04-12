@@ -4,38 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< Updated upstream
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/AdminController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/AdminOffreController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/CandidatOffreController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/CandidateManagementController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/FrontController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/MesCandidaturesController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreDetailAdminController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/entities/Demande.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/entities/Offre.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/main/AppLauncher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/DemandeService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/OffreService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/AdminView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/FrontLayout.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/AdminOffreDetail.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/AdminOffreList.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/CandidatOffreList.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/CandidateManagement.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/MesCandidaturesList.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreDetailAdmin.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreDetailView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreForm.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreList.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/PostulerForm.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
     </list>
+=======
+    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
+>>>>>>> Stashed changes
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -72,33 +49,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.AppLauncher.executor": "Run",
-    "Application.MainApp.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "condidature",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/aya/Desktop/agriSmartJava",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "onboarding.tips.debug.path": "C:/Users/aya/Desktop/agriSmartJava/src/main/java/org/example/Main.java",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.AppLauncher.executor&quot;: &quot;Run&quot;,
+<<<<<<< Updated upstream
+    &quot;Application.MainApp.executor&quot;: &quot;Run&quot;,
+=======
+    &quot;Application.MainApp.executor&quot;: &quot;Debug&quot;,
+>>>>>>> Stashed changes
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;condidature&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/aya/Desktop/agriSmartJava&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/aya/Desktop/agriSmartJava/src/main/java/org/example/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\USER\Documents\Esprit\PI JAVA\agriSmartJava\src\main\resources\Views" />
@@ -138,7 +119,8 @@
       <workItem from="1775751716719" duration="877000" />
       <workItem from="1775816919915" duration="2021000" />
       <workItem from="1775819113798" duration="891000" />
-      <workItem from="1775923099488" duration="17851000" />
+      <workItem from="1775923099488" duration="18193000" />
+      <workItem from="1775991950003" duration="2360000" />
     </task>
     <servers />
   </component>

@@ -105,22 +105,56 @@ public class PostulerController implements Initializable {
         }
     }
 
-    // Helper to allow validation to skip file check if we are editing (since files already exist)
-    private boolean validate() {
-        if (nomF.getText().isEmpty() || prenomF.getText().isEmpty() || phoneF.getText().isEmpty()) {
-            showAlert("Erreur", "Veuillez remplir tous les champs.");
-            return false;
-        }
-        // If adding new, files are required. If editing, they are only required if not already there.
-        if (selectedDemandeForEdit == null && (selectedCV == null || selectedLettre == null)) {
-            showAlert("Erreur", "Veuillez uploader les fichiers PDF.");
-            return false;
-        }
-        return true;
+    private void showAlert(String succès, String s) {
     }
 
-    private void showAlert(String title, String content) {
-        new Alert(Alert.AlertType.INFORMATION, content).showAndWait();
+    // Helper to allow validation to skip file check if we are editing (since files already exist)
+    private boolean validate() {
+        StringBuilder errors = new StringBuilder();
+        String nom = nomF.getText().trim();
+        String prenom = prenomF.getText().trim();
+        String phone = phoneF.getText().trim();
+
+        // 1. Validation du Nom (Min 3 caractères, pas de chiffres)
+        if (nom.length() < 3) {
+            errors.append("- Le Nom doit contenir au moins 3 caractères.\n");
+        } else if (!nom.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
+            errors.append("- Le Nom ne doit contenir que des lettres.\n");
+        }
+
+        // 2. Validation du Prénom (Min 3 caractères, pas de chiffres)
+        if (prenom.length() < 3) {
+            errors.append("- Le Prénom doit contenir au moins 3 caractères.\n");
+        } else if (!prenom.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
+            errors.append("- Le Prénom ne doit contenir que des lettres.\n");
+        }
+
+        // 3. Validation du Téléphone (Exactement 8 chiffres)
+        if (!phone.matches("\\d{8}")) {
+            errors.append("- Le numéro de téléphone doit contenir exactement 8 chiffres (uniquement des nombres).\n");
+        }
+
+        // 4. Validation des fichiers (Uniquement en mode Ajout)
+        if (selectedDemandeForEdit == null) {
+            if (selectedCV == null) {
+                errors.append("- Veuillez sélectionner votre CV (PDF).\n");
+            }
+            if (selectedLettre == null) {
+                errors.append("- Veuillez sélectionner votre Lettre de Motivation (PDF).\n");
+            }
+        }
+
+        // Affichage des erreurs s'il y en a
+        if (errors.length() > 0) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Erreur de saisie");
+            alert.setHeaderText("Veuillez corriger les points suivants :");
+            alert.setContentText(errors.toString());
+            alert.showAndWait();
+            return false;
+        }
+
+        return true;
     }
 
     @FXML public void uploadCV() { selectedCV = selectPDF(); if(selectedCV != null) cvLabel.setText(selectedCV.getName()); }
