@@ -2,6 +2,7 @@ package controllers;
 
 import entities.Parcelle;
 import entities.Culture;
+import entities.Consommation;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -18,6 +19,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import services.ParcelleService;
 import services.CultureService;
+import services.ConsommationService;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +37,7 @@ public class ParcelleController {
 
     private ParcelleService ps = new ParcelleService();
     private CultureService cs = new CultureService();
+    private ConsommationService consS = new ConsommationService();
     private ObservableList<Parcelle> parcelleList = FXCollections.observableArrayList();
     private FilteredList<Parcelle> filteredList;
 
@@ -170,6 +173,13 @@ public class ParcelleController {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox actions = new HBox(5);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+
+        Button btnUtiliser = new Button("Utiliser");
+        btnUtiliser.getStyleClass().add("btn-primary");
+        btnUtiliser.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #27ae60;");
+        btnUtiliser.setOnAction(e -> openConsommationModal(c));
+
         Button btnEdit = new Button("✎");
         btnEdit.getStyleClass().add("culture-action-btn");
         btnEdit.setOnAction(e -> openEditCultureModal(c));
@@ -178,7 +188,7 @@ public class ParcelleController {
         btnDel.getStyleClass().add("culture-action-btn-danger");
         btnDel.setOnAction(e -> handleCultureDelete(c));
         
-        actions.getChildren().addAll(btnEdit, btnDel);
+        actions.getChildren().addAll(btnUtiliser, btnEdit, btnDel);
 
         header.getChildren().addAll(icon, titleArea, spacer, actions);
 
@@ -201,7 +211,27 @@ public class ParcelleController {
         if (c.getStatut().equals("Récolté")) statusBadge.getStyleClass().add("status-harvested");
         else if (c.getStatut().equals("Planté")) statusBadge.getStyleClass().add("status-planted");
 
-        card.getChildren().addAll(header, dateGrid, statusBadge);
+        // Consommation (Affichage au dessus / dans la carte)
+        VBox consumptionBox = new VBox(5);
+        consumptionBox.setStyle("-fx-padding: 10 0 0 0;");
+        try {
+            List<Consommation> consumptions = consS.getByCulture(c.getId());
+            if (!consumptions.isEmpty()) {
+                Label consTitle = new Label("Consommation :");
+                consTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #27ae60;");
+                consumptionBox.getChildren().add(consTitle);
+                
+                for (Consommation cons : consumptions) {
+                    Label l = new Label("• " + cons.getQuantite() + " " + cons.getUnite() + " " + cons.getRessourceNom() + " (" + cons.getDateConsommation().format(DateTimeFormatter.ofPattern("dd/MM")) + ")");
+                    l.setStyle("-fx-font-size: 10.5px; -fx-text-fill: #555;");
+                    consumptionBox.getChildren().add(l);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        card.getChildren().addAll(header, consumptionBox, dateGrid, statusBadge);
         return card;
     }
 
@@ -238,6 +268,27 @@ public class ParcelleController {
             controller.setCultureData(c);
 
             showCultureStage(root, "Modifier la Culture", c.getParcelleId());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openConsommationModal(Culture c) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ConsommationForm.fxml"));
+            Parent root = loader.load();
+            ConsommationFormController controller = loader.getController();
+            controller.setCultureData(c);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Enregistrer une Consommation");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+            
+            // Rafraîchir l'affichage pour voir la consommation
+            Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+            if (selected != null) loadCultures(selected.getId());
         } catch (IOException e) {
             e.printStackTrace();
         }
