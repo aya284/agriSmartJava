@@ -31,7 +31,8 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+# Google OAuth secret
+src/main/resources/client_secret.json
 ### VS Code ###
 .vscode/
 

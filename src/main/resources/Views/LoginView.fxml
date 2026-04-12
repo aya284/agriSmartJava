@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox alignment="CENTER" spacing="16"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.LoginController"
+      style="-fx-background-color: #f4f6f8; -fx-padding: 60;">
+
+    <Label text="Welcome Back" style="-fx-font-size: 26; -fx-font-weight: bold;"/>
+    <Label text="Sign in to AgriSmart" style="-fx-text-fill: #777;"/>
+
+    <VBox maxWidth="380" spacing="10">
+        <TextField fx:id="emailField" promptText="Email address"/>
+        <PasswordField fx:id="passwordField" promptText="Password"/>
+
+        <Label fx:id="errorLabel" visible="false"
+               style="-fx-text-fill: #e74c3c; -fx-font-size: 12;"/>
+
+        <Button fx:id="loginBtn" text="Sign In"
+                onAction="#handleLogin" maxWidth="Infinity"
+                style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10;"/>
+
+        <Separator/>
+
+        <Button fx:id="googleBtn" text="Continue with Google"
+                onAction="#handleGoogleLogin" maxWidth="Infinity"
+                style="-fx-background-color: white; -fx-border-color: #ddd; -fx-padding: 10;"/>
+
+        <HBox alignment="CENTER" spacing="4">
+            <Label text="Don't have an account?"/>
+            <Hyperlink text="Register" onAction="#goToRegister"/>
+        </HBox>
+    </VBox>
+</VBox>

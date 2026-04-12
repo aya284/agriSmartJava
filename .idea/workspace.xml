@@ -4,7 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
+    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/client_secret.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/LoginController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/RegisterController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/services/GoogleAuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/utils/FileStorageUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/utils/PasswordUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/utils/SessionManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/utils/Validator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/entities/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,12 +32,32 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
-        <option value="Class" />
-        <option value="FxmlFile" />
         <option value="CSS File" />
+        <option value="FxmlFile" />
+        <option value="Class" />
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "abir-Bk"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/aya284/agriSmartJava.git",
+    "accountId": "b4b76326-bb64-485c-859a-78929fc22fd0"
+  }
+}]]></component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -36,13 +74,20 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.MainApp.executor": "Run",
+    "Maven.agrismart [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "user",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/aya/Desktop/agriSmartJava",
+    "last_opened_file_path": "C:/Users/User/IdeaProjects/agriSmartJava/src/main",
     "list.type.of.created.stylesheet": "CSS",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -50,12 +95,19 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "onboarding.tips.debug.path": "C:/Users/aya/Desktop/agriSmartJava/src/main/java/org/example/Main.java",
-    "project.structure.last.edited": "Modules",
+    "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable",
+    "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\IdeaProjects\agriSmartJava\src\main" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="agriSmartJava" />
@@ -79,11 +131,45 @@
       <workItem from="1775745484470" duration="21000" />
       <workItem from="1775745518901" duration="5350000" />
       <workItem from="1775751716719" duration="877000" />
+      <workItem from="1775999442468" duration="5607000" />
+      <workItem from="1776010372212" duration="2895000" />
     </task>
+    <task id="LOCAL-00001" summary="login and register">
+      <option name="closed" value="true" />
+      <created>1776012357436</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1776012357436</updated>
+    </task>
+    <task id="LOCAL-00002" summary="login and register">
+      <option name="closed" value="true" />
+      <created>1776013012331</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776013012331</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="login and register" />
+    <option name="LAST_COMMIT_MESSAGE" value="login and register" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -95,5 +181,9 @@
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>
