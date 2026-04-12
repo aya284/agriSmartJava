@@ -7,6 +7,8 @@ import utils.Validator;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class UserService {
@@ -154,5 +156,136 @@ public class UserService {
         u.setStatus(rs.getString("status"));
         u.setGoogleId(rs.getString("google_id"));
         return u;
+    }
+    // ── UPDATE PROFILE ────────────────────────────────────────
+    public void updateProfile(User user) throws Exception {
+
+        // Validation des champs modifiables
+        String error = Validator.validateFirstName(user.getFirstName());
+        if (error != null) throw new Exception(error);
+        error = Validator.validateLastName(user.getLastName());
+        if (error != null) throw new Exception(error);
+        error = Validator.validateEmail(user.getEmail());
+        if (error != null) throw new Exception(error);
+        error = Validator.validatePhone(user.getPhone());
+        if (error != null) throw new Exception(error);
+        error = Validator.validateAddress(user.getAddress());
+        if (error != null) throw new Exception(error);
+
+        // Vérifier que le nouvel email n'appartient pas à un autre utilisateur
+        if (emailExistsForOther(user.getEmail(), user.getId()))
+            throw new Exception("Cet e-mail est déjà utilisé par un autre compte.");
+
+        String sql = """
+        UPDATE users SET
+            first_name   = ?,
+            last_name    = ?,
+            email        = ?,
+            phone        = ?,
+            address      = ?,
+            image        = ?,
+            document_file= ?,
+            updated_at   = ?
+        WHERE id = ?
+        """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, user.getFirstName());
+            ps.setString(2, user.getLastName());
+            ps.setString(3, user.getEmail());
+            ps.setString(4, user.getPhone());
+            ps.setString(5, user.getAddress());
+            ps.setString(6, user.getImage());
+            ps.setString(7, user.getDocumentFile());
+            ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(9, user.getId());
+            ps.executeUpdate();
+        }
+    }
+
+    // ── CHANGER MOT DE PASSE ──────────────────────────────────
+    public void changePassword(int userId, String currentPassword,
+                               String newPassword) throws Exception {
+        // Récupérer le mot de passe actuel
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT password FROM users WHERE id = ?")) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) throw new Exception("Utilisateur introuvable.");
+
+            if (!PasswordUtils.verify(currentPassword, rs.getString("password")))
+                throw new Exception("Mot de passe actuel incorrect.");
+        }
+
+        String error = Validator.validatePassword(newPassword);
+        if (error != null) throw new Exception(error);
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE users SET password = ?, updated_at = ? WHERE id = ?")) {
+            ps.setString(1, PasswordUtils.hash(newPassword));
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            ps.executeUpdate();
+        }
+    }
+    // ── LISTE TOUS LES UTILISATEURS ───────────────────────────
+    public List<User> getAllUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM users ORDER BY created_at DESC")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) users.add(mapUser(rs));
+        }
+        return users;
+    }
+
+    // ── CHANGER LE STATUT ─────────────────────────────────────
+    public void updateStatus(int userId, String status) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE users SET status = ?, updated_at = ? WHERE id = ?")) {
+            ps.setString(1, status);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            ps.executeUpdate();
+        }
+    }
+
+    // ── RECHERCHE ─────────────────────────────────────────────
+    public List<User> searchUsers(String keyword, String role, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)");
+            String k = "%" + keyword.trim() + "%";
+            params.add(k); params.add(k); params.add(k);
+        }
+        if (role != null && !role.equals("Tous")) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (status != null && !status.equals("Tous")) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
+        sql.append(" ORDER BY created_at DESC");
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++)
+                ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) users.add(mapUser(rs));
+            return users;
+        }
+    }
+    // ── HELPER ────────────────────────────────────────────────
+    private boolean emailExistsForOther(String email, int userId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM users WHERE email = ? AND id != ?")) {
+            ps.setString(1, email);
+            ps.setInt(2, userId);
+            return ps.executeQuery().next();
+        }
     }
 }

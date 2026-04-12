@@ -95,7 +95,7 @@ public class LoginController {
 
     private void navigateByRole(String role) {
         String view = switch (role.toLowerCase()) {
-            case "admin"       -> "/Views/AdminDashboard.fxml";
+            case "admin"       -> "/Views/AdminUsersView.fxml";
             case "employee"    -> "/Views/EmployeeDashboard.fxml";
             case "fournisseur" -> "/Views/FournisseurDashboard.fxml";
             default            -> "/Views/MainView.fxml";
