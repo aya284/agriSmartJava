@@ -28,21 +28,22 @@ public class UserService {
 
         String sql = """
             INSERT INTO users
-              (first_name, last_name, email, role, password, phone, address,
-               document_file, image, status, created_at, updated_at)
+              (first_name, last_name, email, role, password,
+               phone, address, document_file, image,
+               status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, user.getFirstName());
-            ps.setString(2, user.getLastName());
-            ps.setString(3, user.getEmail());
-            ps.setString(4, user.getRole() != null ? user.getRole() : "agriculteur");
-            ps.setString(5, PasswordUtils.hash(user.getPassword()));
-            ps.setString(6, user.getPhone());
-            ps.setString(7, user.getAddress());
-            ps.setString(8, user.getDocumentFile());   // ← ajouté
-            ps.setString(9, user.getImage());           // ← ajouté
+            ps.setString(1,  user.getFirstName());
+            ps.setString(2,  user.getLastName());
+            ps.setString(3,  user.getEmail());
+            ps.setString(4,  user.getRole() != null ? user.getRole() : "agriculteur");
+            ps.setString(5,  PasswordUtils.hash(user.getPassword()));
+            ps.setString(6,  user.getPhone().isEmpty() ? null : user.getPhone());
+            ps.setString(7,  user.getAddress().isEmpty() ? null : user.getAddress());
+            ps.setString(8,  user.getDocumentFile());  // ← document_file
+            ps.setString(9,  user.getImage());          // ← image
             ps.setString(10, "active");
             ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
             ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
@@ -52,7 +53,6 @@ public class UserService {
             if (keys.next()) user.setId(keys.getInt(1));
         }
     }
-
     // ── LOGIN ─────────────────────────────────────────────────
     public Optional<User> login(String email, String password) throws Exception {
         // Validation centralisée
