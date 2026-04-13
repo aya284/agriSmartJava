@@ -12,7 +12,6 @@ import services.OffreService;
 
 import java.net.URL;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -25,20 +24,31 @@ public class OffreController implements Initializable {
     @FXML private DatePicker dateDebutP, dateFinP;
     @FXML private Button submitBtn;
 
+    // Labels pour l'affichage des erreurs sous les champs
+    @FXML private Label titleError, typePosteError, typeContratError, descError, lieuError, salaireError, dateDebutError, dateFinError;
+
     private final OffreService service = new OffreService();
     private static Offre selectedOffre = null;
 
+    // Correction : Ajout de l'instruction return
+    public static Offre getSelectedOffre() {
+        return selectedOffre;
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Run if on List page
+        // Vue Liste : chargement des données
         if (cardsContainer != null) {
             loadData();
         }
 
-        // Run if on Form page
+        // Vue Formulaire : configuration des champs et validation
         if (typeContratC != null) {
             typeContratC.setItems(FXCollections.observableArrayList("CDI", "CDD", "Stage"));
             statutC.setItems(FXCollections.observableArrayList("Ouvert", "Clôturée"));
+
+            // Activation de la validation en temps réel
+            setupValidationListeners();
 
             if (selectedOffre != null) {
                 fillForm(selectedOffre);
@@ -48,34 +58,43 @@ public class OffreController implements Initializable {
         }
     }
 
-    private void loadData() {
-        try {
-            List<Offre> list = service.afficher();
-            cardsContainer.getChildren().clear();
-            int approved = 0;
-            for (Offre o : list) {
-                cardsContainer.getChildren().add(createCard(o));
-                if ("approuvée".equals(o.getStatut_validation())) approved++;
-            }
-            statTotalOffres.setText(String.valueOf(list.size()));
-            statApprouve.setText(String.valueOf(approved));
-        } catch (SQLException e) { e.printStackTrace(); }
-    }
+    // Gestion de la validation interactive
+    private void setupValidationListeners() {
+        if (titleF != null) {
+            titleF.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.trim().length() < 3) {
+                    titleError.setText("Minimum 3 caractères");
+                    titleF.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    titleError.setText("");
+                    titleF.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
 
-    private void fillForm(Offre o) {
-        formTitle.setText("Modifier l'offre : " + o.getTitle());
-        submitBtn.setText("Enregistrer les modifications");
+        if (salaireF != null) {
+            salaireF.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (!newVal.matches("\\d*(\\.\\d*)?")) {
+                    salaireF.setText(oldVal);
+                } else if (newVal.trim().isEmpty()) {
+                    salaireError.setText("Le salaire est requis");
+                    salaireF.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    salaireError.setText("");
+                    salaireF.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
 
-        titleF.setText(o.getTitle());
-        typePosteF.setText(o.getType_poste());
-        typeContratC.setValue(o.getType_contrat());
-        descF.setText(o.getDescription());
-        lieuF.setText(o.getLieu());
-        salaireF.setText(String.valueOf(o.getSalaire()));
-        statutC.setValue(o.getStatut());
-
-        if (o.getDate_debut() != null) dateDebutP.setValue(o.getDate_debut().toLocalDate());
-        if (o.getDate_fin() != null) dateFinP.setValue(o.getDate_fin().toLocalDate());
+        if (dateFinP != null) {
+            dateFinP.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (dateDebutP.getValue() != null && newVal != null && newVal.isBefore(dateDebutP.getValue())) {
+                    dateFinError.setText("La date de fin doit être après le début");
+                } else {
+                    dateFinError.setText("");
+                }
+            });
+        }
     }
 
     @FXML
@@ -93,11 +112,10 @@ public class OffreController implements Initializable {
             o.setSalaire(Double.parseDouble(salaireF.getText().trim()));
             o.setStatut(statutC.getValue());
 
-            // Converting LocalDate to LocalDateTime for the entity
             o.setDate_debut(dateDebutP.getValue().atStartOfDay());
             o.setDate_fin(dateFinP.getValue().atTime(23, 59, 59));
 
-            o.setAgriculteur_id(2); // Simulated session ID
+            o.setAgriculteur_id(2);
             o.setIs_active(true);
 
             if (selectedOffre == null) {
@@ -117,58 +135,54 @@ public class OffreController implements Initializable {
     }
 
     private boolean validateInputs() {
-        StringBuilder sb = new StringBuilder();
+        boolean isValid = true;
+        if (titleF.getText().trim().length() < 3) { titleError.setText("Titre trop court"); isValid = false; }
+        if (typePosteF.getText().trim().length() < 3) { typePosteError.setText("Requis"); isValid = false; }
+        if (descF.getText().trim().isEmpty()) { descError.setText("Vide"); isValid = false; }
+        if (lieuF.getText().trim().isEmpty()) { lieuError.setText("Requis"); isValid = false; }
+        if (typeContratC.getValue() == null) { typeContratError.setText("Sélectionnez"); isValid = false; }
+        if (salaireF.getText().isEmpty()) { salaireError.setText("Requis"); isValid = false; }
+        if (dateDebutP.getValue() == null) { dateDebutError.setText("Requis"); isValid = false; }
+        if (dateFinP.getValue() == null) { dateFinError.setText("Requis"); isValid = false; }
+        return isValid;
+    }
 
-        // Length and Null checks
-        if (titleF.getText().trim().length() < 3) sb.append("- Titre: minimum 3 caractères\n");
-        if (typePosteF.getText().trim().length() < 3) sb.append("- Type Poste: minimum 3 caractères\n");
-        if (descF.getText().trim().isEmpty()) sb.append("- Description est requise\n");
-        if (lieuF.getText().trim().isEmpty()) sb.append("- Lieu est requis\n");
-        if (typeContratC.getValue() == null) sb.append("- Sélectionnez un type de contrat\n");
-
-        // Numeric check for salary
+    private void loadData() {
         try {
-            double s = Double.parseDouble(salaireF.getText());
-            if (s <= 0) sb.append("- Salaire doit être supérieur à 0\n");
-        } catch (NumberFormatException e) {
-            sb.append("- Salaire doit être un nombre valide\n");
-        }
-
-        // Date Logic
-        LocalDate today = LocalDate.now();
-        LocalDate debut = dateDebutP.getValue();
-        LocalDate fin = dateFinP.getValue();
-
-        if (debut == null || fin == null) {
-            sb.append("- Les dates de début et fin sont obligatoires\n");
-        } else {
-            // Debut >= Today (Only for new offers)
-            if (selectedOffre == null && debut.isBefore(today)) {
-                sb.append("- Date début ne peut pas être dans le passé\n");
+            List<Offre> list = service.afficher();
+            cardsContainer.getChildren().clear();
+            int approved = 0;
+            for (Offre o : list) {
+                cardsContainer.getChildren().add(createCard(o));
+                if ("approuvée".equals(o.getStatut_validation())) approved++;
             }
-            // Fin > Debut
-            if (!fin.isAfter(debut)) {
-                sb.append("- Date fin doit être après la date début\n");
-            }
-        }
+            statTotalOffres.setText(String.valueOf(list.size()));
+            statApprouve.setText(String.valueOf(approved));
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
 
-        if (sb.length() > 0) {
-            showAlert("Erreurs de validation", sb.toString());
-            return false;
-        }
-        return true;
+    private void fillForm(Offre o) {
+        formTitle.setText("Modifier l'offre : " + o.getTitle());
+        submitBtn.setText("Enregistrer les modifications");
+        titleF.setText(o.getTitle());
+        typePosteF.setText(o.getType_poste());
+        typeContratC.setValue(o.getType_contrat());
+        descF.setText(o.getDescription());
+        lieuF.setText(o.getLieu());
+        salaireF.setText(String.valueOf(o.getSalaire()));
+        statutC.setValue(o.getStatut());
+        if (o.getDate_debut() != null) dateDebutP.setValue(o.getDate_debut().toLocalDate());
+        if (o.getDate_fin() != null) dateFinP.setValue(o.getDate_fin().toLocalDate());
     }
 
     private VBox createCard(Offre o) {
         VBox card = new VBox(10);
         card.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-pref-width: 280; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);");
 
-        // Existing Type Label
         Label type = new Label(o.getType_contrat());
         type.setStyle("-fx-background-color: #eee; -fx-padding: 2 8; -fx-background-radius: 5;");
 
-        // --- NEW VALIDATION STATUS LABEL ---
-        Label validationStatus = new Label(o.getStatut_validation().toUpperCase());
+        Label validationStatus = new Label();
         applyStatusStyle(validationStatus, o.getStatut_validation());
 
         Label title = new Label(o.getTitle());
@@ -190,66 +204,50 @@ public class OffreController implements Initializable {
         });
         options.getItems().addAll(edit, delete);
 
-        // --- VOIR BUTTON ---
         Button voirBtn = new Button("Voir Détails");
-        voirBtn.setStyle("-fx-background-color: #1a3323; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
+        voirBtn.setStyle("-fx-background-color: #1a3323; -fx-text-fill: white; -fx-background-radius: 5;");
         voirBtn.setMaxWidth(Double.MAX_VALUE);
         voirBtn.setOnAction(e -> {
             selectedOffre = o;
             switchView("/Views/Offres/OffreDetailAdmin.fxml");
         });
 
-        // Added validationStatus to the top HBox
         card.getChildren().addAll(
                 new HBox(type, new Region(){{HBox.setHgrow(this, Priority.ALWAYS);}}, options),
-                title,
-                loc,
-                sal,
-                validationStatus, // Positioned above the button
-                voirBtn
+                title, loc, sal, validationStatus, voirBtn
         );
         return card;
     }
 
-    /**
-     * Helper method to apply dynamic colors to the status label
-     */
     private void applyStatusStyle(Label label, String status) {
         String baseStyle = "-fx-padding: 4 10; -fx-background-radius: 15; -fx-font-size: 11; -fx-font-weight: bold; ";
-
         if (status == null) status = "en_attente";
-
         switch (status.toLowerCase()) {
             case "approuvée":
-                label.setStyle(baseStyle + "-fx-background-color: #d4edda; -fx-text-fill: #155724;"); // Green
+                label.setStyle(baseStyle + "-fx-background-color: #d4edda; -fx-text-fill: #155724;");
                 label.setText("✔ Acceptée");
                 break;
             case "refusée":
-                label.setStyle(baseStyle + "-fx-background-color: #f8d7da; -fx-text-fill: #721c24;"); // Red
+                label.setStyle(baseStyle + "-fx-background-color: #f8d7da; -fx-text-fill: #721c24;");
                 label.setText("✘ Refusée");
                 break;
-            case "en_attente":
             default:
-                label.setStyle(baseStyle + "-fx-background-color: #fff3cd; -fx-text-fill: #856404;"); // Orange/Yellow
+                label.setStyle(baseStyle + "-fx-background-color: #fff3cd; -fx-text-fill: #856404;");
                 label.setText("⏳ En cours");
                 break;
         }
     }
-    @FXML
-    public void handleSearch() {
+
+    @FXML public void handleSearch() {
         String query = searchField.getText().toLowerCase().trim();
         try {
             List<Offre> allOffres = service.afficher();
             cardsContainer.getChildren().clear();
-            int approvedCount = 0;
             for (Offre o : allOffres) {
                 if (o.getTitle().toLowerCase().contains(query) || o.getLieu().toLowerCase().contains(query)) {
                     cardsContainer.getChildren().add(createCard(o));
-                    if ("approuvée".equals(o.getStatut_validation())) approvedCount++;
                 }
             }
-            statTotalOffres.setText(String.valueOf(cardsContainer.getChildren().size()));
-            statApprouve.setText(String.valueOf(approvedCount));
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
@@ -268,21 +266,14 @@ public class OffreController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             Parent root = loader.load();
-
-            // Dynamic anchor selection
+            // Correction : Utilisation du type Node pour la compatibilité FlowPane/Button
             javafx.scene.Node anchor = (cardsContainer != null) ? cardsContainer : submitBtn;
             StackPane contentArea = (StackPane) anchor.getScene().lookup("#contentArea");
-
             if (contentArea != null) {
                 contentArea.getChildren().setAll(root);
             } else {
                 anchor.getScene().setRoot(root);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    public static Offre getSelectedOffre() {
-        return selectedOffre;
+        } catch (Exception e) { e.printStackTrace(); }
     }
 }

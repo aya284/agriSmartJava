@@ -17,29 +17,37 @@
         <VBox GridPane.columnIndex="0" GridPane.rowIndex="0">
             <Label text="Nom *" style="-fx-font-weight: bold;" />
             <TextField fx:id="nomF" prefHeight="40" promptText="Votre nom" />
+            <Label fx:id="nomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
         </VBox>
+
         <VBox GridPane.columnIndex="1" GridPane.rowIndex="0">
             <Label text="Prénom *" style="-fx-font-weight: bold;" />
             <TextField fx:id="prenomF" prefHeight="40" promptText="Votre prénom" />
+            <Label fx:id="prenomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
         </VBox>
+
         <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2">
             <Label text="Numéro de téléphone *" style="-fx-font-weight: bold;" />
             <TextField fx:id="phoneF" prefHeight="40" promptText="Ex: 55123456" />
+            <Label fx:id="phoneError" textFill="#e74c3c" style="-fx-font-size: 11;" />
         </VBox>
 
         <VBox GridPane.columnIndex="0" GridPane.rowIndex="2">
             <Label text="CV (PDF) *" style="-fx-font-weight: bold;" />
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button onAction="#uploadCV" text="📁 Choisir CV" style="-fx-background-color: #f1f2f6;" />
+                <Button onAction="#uploadCV" text="📁 Choisir CV" />
                 <Label fx:id="cvLabel" text="Aucun fichier" textFill="#7f8c8d" />
             </HBox>
+            <Label fx:id="cvError" textFill="RED" style="-fx-font-size: 10;" />
         </VBox>
+
         <VBox GridPane.columnIndex="1" GridPane.rowIndex="2">
             <Label text="Lettre de Motivation (PDF) *" style="-fx-font-weight: bold;" />
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button onAction="#uploadLettre" text="📁 Choisir Lettre" style="-fx-background-color: #f1f2f6;" />
+                <Button onAction="#uploadLettre" text="📁 Choisir Lettre" />
                 <Label fx:id="lettreLabel" text="Aucun fichier" textFill="#7f8c8d" />
             </HBox>
+            <Label fx:id="lettreError" textFill="RED" style="-fx-font-size: 10;" />
         </VBox>
     </GridPane>
 

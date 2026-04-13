@@ -14,26 +14,33 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.*;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
 
 public class PostulerController implements Initializable {
+
+    // Champs de saisie
     @FXML private TextField nomF, prenomF, phoneF;
     @FXML private Label cvLabel, lettreLabel;
     @FXML private Button btnSubmit;
+
+    // Labels d'erreur (Sous les champs et sous les boutons)
+    @FXML private Label nomError, prenomError, phoneError;
+    @FXML private Label cvError, lettreError;
 
     private File selectedCV;
     private File selectedLettre;
     private final DemandeService service = new DemandeService();
 
     public static long currentOffreId;
-    // New static field for editing
     public static Demande selectedDemandeForEdit;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // If we are in edit mode, fill the fields
+        // Active la validation en temps réel pour le texte
+        setupRealTimeValidation();
+
+        // Mode Edition : Remplir les champs si on modifie
         if (selectedDemandeForEdit != null) {
             nomF.setText(selectedDemandeForEdit.getNom());
             prenomF.setText(selectedDemandeForEdit.getPrenom());
@@ -44,24 +51,65 @@ public class PostulerController implements Initializable {
         }
     }
 
+    private void setupRealTimeValidation() {
+        // Validation Nom (Style Web/PHP)
+        nomF.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.trim().length() < 3) {
+                nomError.setText("Le nom doit avoir au moins 3 caractères");
+                nomF.setStyle("-fx-border-color: #e74c3c;");
+            } else if (!newVal.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
+                nomError.setText("Lettres uniquement");
+                nomF.setStyle("-fx-border-color: #e74c3c;");
+            } else {
+                nomError.setText("");
+                nomF.setStyle("-fx-border-color: #2ecc71;");
+            }
+        });
+
+        // Validation Prénom
+        prenomF.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.trim().length() < 3) {
+                prenomError.setText("Le prénom doit avoir au moins 3 caractères");
+                prenomF.setStyle("-fx-border-color: #e74c3c;");
+            } else if (!newVal.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
+                prenomError.setText("Lettres uniquement");
+                prenomF.setStyle("-fx-border-color: #e74c3c;");
+            } else {
+                prenomError.setText("");
+                prenomF.setStyle("-fx-border-color: #2ecc71;");
+            }
+        });
+
+        // Validation Téléphone (8 chiffres uniquement)
+        phoneF.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal.matches("\\d*")) {
+                phoneF.setText(oldVal);
+            } else if (newVal.length() != 8) {
+                phoneError.setText("Doit contenir exactement 8 chiffres");
+                phoneF.setStyle("-fx-border-color: #e74c3c;");
+            } else {
+                phoneError.setText("");
+                phoneF.setStyle("-fx-border-color: #2ecc71;");
+            }
+        });
+    }
+
     @FXML
     public void handleSubmit() {
         if (!validate()) return;
 
         try {
-            // --- NEW CHECK: Prevent duplicates for Add Mode ---
             if (selectedDemandeForEdit == null) {
                 boolean alreadyApplied = service.afficher().stream()
                         .anyMatch(d -> d.getUsers_id() == 2 && d.getOffre_id() == (int) currentOffreId);
 
                 if (alreadyApplied) {
                     showAlert("Attention", "Vous avez déjà postulé pour cette offre !");
-                    cancel(); // Redirect them back to their list
+                    cancel();
                     return;
                 }
             }
 
-            // Only upload new files if the user selected new ones
             String cvFileName = (selectedCV != null) ?
                     saveFile(selectedCV, "src/main/resources/uploads/cv") :
                     (selectedDemandeForEdit != null ? selectedDemandeForEdit.getCv() : "");
@@ -71,7 +119,6 @@ public class PostulerController implements Initializable {
                     (selectedDemandeForEdit != null ? selectedDemandeForEdit.getLettre_motivation() : "");
 
             if (selectedDemandeForEdit != null) {
-                // UPDATE MODE
                 selectedDemandeForEdit.setNom(nomF.getText().trim());
                 selectedDemandeForEdit.setPrenom(prenomF.getText().trim());
                 selectedDemandeForEdit.setPhone_number(phoneF.getText().trim());
@@ -83,7 +130,6 @@ public class PostulerController implements Initializable {
                 showAlert("Succès", "Candidature modifiée !");
                 selectedDemandeForEdit = null;
             } else {
-                // ADD MODE
                 Demande d = new Demande();
                 d.setNom(nomF.getText().trim());
                 d.setPrenom(prenomF.getText().trim());
@@ -105,60 +151,60 @@ public class PostulerController implements Initializable {
         }
     }
 
-    private void showAlert(String succès, String s) {
-    }
-
-    // Helper to allow validation to skip file check if we are editing (since files already exist)
     private boolean validate() {
-        StringBuilder errors = new StringBuilder();
-        String nom = nomF.getText().trim();
-        String prenom = prenomF.getText().trim();
-        String phone = phoneF.getText().trim();
+        boolean isValid = true;
 
-        // 1. Validation du Nom (Min 3 caractères, pas de chiffres)
-        if (nom.length() < 3) {
-            errors.append("- Le Nom doit contenir au moins 3 caractères.\n");
-        } else if (!nom.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
-            errors.append("- Le Nom ne doit contenir que des lettres.\n");
+        if (nomF.getText().trim().isEmpty() || !nomError.getText().isEmpty()) {
+            if(nomF.getText().trim().isEmpty()) nomError.setText("Champ obligatoire");
+            isValid = false;
+        }
+        if (prenomF.getText().trim().isEmpty() || !prenomError.getText().isEmpty()) {
+            if(prenomF.getText().trim().isEmpty()) prenomError.setText("Champ obligatoire");
+            isValid = false;
+        }
+        if (phoneF.getText().trim().isEmpty() || !phoneError.getText().isEmpty()) {
+            if(phoneF.getText().trim().isEmpty()) phoneError.setText("Champ obligatoire");
+            isValid = false;
         }
 
-        // 2. Validation du Prénom (Min 3 caractères, pas de chiffres)
-        if (prenom.length() < 3) {
-            errors.append("- Le Prénom doit contenir au moins 3 caractères.\n");
-        } else if (!prenom.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
-            errors.append("- Le Prénom ne doit contenir que des lettres.\n");
-        }
-
-        // 3. Validation du Téléphone (Exactement 8 chiffres)
-        if (!phone.matches("\\d{8}")) {
-            errors.append("- Le numéro de téléphone doit contenir exactement 8 chiffres (uniquement des nombres).\n");
-        }
-
-        // 4. Validation des fichiers (Uniquement en mode Ajout)
+        // Validation des fichiers sous les boutons
         if (selectedDemandeForEdit == null) {
             if (selectedCV == null) {
-                errors.append("- Veuillez sélectionner votre CV (PDF).\n");
+                cvError.setText("Le CV est obligatoire");
+                isValid = false;
             }
             if (selectedLettre == null) {
-                errors.append("- Veuillez sélectionner votre Lettre de Motivation (PDF).\n");
+                lettreError.setText("La lettre est obligatoire");
+                isValid = false;
             }
         }
 
-        // Affichage des erreurs s'il y en a
-        if (errors.length() > 0) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Erreur de saisie");
-            alert.setHeaderText("Veuillez corriger les points suivants :");
-            alert.setContentText(errors.toString());
-            alert.showAndWait();
-            return false;
-        }
-
-        return true;
+        return isValid;
     }
 
-    @FXML public void uploadCV() { selectedCV = selectPDF(); if(selectedCV != null) cvLabel.setText(selectedCV.getName()); }
-    @FXML public void uploadLettre() { selectedLettre = selectPDF(); if(selectedLettre != null) lettreLabel.setText(selectedLettre.getName()); }
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    @FXML public void uploadCV() {
+        selectedCV = selectPDF();
+        if(selectedCV != null) {
+            cvLabel.setText(selectedCV.getName());
+            cvError.setText("");
+        }
+    }
+
+    @FXML public void uploadLettre() {
+        selectedLettre = selectPDF();
+        if(selectedLettre != null) {
+            lettreLabel.setText(selectedLettre.getName());
+            lettreError.setText("");
+        }
+    }
 
     private File selectPDF() {
         FileChooser fc = new FileChooser();
@@ -175,7 +221,7 @@ public class PostulerController implements Initializable {
     }
 
     @FXML public void cancel() {
-        selectedDemandeForEdit = null; // Clean up
+        selectedDemandeForEdit = null;
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/Views/Offres/MesCandidaturesList.fxml"));
             StackPane contentArea = (StackPane) nomF.getScene().lookup("#contentArea");
