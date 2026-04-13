@@ -15,29 +15,36 @@
         <!-- Nom -->
         <VBox spacing="5">
             <Label text="Nom de la ressource" styleClass="panel-muted"/>
-            <TextField fx:id="txtNom" promptText="Ex: Engrais NPK, Tracteur..."/>
+            <TextField fx:id="txtNom" promptText="Ex: Engrais NPK, Tracteur..." style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
             <Label fx:id="lblErrorNom" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
         </VBox>
 
         <!-- Type -->
         <VBox spacing="5">
             <Label text="Type" styleClass="panel-muted"/>
-            <ComboBox fx:id="cbType" maxWidth="Infinity" promptText="Sélectionner le type"/>
+            <ComboBox fx:id="cbType" maxWidth="Infinity" promptText="Sélectionner le type" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
             <Label fx:id="lblErrorType" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+        </VBox>
+
+        <!-- Type Autre (Caché par défaut) -->
+        <VBox fx:id="boxTypeAutre" spacing="5" visible="false" managed="false">
+            <Label text="Précisez le type" styleClass="panel-muted"/>
+            <TextField fx:id="txtTypeAutre" promptText="Ex: Carburant, Outils..." style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+            <Label fx:id="lblErrorTypeAutre" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
         </VBox>
 
         <HBox spacing="15">
             <!-- Stock -->
             <VBox spacing="5" HBox.hgrow="ALWAYS">
                 <Label text="Stock Restant" styleClass="panel-muted"/>
-                <TextField fx:id="txtStock" promptText="Ex: 50.5"/>
+                <TextField fx:id="txtStock" promptText="Ex: 50.5" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
                 <Label fx:id="lblErrorStock" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
             </VBox>
             
             <!-- Unité -->
             <VBox spacing="5" HBox.hgrow="ALWAYS">
                 <Label text="Unité" styleClass="panel-muted"/>
-                <ComboBox fx:id="cbUnite" maxWidth="Infinity" promptText="Unité"/>
+                <ComboBox fx:id="cbUnite" maxWidth="Infinity" promptText="Unité" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
                 <Label fx:id="lblErrorUnite" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
             </VBox>
         </HBox>

@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import utils.NotificationUtil;
 
 public class ParcelleController {
 
@@ -49,6 +50,10 @@ public class ParcelleController {
 
     @FXML
     public void initialize() {
+        // Fixe la taille de la cellule pour empêcher le virtual flow de JavaFX de mal
+        // calculer la hauteur (ce qui cause le chevauchement)
+        lvParcelles.setFixedCellSize(95);
+
         refreshList();
         setupSearch();
         setupSelectionListener();
@@ -120,10 +125,27 @@ public class ParcelleController {
     }
 
     private void loadMap() {
-        String content = "<html><head><link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/><script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script></head>"
-                + "<body style='margin:0;'><div id='map' style='height:100%;'></div>"
-                + "<script>var map = L.map('map').setView([36.8065, 10.1815], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); var marker;</script></body></html>";
-        webViewMap.getEngine().loadContent(content);
+        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(300));
+        pause.setOnFinished(e -> {
+            java.net.URL cssResource = getClass().getResource("/leaflet/leaflet.css");
+            java.net.URL jsResource = getClass().getResource("/leaflet/leaflet.js");
+            String cssUrl = cssResource != null ? cssResource.toExternalForm()
+                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+            String jsUrl = jsResource != null ? jsResource.toExternalForm()
+                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+
+            String content = "<html><head><link rel='stylesheet' href='" + cssUrl + "'/><script src='" + jsUrl
+                    + "'></script></head>"
+                    + "<body style='margin:0;'><div id='map' style='height:100%;'></div>"
+                    + "<script>"
+                    + "var map = L.map('map').setView([36.8065, 10.1815], 6); "
+                    + "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); "
+                    + "var customIcon = L.divIcon({ className: 'custom-icon', html: '<svg viewBox=\"0 0 24 24\" width=\"36\" height=\"36\" fill=\"#2D6A4F\"><path d=\"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\"/></svg>', iconSize: [36, 36], iconAnchor: [18, 36] });"
+                    + "var marker;"
+                    + "</script></body></html>";
+            webViewMap.getEngine().loadContent(content);
+        });
+        pause.play();
     }
 
     private void afficherDetails(Parcelle p) {
@@ -133,7 +155,8 @@ public class ParcelleController {
         lblDetailCoords.setText("Lat: " + p.getLatitude() + " | Lon: " + p.getLongitude());
 
         String script = "if(marker) map.removeLayer(marker); " +
-                "marker = L.marker([" + p.getLatitude() + "," + p.getLongitude() + "]).addTo(map);" +
+                "marker = L.marker([" + p.getLatitude() + "," + p.getLongitude() + "], {icon: customIcon}).addTo(map);"
+                +
                 "map.setView([" + p.getLatitude() + "," + p.getLongitude() + "], 13);";
         webViewMap.getEngine().executeScript(script);
 
@@ -314,7 +337,9 @@ public class ParcelleController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Enregistrer une Consommation");
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.showAndWait();
 
             // Rafraîchir l'affichage pour voir la consommation
@@ -336,7 +361,9 @@ public class ParcelleController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Modifier la Consommation");
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.showAndWait();
 
             loadCultures(c.getParcelleId());
@@ -355,6 +382,7 @@ public class ParcelleController {
         if (alert.showAndWait().get() == ButtonType.OK) {
             try {
                 consS.supprimer(cons.getId());
+                NotificationUtil.showDelete(lvParcelles.getScene().getWindow(), "Consommation supprimée.");
                 loadCultures(c.getParcelleId());
             } catch (SQLException e) {
                 showError("Erreur", e.getMessage());
@@ -366,7 +394,9 @@ public class ParcelleController {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle(title);
-        stage.setScene(new Scene(root));
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        stage.setScene(scene);
         stage.showAndWait();
         loadCultures(parcelleId);
     }
@@ -379,6 +409,7 @@ public class ParcelleController {
         if (alert.showAndWait().get() == ButtonType.OK) {
             try {
                 cs.supprimer(c.getId());
+                NotificationUtil.showDelete(lvParcelles.getScene().getWindow(), "Culture supprimée.");
                 loadCultures(c.getParcelleId());
             } catch (SQLException e) {
                 showError("Erreur", "Suppression impossible : " + e.getMessage());
@@ -408,7 +439,9 @@ public class ParcelleController {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle(p == null ? "Ajouter une Parcelle" : "Modifier la Parcelle");
-        stage.setScene(new Scene(root));
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+        stage.setScene(scene);
         stage.showAndWait();
         refreshList();
     }
@@ -423,6 +456,7 @@ public class ParcelleController {
             if (alert.showAndWait().get() == ButtonType.OK) {
                 try {
                     ps.supprimer(selected.getId());
+                    NotificationUtil.showDelete(lvParcelles.getScene().getWindow(), "Parcelle supprimée.");
                     refreshList();
                     detailsContainer.setVisible(false);
                 } catch (SQLException e) {

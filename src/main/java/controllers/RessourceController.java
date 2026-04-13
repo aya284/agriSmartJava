@@ -19,6 +19,7 @@ import services.RessourceService;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
+import utils.NotificationUtil;
 
 public class RessourceController {
 
@@ -153,7 +154,9 @@ public class RessourceController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(r == null ? "Ajouter une Ressource" : "Modifier la Ressource");
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.showAndWait();
             refreshList();
         } catch (IOException e) {
@@ -171,6 +174,7 @@ public class RessourceController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 rs.supprimer(r.getId());
+                NotificationUtil.showDelete(tvRessources.getScene().getWindow(), "Ressource supprimée.");
                 refreshList();
             } catch (SQLException e) {
                 Alert error = new Alert(Alert.AlertType.ERROR);

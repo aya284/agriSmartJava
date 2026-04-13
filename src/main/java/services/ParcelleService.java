@@ -80,6 +80,13 @@ public class ParcelleService implements IService<Parcelle> {
 
     @Override
     public void supprimer(int id) throws SQLException {
+        // Supprimer toutes les cultures liées avant de supprimer la parcelle
+        CultureService cultureService = new CultureService();
+        List<entities.Culture> cultures = cultureService.getByParcelle(id);
+        for (entities.Culture c : cultures) {
+            cultureService.supprimer(c.getId());
+        }
+
         String query = "DELETE FROM parcelle WHERE id=?";
         PreparedStatement ps = connection.prepareStatement(query);
         ps.setInt(1, id);

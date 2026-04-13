@@ -9,6 +9,7 @@ import services.CultureService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import utils.NotificationUtil;
 
 public class FormulaireCultureController {
     @FXML private Label lblTitle;
@@ -45,7 +46,10 @@ public class FormulaireCultureController {
     @FXML
     private void save() {
         clearErrors();
-        if (!validate()) return;
+        if (!validate()) {
+            ((javafx.stage.Stage) txtType.getScene().getWindow()).sizeToScene();
+            return;
+        }
 
         Culture c = new Culture(
             txtType.getText(),
@@ -59,11 +63,11 @@ public class FormulaireCultureController {
         try {
             if (currentId == -1) {
                 cs.ajouter(c);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Culture ajoutée avec succès !");
+                NotificationUtil.showSuccess(null, "Culture ajoutée avec succès !");
             } else {
                 c.setId(currentId);
                 cs.modifier(c);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Culture mise à jour !");
+                NotificationUtil.showSuccess(null, "Culture mise à jour !");
             }
             close();
         } catch (SQLException e) {
@@ -82,26 +86,49 @@ public class FormulaireCultureController {
 
     private boolean validate() {
         boolean valid = true;
+        
         if (txtType.getText().trim().isEmpty()) {
             showError(txtType, lblErrorType, "Le type est obligatoire.");
             valid = false;
+        } else if (txtType.getText().trim().length() < 3) {
+            showError(txtType, lblErrorType, "Type trop court (3 min).");
+            valid = false;
         }
+
         if (txtVariete.getText().trim().isEmpty()) {
             showError(txtVariete, lblErrorVariete, "La variété est obligatoire.");
             valid = false;
-        }
-        if (dpPlantation.getValue() == null) {
-            showError(dpPlantation, lblErrorPlantation, "Date requise.");
+        } else if (txtVariete.getText().trim().length() < 3) {
+            showError(txtVariete, lblErrorVariete, "Variété trop courte (3 min).");
             valid = false;
         }
-        if (dpRecolte.getValue() == null) {
-            showError(dpRecolte, lblErrorRecolte, "Date requise.");
+
+        LocalDate start = dpPlantation.getValue();
+        LocalDate end = dpRecolte.getValue();
+
+        if (start == null) {
+            showError(dpPlantation, lblErrorPlantation, "Date de plantation requise.");
             valid = false;
         }
+
+        if (end == null) {
+            showError(dpRecolte, lblErrorRecolte, "Date de récolte requise.");
+            valid = false;
+        }
+
+        if (start != null && end != null) {
+            if (!end.isAfter(start)) {
+                showError(dpRecolte, lblErrorRecolte, "La récolte doit être après la plantation.");
+                showError(dpPlantation, lblErrorPlantation, "Date incohérente.");
+                valid = false;
+            }
+        }
+
         if (cbStatut.getValue() == null) {
             showError(cbStatut, lblErrorStatut, "Sélectionnez un statut.");
             valid = false;
         }
+        
         return valid;
     }
 

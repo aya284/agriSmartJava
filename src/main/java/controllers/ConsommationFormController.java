@@ -14,6 +14,7 @@ import services.RessourceService;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import utils.NotificationUtil;
 
 public class ConsommationFormController {
 
@@ -88,7 +89,10 @@ public class ConsommationFormController {
     @FXML
     private void save() {
         clearErrors();
-        if (!validate()) return;
+        if (!validate()) {
+            ((javafx.stage.Stage) txtQuantite.getScene().getWindow()).sizeToScene();
+            return;
+        }
 
         try {
             Ressource selectedRessource = cbRessource.getValue();
@@ -102,14 +106,14 @@ public class ConsommationFormController {
                     cultureId
                 );
                 cs.ajouter(c);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Consommation enregistrée !");
+                NotificationUtil.showSuccess(null, "Consommation enregistrée !");
             } else {
                 currentConsommation.setQuantite(quantite);
                 currentConsommation.setDateConsommation(dpDate.getValue());
                 currentConsommation.setRessourceId(selectedRessource.getId());
                 
                 cs.modifier(currentConsommation);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Consommation mise à jour !");
+                NotificationUtil.showSuccess(null, "Consommation mise à jour !");
             }
             close();
         } catch (SQLException e) {

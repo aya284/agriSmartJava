@@ -42,6 +42,13 @@ public class CultureService implements IService<Culture> {
 
     @Override
     public void supprimer(int id) throws SQLException {
+        // Supprimer d'abord les consommations associées pour restituer le stock et éviter l'erreur de contrainte
+        ConsommationService consommationService = new ConsommationService();
+        List<entities.Consommation> consommations = consommationService.getByCulture(id);
+        for (entities.Consommation cons : consommations) {
+            consommationService.supprimer(cons.getId());
+        }
+
         String query = "DELETE FROM culture WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, id);

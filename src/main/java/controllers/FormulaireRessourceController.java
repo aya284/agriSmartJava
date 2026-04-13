@@ -8,13 +8,15 @@ import javafx.stage.Stage;
 import services.RessourceService;
 
 import java.sql.SQLException;
+import utils.NotificationUtil;
 
 public class FormulaireRessourceController {
 
     @FXML private Label lblTitle;
-    @FXML private TextField txtNom, txtStock;
+    @FXML private TextField txtNom, txtStock, txtTypeAutre;
     @FXML private ComboBox<String> cbType, cbUnite;
-    @FXML private Label lblErrorNom, lblErrorType, lblErrorStock, lblErrorUnite;
+    @FXML private Label lblErrorNom, lblErrorType, lblErrorStock, lblErrorUnite, lblErrorTypeAutre;
+    @FXML private javafx.scene.layout.VBox boxTypeAutre;
 
     private RessourceService rs = new RessourceService();
     private int currentId = -1;
@@ -23,13 +25,36 @@ public class FormulaireRessourceController {
     public void initialize() {
         cbType.setItems(FXCollections.observableArrayList("Engrais", "Semences", "Équipement", "Pesticides", "Autre"));
         cbUnite.setItems(FXCollections.observableArrayList("Kg", "Litres", "Pièces", "Sacs", "Heures"));
+
+        cbType.valueProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isAutre = "Autre".equals(newVal);
+            boxTypeAutre.setVisible(isAutre);
+            boxTypeAutre.setManaged(isAutre);
+            if (!isAutre) {
+                txtTypeAutre.clear();
+                lblErrorTypeAutre.setVisible(false);
+                lblErrorTypeAutre.setManaged(false);
+                txtTypeAutre.getStyleClass().remove("danger-field");
+            }
+            if (txtNom.getScene() != null && txtNom.getScene().getWindow() != null) {
+                ((javafx.stage.Stage) txtNom.getScene().getWindow()).sizeToScene();
+            }
+        });
     }
 
     public void setRessourceData(Ressource r) {
         this.currentId = r.getId();
         lblTitle.setText("Modifier la Ressource");
         txtNom.setText(r.getNom());
-        cbType.setValue(r.getType());
+        
+        String t = r.getType();
+        if(!cbType.getItems().contains(t)) {
+            cbType.setValue("Autre");
+            txtTypeAutre.setText(t);
+        } else {
+            cbType.setValue(t);
+        }
+
         txtStock.setText(String.valueOf(r.getStockRestant()));
         cbUnite.setValue(r.getUnite());
     }
@@ -37,12 +62,20 @@ public class FormulaireRessourceController {
     @FXML
     private void save() {
         clearErrors();
-        if (!validate()) return;
+        if (!validate()) {
+            ((javafx.stage.Stage) txtNom.getScene().getWindow()).sizeToScene();
+            return;
+        }
 
         try {
+            String finalType = cbType.getValue();
+            if ("Autre".equals(finalType)) {
+                finalType = txtTypeAutre.getText().trim();
+            }
+
             Ressource r = new Ressource(
                 txtNom.getText(),
-                cbType.getValue(),
+                finalType,
                 Double.parseDouble(txtStock.getText().replace(",", ".")),
                 cbUnite.getValue(),
                 1 // User ID statique pour le moment
@@ -50,11 +83,11 @@ public class FormulaireRessourceController {
 
             if (currentId == -1) {
                 rs.ajouter(r);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Ressource ajoutée avec succès !");
+                NotificationUtil.showSuccess(null, "Ressource ajoutée avec succès !");
             } else {
                 r.setId(currentId);
                 rs.modifier(r);
-                showAlert(Alert.AlertType.INFORMATION, "Succès", "Ressource mise à jour !");
+                NotificationUtil.showSuccess(null, "Ressource mise à jour !");
             }
             close();
         } catch (SQLException e) {
@@ -72,6 +105,9 @@ public class FormulaireRessourceController {
         }
         if (cbType.getValue() == null) {
             showError(cbType, lblErrorType, "Veuillez sélectionner un type.");
+            valid = false;
+        } else if ("Autre".equals(cbType.getValue()) && txtTypeAutre.getText().trim().isEmpty()) {
+            showError(txtTypeAutre, lblErrorTypeAutre, "Veuillez préciser le type de ressource.");
             valid = false;
         }
         if (txtStock.getText().trim().isEmpty()) {
@@ -104,6 +140,9 @@ public class FormulaireRessourceController {
         lblErrorType.setVisible(false);
         lblErrorStock.setVisible(false);
         lblErrorUnite.setVisible(false);
+
+        txtTypeAutre.getStyleClass().remove("danger-field");
+        lblErrorTypeAutre.setVisible(false);
     }
 
     @FXML
