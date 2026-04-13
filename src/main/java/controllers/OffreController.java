@@ -30,24 +30,20 @@ public class OffreController implements Initializable {
     private final OffreService service = new OffreService();
     private static Offre selectedOffre = null;
 
-    // Correction : Ajout de l'instruction return
     public static Offre getSelectedOffre() {
         return selectedOffre;
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Vue Liste : chargement des données
         if (cardsContainer != null) {
             loadData();
         }
 
-        // Vue Formulaire : configuration des champs et validation
         if (typeContratC != null) {
             typeContratC.setItems(FXCollections.observableArrayList("CDI", "CDD", "Stage"));
             statutC.setItems(FXCollections.observableArrayList("Ouvert", "Clôturée"));
 
-            // Activation de la validation en temps réel
             setupValidationListeners();
 
             if (selectedOffre != null) {
@@ -58,12 +54,13 @@ public class OffreController implements Initializable {
         }
     }
 
-    // Gestion de la validation interactive
+    // Gestion de la validation interactive (Style vidéo avec retouches Date et Contrat)
     private void setupValidationListeners() {
+        // Validation Titre (Min 3)
         if (titleF != null) {
             titleF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.trim().length() < 3) {
-                    titleError.setText("Minimum 3 caractères");
+                    titleError.setText("Min. 3 caractères");
                     titleF.setStyle("-fx-border-color: #e74c3c;");
                 } else {
                     titleError.setText("");
@@ -72,12 +69,65 @@ public class OffreController implements Initializable {
             });
         }
 
+        // Validation Type Poste (Min 3)
+        if (typePosteF != null) {
+            typePosteF.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.trim().length() < 3) {
+                    typePosteError.setText("Min. 3 caractères");
+                    typePosteF.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    typePosteError.setText("");
+                    typePosteF.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
+
+        // Validation Lieu (Min 5)
+        if (lieuF != null) {
+            lieuF.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.trim().length() < 5) {
+                    lieuError.setText("Minimum 5 caractères");
+                    lieuF.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    lieuError.setText("");
+                    lieuF.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
+
+        // Validation Description (Min 12)
+        if (descF != null) {
+            descF.textProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal.trim().length() < 12) {
+                    descError.setText("Minimum 12 caractères");
+                    descF.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    descError.setText("");
+                    descF.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
+
+        // RETOUCHE : Validation Type Contrat
+        if (typeContratC != null) {
+            typeContratC.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null || newVal.isEmpty()) {
+                    typeContratError.setText("Sélectionnez un type");
+                    typeContratC.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    typeContratError.setText("");
+                    typeContratC.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
+
+        // Validation Salaire
         if (salaireF != null) {
             salaireF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (!newVal.matches("\\d*(\\.\\d*)?")) {
                     salaireF.setText(oldVal);
                 } else if (newVal.trim().isEmpty()) {
-                    salaireError.setText("Le salaire est requis");
+                    salaireError.setText("Requis");
                     salaireF.setStyle("-fx-border-color: #e74c3c;");
                 } else {
                     salaireError.setText("");
@@ -86,12 +136,28 @@ public class OffreController implements Initializable {
             });
         }
 
+        // RETOUCHE : Validation Date Début
+        if (dateDebutP != null) {
+            dateDebutP.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal == null) {
+                    dateDebutError.setText("Requis");
+                    dateDebutP.setStyle("-fx-border-color: #e74c3c;");
+                } else {
+                    dateDebutError.setText("");
+                    dateDebutP.setStyle("-fx-border-color: #2ecc71;");
+                }
+            });
+        }
+
+        // Validation Date Fin
         if (dateFinP != null) {
             dateFinP.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (dateDebutP.getValue() != null && newVal != null && newVal.isBefore(dateDebutP.getValue())) {
                     dateFinError.setText("La date de fin doit être après le début");
-                } else {
+                    dateFinP.setStyle("-fx-border-color: #e74c3c;");
+                } else if (newVal != null) {
                     dateFinError.setText("");
+                    dateFinP.setStyle("-fx-border-color: #2ecc71;");
                 }
             });
         }
@@ -136,14 +202,17 @@ public class OffreController implements Initializable {
 
     private boolean validateInputs() {
         boolean isValid = true;
+
         if (titleF.getText().trim().length() < 3) { titleError.setText("Titre trop court"); isValid = false; }
-        if (typePosteF.getText().trim().length() < 3) { typePosteError.setText("Requis"); isValid = false; }
-        if (descF.getText().trim().isEmpty()) { descError.setText("Vide"); isValid = false; }
-        if (lieuF.getText().trim().isEmpty()) { lieuError.setText("Requis"); isValid = false; }
+        if (typePosteF.getText().trim().length() < 3) { typePosteError.setText("Type poste trop court"); isValid = false; }
+        if (descF.getText().trim().length() < 12) { descError.setText("Description trop courte (min 12)"); isValid = false; }
+        if (lieuF.getText().trim().length() < 5) { lieuError.setText("Lieu trop court (min 5)"); isValid = false; }
+
         if (typeContratC.getValue() == null) { typeContratError.setText("Sélectionnez"); isValid = false; }
         if (salaireF.getText().isEmpty()) { salaireError.setText("Requis"); isValid = false; }
         if (dateDebutP.getValue() == null) { dateDebutError.setText("Requis"); isValid = false; }
         if (dateFinP.getValue() == null) { dateFinError.setText("Requis"); isValid = false; }
+
         return isValid;
     }
 
@@ -266,7 +335,6 @@ public class OffreController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             Parent root = loader.load();
-            // Correction : Utilisation du type Node pour la compatibilité FlowPane/Button
             javafx.scene.Node anchor = (cardsContainer != null) ? cardsContainer : submitBtn;
             StackPane contentArea = (StackPane) anchor.getScene().lookup("#contentArea");
             if (contentArea != null) {

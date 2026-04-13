@@ -6,18 +6,10 @@
   <component name="ChangeListManager">
 <<<<<<< Updated upstream
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/Views/Offres/OffreForm.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/Views/Offres/OffreForm.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/Views/Offres/PostulerForm.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/Views/Offres/PostulerForm.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController$1.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/PostulerController.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/PostulerController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/main/MainApp.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/main/MainApp.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/PostulerController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreForm.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/OffreForm.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Offres/PostulerForm.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Offres/PostulerForm.fxml" afterDir="false" />
     </list>
 =======
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
@@ -131,7 +123,7 @@
       <workItem from="1775923099488" duration="18193000" />
       <workItem from="1775991950003" duration="3872000" />
       <workItem from="1776009995932" duration="5399000" />
-      <workItem from="1776085437557" duration="333000" />
+      <workItem from="1776085437557" duration="952000" />
     </task>
     <servers />
   </component>
