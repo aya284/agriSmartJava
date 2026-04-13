@@ -6,6 +6,7 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="controllers.admin.AdminUsersController">
 
+    <!-- ── Titre ── -->
     <HBox alignment="CENTER_LEFT" spacing="12">
         <Label text="Gestion des Utilisateurs"
                style="-fx-font-size: 20; -fx-font-weight: bold;"/>
@@ -14,40 +15,94 @@
                style="-fx-text-fill: #777; -fx-font-size: 13;"/>
     </HBox>
 
-    <!-- Filtres -->
+    <!-- ── Filtres ── -->
     <HBox spacing="10" alignment="CENTER_LEFT"
           style="-fx-background-color: white; -fx-padding: 14;
                  -fx-background-radius: 8;
                  -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
         <TextField fx:id="searchField"
                    promptText="🔍  Rechercher par nom ou email..."
-                   prefWidth="280"/>
-        <Label text="Rôle :"    style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="roleFilter"   prefWidth="140"/>
-        <Label text="Statut :"  style="-fx-font-weight: bold;"/>
-        <ComboBox fx:id="statusFilter" prefWidth="130"/>
+                   HBox.hgrow="ALWAYS"/>
+        <Label text="Rôle :"   style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="roleFilter"   prefWidth="130"/>
+        <Label text="Statut :" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="statusFilter" prefWidth="120"/>
         <Button text="Réinitialiser" onAction="#resetFilters"
                 style="-fx-background-color: #ecf0f1;
                        -fx-padding: 6 14; -fx-background-radius: 4;"/>
     </HBox>
 
-    <!-- Tableau -->
-    <TableView fx:id="usersTable" VBox.vgrow="ALWAYS"
+    <!-- ── Tableau ── -->
+    <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" maxHeight="Infinity"
                style="-fx-background-color: white;
                       -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
         <columns>
-            <TableColumn fx:id="colId"      text="ID"          prefWidth="50"/>
-            <TableColumn fx:id="colName"    text="Nom complet" prefWidth="170"/>
-            <TableColumn fx:id="colEmail"   text="Email"       prefWidth="210"/>
-            <TableColumn fx:id="colRole"    text="Rôle"        prefWidth="110"/>
-            <TableColumn fx:id="colStatus"  text="Statut"      prefWidth="100"/>
-            <TableColumn fx:id="colDate"    text="Inscrit le"  prefWidth="110"/>
-            <TableColumn fx:id="colActions" text="Actions"     prefWidth="250"/>
+            <TableColumn fx:id="colId"
+                         text="ID"
+                         minWidth="50" maxWidth="50"/>
+
+            <TableColumn fx:id="colName"
+                         text="Nom complet"
+                         minWidth="140" prefWidth="170"/>
+
+            <TableColumn fx:id="colEmail"
+                         text="Email"
+                         minWidth="170" prefWidth="210"/>
+
+            <TableColumn fx:id="colRole"
+                         text="Rôle"
+                         minWidth="100" prefWidth="130" maxWidth="130"/>
+
+            <TableColumn fx:id="colStatus"
+                         text="Statut"
+                         minWidth="110" prefWidth="120" maxWidth="120"/>
+
+            <TableColumn fx:id="colDate"
+                         text="Inscrit le"
+                         minWidth="100" prefWidth="120" maxWidth="120"/>
+
+            <TableColumn fx:id="colActions"
+                         text="Actions"
+                         minWidth="90" prefWidth="90" maxWidth="90"/>
         </columns>
         <placeholder>
             <Label text="Aucun utilisateur trouvé."
                    style="-fx-text-fill: #aaa; -fx-font-size: 14;"/>
         </placeholder>
     </TableView>
+
+    <!-- ── Pagination ── -->
+    <HBox fx:id="paginationBox" alignment="CENTER" spacing="6"
+          style="-fx-background-color: white; -fx-padding: 12;
+                 -fx-background-radius: 8;
+                 -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
+
+        <Label text="Afficher :" style="-fx-text-fill: #777;"/>
+        <ComboBox fx:id="pageSizeCombo" prefWidth="70"/>
+        <Label text="par page"  style="-fx-text-fill: #777;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+        <Button fx:id="btnFirst" text="«" onAction="#goFirst"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+        <Button fx:id="btnPrev"  text="‹" onAction="#goPrev"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+
+        <!-- boutons numérotés insérés dynamiquement avant btnNext -->
+
+        <Button fx:id="btnNext"  text="›" onAction="#goNext"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+        <Button fx:id="btnLast"  text="»" onAction="#goLast"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+        <Label fx:id="pageInfoLabel" text="— / —"
+               style="-fx-text-fill: #777; -fx-font-size: 12;"/>
+    </HBox>
 
 </VBox>

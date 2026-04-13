@@ -155,6 +155,12 @@ public class UserService {
         u.setDocumentFile(rs.getString("document_file"));
         u.setStatus(rs.getString("status"));
         u.setGoogleId(rs.getString("google_id"));
+        // ── Dates ── ← c'était manquant
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        Timestamp updatedAt = rs.getTimestamp("updated_at");
+        if (createdAt != null) u.setCreatedAt(createdAt.toLocalDateTime());
+        if (updatedAt != null) u.setUpdatedAt(updatedAt.toLocalDateTime());
+
         return u;
     }
     // ── UPDATE PROFILE ────────────────────────────────────────
@@ -286,6 +292,67 @@ public class UserService {
             ps.setString(1, email);
             ps.setInt(2, userId);
             return ps.executeQuery().next();
+        }
+    }
+    // ── COMPTER LES RÉSULTATS ─────────────────────────────────
+    public int countUsers(String keyword, String role, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)");
+            String k = "%" + keyword.trim() + "%";
+            params.add(k); params.add(k); params.add(k);
+        }
+        if (role != null && !role.equals("Tous")) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (status != null && !status.equals("Tous")) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++)
+                ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    // ── RECHERCHE AVEC PAGINATION ─────────────────────────────
+    public List<User> searchUsersPaged(String keyword, String role,
+                                       String status, int page,
+                                       int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)");
+            String k = "%" + keyword.trim() + "%";
+            params.add(k); params.add(k); params.add(k);
+        }
+        if (role != null && !role.equals("Tous")) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (status != null && !status.equals("Tous")) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
+
+        sql.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++)
+                ps.setObject(i + 1, params.get(i));
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) users.add(mapUser(rs));
+            return users;
         }
     }
 }
