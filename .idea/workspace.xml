@@ -5,8 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminDashboardController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminDashboard.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/AdminUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUsersController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/EditProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/EditProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/utils/SessionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/SessionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/AdminUsersView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUsersView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/EditProfileView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/EditProfileView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,8 +32,8 @@
       <list>
         <option value="Interface" />
         <option value="CSS File" />
-        <option value="Class" />
         <option value="FxmlFile" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -31,18 +45,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "abir-Bk"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;abir-Bk&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/aya284/agriSmartJava.git",
-    "accountId": "b4b76326-bb64-485c-859a-78929fc22fd0"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/aya284/agriSmartJava.git&quot;,
+    &quot;accountId&quot;: &quot;b4b76326-bb64-485c-859a-78929fc22fd0&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -83,7 +97,7 @@
     "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable",
+    "settings.editor.selected.configurable": "preferences.JavaFX",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
@@ -91,6 +105,9 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\User\IdeaProjects\agriSmartJava\src\main" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\User\IdeaProjects\agriSmartJava\src\main\resources\Views\Admin" />
     </key>
   </component>
   <component name="RunManager">
@@ -117,7 +134,8 @@
       <workItem from="1775745518901" duration="5350000" />
       <workItem from="1775751716719" duration="877000" />
       <workItem from="1775999442468" duration="5607000" />
-      <workItem from="1776010372212" duration="6935000" />
+      <workItem from="1776010372212" duration="8323000" />
+      <workItem from="1776103665595" duration="3431000" />
     </task>
     <task id="LOCAL-00001" summary="login and register">
       <option name="closed" value="true" />

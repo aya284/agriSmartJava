@@ -1,4 +1,4 @@
-package controllers;
+package controllers.admin;
 
 import entities.User;
 import javafx.application.Platform;

@@ -26,4 +26,5 @@ public class SessionManager {
     private boolean hasRole(String role) {
         return currentUser != null && role.equalsIgnoreCase(currentUser.getRole());
     }
+
 }

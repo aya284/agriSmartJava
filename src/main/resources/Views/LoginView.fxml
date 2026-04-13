@@ -5,7 +5,7 @@
 
 <VBox alignment="CENTER" spacing="16"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.LoginController"
+      fx:controller="controllers.user.LoginController"
       style="-fx-background-color: #f4f6f8; -fx-padding: 60;">
 
     <Label text="Welcome Back" style="-fx-font-size: 26; -fx-font-weight: bold;"/>

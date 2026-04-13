@@ -21,8 +21,9 @@
 
                 <TextField fx:id="globalSearchField" promptText="Search module, order, product..." onKeyReleased="#handleGlobalSearch" prefWidth="280"/>
                 <Button text="Notifications" styleClass="header-icon-btn" onAction="#showNotifications"/>
-                <Button text="Profile" styleClass="header-icon-btn" onAction="#showProfile"/>
-            </HBox>
+                <Button text="Profile"      styleClass="header-icon-btn" onAction="#showProfile"/>
+                <Button text="Déconnexion"  styleClass="header-icon-btn" onAction="#handleLogout"
+                        style="-fx-text-fill: #e74c3c;"/>            </HBox>
 
             <HBox spacing="10" alignment="CENTER_LEFT" styleClass="module-pill-row">
                 <Label text="Modules" styleClass="module-label"/>

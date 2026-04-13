@@ -6,7 +6,7 @@
 
 <ScrollPane fitToWidth="true"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controllers.EditProfileController"
+            fx:controller="controllers.user.EditProfileController"
             style="-fx-background-color: transparent;">
 
     <VBox spacing="24" style="-fx-padding: 30;">

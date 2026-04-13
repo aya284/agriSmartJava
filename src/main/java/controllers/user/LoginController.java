@@ -1,4 +1,4 @@
-package controllers;
+package controllers.user;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -95,9 +95,9 @@ public class LoginController {
 
     private void navigateByRole(String role) {
         String view = switch (role.toLowerCase()) {
-            case "admin"       -> "/Views/AdminUsersView.fxml";
-            case "employee"    -> "/Views/EmployeeDashboard.fxml";
-            case "fournisseur" -> "/Views/FournisseurDashboard.fxml";
+            case "admin"       -> "/Views/admin/AdminLayout.fxml";
+            case "employee"    -> "/Views/MainView.fxml";
+            case "fournisseur" -> "/Views/MainView.fxml";
             default            -> "/Views/MainView.fxml";
         };
         loadView(view);

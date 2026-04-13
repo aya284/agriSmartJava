@@ -2,9 +2,9 @@ package controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -55,7 +55,7 @@ public class MainController {
             showAccessDenied();
             return;
         }
-        loadView("/Views/AdminUsersView.fxml", "Gestion Utilisateurs", "Utilisateurs");
+        loadView("/Views/Admin/AdminUsersView.fxml", "Gestion Utilisateurs", "Utilisateurs");
     }
 
     @FXML
@@ -97,5 +97,23 @@ public class MainController {
         msg.setStyle("-fx-font-size:16; -fx-text-fill:#e74c3c; -fx-padding:40;");
         contentArea.getChildren().setAll(msg);
         currentModuleLabel.setText("Current: Accès refusé");
+    }
+    @FXML
+    public void handleLogout() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Déconnexion");
+        confirm.setHeaderText("Voulez-vous vous déconnecter ?");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                SessionManager.getInstance().logout();
+                try {
+                    Parent root = FXMLLoader.load(
+                            getClass().getResource("/Views/LoginView.fxml"));
+                    contentArea.getScene().setRoot(root);
+                } catch (Exception e) {
+                    System.err.println("Erreur logout : " + e.getMessage());
+                }
+            }
+        });
     }
 }
