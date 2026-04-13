@@ -21,6 +21,12 @@ import java.sql.SQLException;
 import java.util.Optional;
 import utils.NotificationUtil;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import javafx.stage.FileChooser;
+
 public class RessourceController {
 
     @FXML private TableView<Ressource> tvRessources;
@@ -29,9 +35,12 @@ public class RessourceController {
     @FXML private TableColumn<Ressource, Void> colActions;
     @FXML private TextField txtSearch;
     @FXML private ComboBox<String> cbSort;
+    @FXML private Pagination pagination;
 
+    private final int ITEMS_PER_PAGE = 8;
     private RessourceService rs = new RessourceService();
     private ObservableList<Ressource> ressourceList = FXCollections.observableArrayList();
+    private SortedList<Ressource> sortedData;
 
     @FXML
     public void initialize() {
@@ -45,6 +54,12 @@ public class RessourceController {
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
         colStock.setCellValueFactory(new PropertyValueFactory<>("stockRestant"));
         colUnite.setCellValueFactory(new PropertyValueFactory<>("unite"));
+
+        colNom.setSortable(false);
+        colType.setSortable(false);
+        colStock.setSortable(false);
+        colUnite.setSortable(false);
+        colActions.setSortable(false);
 
         // Custom Actions Column
         colActions.setCellFactory(column -> new TableCell<>() {
@@ -105,31 +120,79 @@ public class RessourceController {
             });
         });
 
-        SortedList<Ressource> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(tvRessources.comparatorProperty());
-        tvRessources.setItems(sortedData);
+        sortedData = new SortedList<>(filteredData);
+        
+        pagination.setPageFactory(this::createPage);
+        filteredData.addListener((javafx.collections.ListChangeListener.Change<? extends Ressource> c) -> {
+            updatePagination();
+        });
+        
+        updatePagination();
+    }
+
+    private void updatePagination() {
+        int pageCount = (int) Math.ceil((double) sortedData.size() / ITEMS_PER_PAGE);
+        pagination.setPageCount(pageCount == 0 ? 1 : pageCount);
+        pagination.setCurrentPageIndex(0);
+        createPage(0);
+    }
+
+    private javafx.scene.Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * ITEMS_PER_PAGE;
+        int toIndex = Math.min(fromIndex + ITEMS_PER_PAGE, sortedData.size());
+        
+        if (fromIndex <= toIndex && fromIndex < sortedData.size()) {
+            tvRessources.setItems(FXCollections.observableArrayList(sortedData.subList(fromIndex, toIndex)));
+        } else {
+            tvRessources.setItems(FXCollections.observableArrayList());
+        }
+        return new javafx.scene.layout.VBox(); // Layout dummy pour la factory
     }
 
     private void applySort() {
         String selection = cbSort.getValue();
         if (selection == null) return;
 
-        tvRessources.getSortOrder().clear();
+        java.util.Comparator<Ressource> comparator = null;
         switch (selection) {
             case "Nom (A-Z)":
-                colNom.setSortType(TableColumn.SortType.ASCENDING);
-                tvRessources.getSortOrder().add(colNom);
+                comparator = java.util.Comparator.comparing(Ressource::getNom);
                 break;
             case "Type":
-                colType.setSortType(TableColumn.SortType.ASCENDING);
-                tvRessources.getSortOrder().add(colType);
+                comparator = java.util.Comparator.comparing(Ressource::getType);
                 break;
             case "Stock (Décroissant)":
-                colStock.setSortType(TableColumn.SortType.DESCENDING);
-                tvRessources.getSortOrder().add(colStock);
+                comparator = java.util.Comparator.comparing(Ressource::getStockRestant).reversed();
                 break;
         }
-        tvRessources.sort();
+        sortedData.setComparator(comparator);
+        createPage(pagination.getCurrentPageIndex());
+    }
+
+    @FXML
+    public void exportExcel() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Sauvegarder l'inventaire");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Excel/CSV Fichier", "*.csv"));
+        File file = fileChooser.showSaveDialog(tvRessources.getScene().getWindow());
+
+        if (file != null) {
+            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+                writer.write('\ufeff'); // BOM pour Excel
+                writer.println("Nom;Type;Stock Restant;Unité"); // Séparateur point-virgule pour Excel FR
+
+                for (Ressource r : sortedData) {
+                    writer.printf("%s;%s;%.2f;%s\n",
+                            r.getNom().replace(";", " "),
+                            r.getType().replace(";", " "),
+                            r.getStockRestant(),
+                            r.getUnite().replace(";", " "));
+                }
+                NotificationUtil.showSuccess(tvRessources.getScene().getWindow(), "Export réussi !");
+            } catch (Exception e) {
+                NotificationUtil.showError(tvRessources.getScene().getWindow(), "Erreur : " + e.getMessage());
+            }
+        }
     }
 
     @FXML

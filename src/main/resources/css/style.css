@@ -62,11 +62,13 @@
 }
 
 .current-module-label {
-    -fx-text-fill: #315743;
-    -fx-background-color: #ecf6f0;
-    -fx-padding: 6 10;
+    -fx-text-fill: #1a432b;
+    -fx-background-color: #e6f5ec;
+    -fx-border-color: #c9e8d4;
+    -fx-padding: 6 12;
+    -fx-border-radius: 8;
     -fx-background-radius: 8;
-    -fx-font-weight: 700;
+    -fx-font-weight: 800;
 }
 
 .header-nav-btn {
@@ -221,10 +223,12 @@
 
 .panel-card {
     -fx-background-color: #ffffff;
-    -fx-border-color: #dce8df;
+    -fx-border-color: #40916c #dce8df #dce8df #dce8df;
+    -fx-border-width: 4 1 1 1;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
-    -fx-padding: 14;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(45,106,79,0.08), 30, 0, 0, 12);
 }
 
 .panel-title {
@@ -277,16 +281,22 @@
 }
 
 .btn-primary {
-    -fx-background-color: #2D6A4F;
+    -fx-background-color: linear-gradient(to bottom, #2D6A4F, #1f4f39);
     -fx-text-fill: white;
-    -fx-font-weight: 700;
-    -fx-background-radius: 9;
-    -fx-padding: 8 14;
+    -fx-font-weight: 800;
+    -fx-background-radius: 8;
+    -fx-padding: 10 18;
     -fx-cursor: hand;
+    -fx-border-color: #1b4326;
+    -fx-border-width: 0 0 3 0;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(45,106,79,0.3), 10, 0, 0, 4);
 }
 
 .btn-primary:hover {
-    -fx-background-color: #235841;
+    -fx-background-color: linear-gradient(to bottom, #40916c, #2D6A4F);
+    -fx-translate-y: -1px;
+    -fx-effect: dropshadow(three-pass-box, rgba(64,145,108,0.4), 15, 0, 0, 6);
 }
 
 .btn-gold {
@@ -349,18 +359,20 @@
     -fx-background-radius: 12;
     -fx-padding: 16;
     -fx-spacing: 16;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.06), 10, 0, 0, 4);
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.06), 10, 0, 0, 4);
 }
 
 .parcel-list-card:hover {
-    -fx-border-color: #74C69D;
-    -fx-background-color: #f9fffb;
+    -fx-border-color: #52B788;
+    -fx-background-color: #f7fcf9;
+    -fx-translate-x: 4px;
 }
 
 .list-cell:selected .parcel-list-card {
     -fx-background-color: #e6f5ec;
     -fx-border-color: #2D6A4F;
-    -fx-border-width: 1.5;
+    -fx-border-width: 2.5;
+    -fx-effect: dropshadow(three-pass-box, rgba(45,106,79,0.2), 15, 0, 0, 6);
 }
 
 .list-cell {
@@ -405,9 +417,15 @@
     -fx-background-radius: 12;
     -fx-padding: 16;
     -fx-spacing: 12;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 8, 0, 0, 3);
-    -fx-border-color: #f0f0f0;
+    -fx-effect: dropshadow(three-pass-box, rgba(45,106,79,0.06), 15, 0, 0, 5);
+    -fx-border-color: #edf5f0;
+    -fx-border-width: 1 1 2 1;
     -fx-border-radius: 12;
+}
+
+.culture-card:hover {
+    -fx-border-color: #74C69D;
+    -fx-effect: dropshadow(three-pass-box, rgba(45,106,79,0.12), 20, 0, 0, 6);
 }
 
 .culture-icon-box {
@@ -472,31 +490,54 @@
 }
 
 .culture-action-btn {
-    -fx-background-color: #f8f9fa;
-    -fx-text-fill: #666;
-    -fx-font-size: 12px;
-    -fx-background-radius: 20;
+    -fx-background-color: #fff9e6;
+    -fx-text-fill: #d4a853;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
     -fx-min-width: 30;
     -fx-min-height: 30;
+    -fx-padding: 2 6;
 }
 
 .culture-action-btn:hover {
-    -fx-background-color: #eef2f5;
-    -fx-text-fill: #007bff;
+    -fx-background-color: #d4a853;
+    -fx-text-fill: white;
 }
 
 .culture-action-btn-danger {
-    -fx-background-color: #f8f9fa;
-    -fx-text-fill: #666;
-    -fx-font-size: 12px;
-    -fx-background-radius: 20;
+    -fx-background-color: #ffeeee;
+    -fx-text-fill: #dc3545;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
     -fx-cursor: hand;
     -fx-min-width: 30;
     -fx-min-height: 30;
+    -fx-padding: 2 6;
 }
 
 .culture-action-btn-danger:hover {
-    -fx-background-color: #fff5f5;
-    -fx-text-fill: #dc3545;
-}
+    -fx-background-color: #dc3545;
+    -fx-text-fill: white;
+}
+
+/* --- FORM FIELDS PREMIUM STYLES --- */
+.text-field, .combo-box, .date-picker {
+    -fx-border-color: #dce8df;
+    -fx-border-radius: 8;
+    -fx-border-width: 1.5;
+    -fx-background-color: #fdfdfd;
+}
+
+.text-field:focused, .combo-box:focused, .date-picker:focused {
+    -fx-border-color: #52b788;
+    -fx-border-width: 2;
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(82, 183, 136, 0.25), 10, 0, 0, 3);
+}
+
+.text-area:focused .content {
+    -fx-background-color: #ffffff;
+}

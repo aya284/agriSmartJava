@@ -21,7 +21,7 @@
         <HBox alignment="CENTER_LEFT" spacing="10">
             <Label text="Liste de l'inventaire" styleClass="panel-title"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Exporter (PDF)" styleClass="header-nav-btn" style="-fx-font-size: 11px;"/>
+            <Button text="Exporter (Excel)" onAction="#exportExcel" styleClass="btn-primary" style="-fx-font-size: 11px;"/>
         </HBox>
         
         <TableView fx:id="tvRessources" VBox.vgrow="ALWAYS" styleClass="table-view">
@@ -36,5 +36,7 @@
                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
             </columnResizePolicy>
         </TableView>
+
+        <Pagination fx:id="pagination" pageCount="1" maxPageIndicatorCount="5" VBox.vgrow="NEVER" style="-fx-page-information-visible: false;"/>
     </VBox>
 </VBox>

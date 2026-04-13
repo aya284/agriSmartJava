@@ -54,10 +54,10 @@ public class ParcelleController {
         // calculer la hauteur (ce qui cause le chevauchement)
         lvParcelles.setFixedCellSize(95);
 
-        refreshList();
         setupSearch();
         setupSelectionListener();
         setupCellFactory();
+        refreshList();
         loadMap();
     }
 
@@ -118,7 +118,24 @@ public class ParcelleController {
 
     private void refreshList() {
         try {
+            Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+            int selectedId = selected != null ? selected.getId() : -1;
+
             parcelleList.setAll(ps.afficher());
+
+            // Si filteredList est déjà installé
+            if (lvParcelles.getItems() != null && !lvParcelles.getItems().isEmpty()) {
+                if (selectedId != -1) {
+                    for (Parcelle p : lvParcelles.getItems()) {
+                        if (p.getId() == selectedId) {
+                            lvParcelles.getSelectionModel().select(p);
+                            return;
+                        }
+                    }
+                }
+                // Par défaut, sélectionner le premier s'il y en a un
+                lvParcelles.getSelectionModel().selectFirst();
+            }
         } catch (SQLException e) {
             showError("Erreur SQL", "Impossible de charger les parcelles : " + e.getMessage());
         }
