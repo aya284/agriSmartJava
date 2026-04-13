@@ -28,12 +28,18 @@ import java.util.Optional;
 
 public class ParcelleController {
 
-    @FXML private ListView<Parcelle> lvParcelles;
-    @FXML private Label lblDetailNom, lblDetailSurface, lblDetailType, lblDetailCoords;
-    @FXML private WebView webViewMap;
-    @FXML private VBox detailsContainer;
-    @FXML private VBox cultureListContainer;
-    @FXML private TextField txtSearch;
+    @FXML
+    private ListView<Parcelle> lvParcelles;
+    @FXML
+    private Label lblDetailNom, lblDetailSurface, lblDetailType, lblDetailCoords;
+    @FXML
+    private WebView webViewMap;
+    @FXML
+    private VBox detailsContainer;
+    @FXML
+    private VBox cultureListContainer;
+    @FXML
+    private TextField txtSearch;
 
     private ParcelleService ps = new ParcelleService();
     private CultureService cs = new CultureService();
@@ -54,10 +60,11 @@ public class ParcelleController {
         filteredList = new FilteredList<>(parcelleList, p -> true);
         txtSearch.textProperty().addListener((obs, oldVal, newVal) -> {
             filteredList.setPredicate(p -> {
-                if (newVal == null || newVal.isEmpty()) return true;
+                if (newVal == null || newVal.isEmpty())
+                    return true;
                 String lowerCaseFilter = newVal.toLowerCase();
                 return p.getNom().toLowerCase().contains(lowerCaseFilter) ||
-                       p.getTypeSol().toLowerCase().contains(lowerCaseFilter);
+                        p.getTypeSol().toLowerCase().contains(lowerCaseFilter);
             });
         });
         lvParcelles.setItems(filteredList);
@@ -158,10 +165,10 @@ public class ParcelleController {
         // Header
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
-        
+
         Label icon = new Label("🌿");
         icon.getStyleClass().add("culture-icon-box");
-        
+
         VBox titleArea = new VBox(2);
         Label typeLabel = new Label(c.getTypeCulture());
         typeLabel.getStyleClass().add("culture-card-title");
@@ -183,11 +190,11 @@ public class ParcelleController {
         Button btnEdit = new Button("✎");
         btnEdit.getStyleClass().add("culture-action-btn");
         btnEdit.setOnAction(e -> openEditCultureModal(c));
-        
+
         Button btnDel = new Button("🗑");
         btnDel.getStyleClass().add("culture-action-btn-danger");
         btnDel.setOnAction(e -> handleCultureDelete(c));
-        
+
         actions.getChildren().addAll(btnUtiliser, btnEdit, btnDel);
 
         header.getChildren().addAll(icon, titleArea, spacer, actions);
@@ -195,12 +202,14 @@ public class ParcelleController {
         // Dates
         HBox dateGrid = new HBox(0);
         dateGrid.getStyleClass().add("culture-date-grid");
-        
-        VBox plantCol = createDateCol("Plantation", c.getDatePlantation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        VBox plantCol = createDateCol("Plantation",
+                c.getDatePlantation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         Separator sep = new Separator();
         sep.setOrientation(javafx.geometry.Orientation.VERTICAL);
-        VBox harvestCol = createDateCol("Récolte", c.getDateRecoltePrevue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        
+        VBox harvestCol = createDateCol("Récolte",
+                c.getDateRecoltePrevue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
         HBox.setHgrow(plantCol, Priority.ALWAYS);
         HBox.setHgrow(harvestCol, Priority.ALWAYS);
         dateGrid.getChildren().addAll(plantCol, sep, harvestCol);
@@ -208,8 +217,10 @@ public class ParcelleController {
         // Status
         Label statusBadge = new Label(c.getStatut());
         statusBadge.getStyleClass().add("culture-status-badge");
-        if (c.getStatut().equals("Récolté")) statusBadge.getStyleClass().add("status-harvested");
-        else if (c.getStatut().equals("Planté")) statusBadge.getStyleClass().add("status-planted");
+        if (c.getStatut().equals("Récolté"))
+            statusBadge.getStyleClass().add("status-harvested");
+        else if (c.getStatut().equals("Planté"))
+            statusBadge.getStyleClass().add("status-planted");
 
         // Consommation (Affichage au dessus / dans la carte)
         VBox consumptionBox = new VBox(5);
@@ -220,14 +231,15 @@ public class ParcelleController {
                 Label consTitle = new Label("Consommation :");
                 consTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: #27ae60;");
                 consumptionBox.getChildren().add(consTitle);
-                
+
                 for (Consommation cons : consumptions) {
                     HBox row = new HBox(5);
                     row.setAlignment(Pos.CENTER_LEFT);
 
-                    Label l = new Label("• " + cons.getQuantite() + " " + cons.getUnite() + " " + cons.getRessourceNom() + " (" + cons.getDateConsommation().format(DateTimeFormatter.ofPattern("dd/MM")) + ")");
+                    Label l = new Label("• " + cons.getQuantite() + " " + cons.getUnite() + " " + cons.getRessourceNom()
+                            + " (" + cons.getDateConsommation().format(DateTimeFormatter.ofPattern("dd/MM")) + ")");
                     l.setStyle("-fx-font-size: 10.5px; -fx-text-fill: #555;");
-                    
+
                     Region rSpacer = new Region();
                     HBox.setHgrow(rSpacer, Priority.ALWAYS);
 
@@ -268,7 +280,8 @@ public class ParcelleController {
     @FXML
     private void openAddCultureModal() throws IOException {
         Parcelle p = lvParcelles.getSelectionModel().getSelectedItem();
-        if (p == null) return;
+        if (p == null)
+            return;
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/FormulaireCulture.fxml"));
         Parent root = loader.load();
@@ -303,10 +316,11 @@ public class ParcelleController {
             stage.setTitle("Enregistrer une Consommation");
             stage.setScene(new Scene(root));
             stage.showAndWait();
-            
+
             // Rafraîchir l'affichage pour voir la consommation
             Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
-            if (selected != null) loadCultures(selected.getId());
+            if (selected != null)
+                loadCultures(selected.getId());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -324,7 +338,7 @@ public class ParcelleController {
             stage.setTitle("Modifier la Consommation");
             stage.setScene(new Scene(root));
             stage.showAndWait();
-            
+
             loadCultures(c.getParcelleId());
         } catch (IOException e) {
             e.printStackTrace();
@@ -335,8 +349,9 @@ public class ParcelleController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Suppression");
         alert.setHeaderText("Supprimer cette consommation ?");
-        alert.setContentText("Le stock consommé (" + cons.getQuantite() + " " + cons.getUnite() + ") sera restitué à l'inventaire.");
-        
+        alert.setContentText(
+                "Le stock consommé (" + cons.getQuantite() + " " + cons.getUnite() + ") sera restitué à l'inventaire.");
+
         if (alert.showAndWait().get() == ButtonType.OK) {
             try {
                 consS.supprimer(cons.getId());
@@ -379,14 +394,16 @@ public class ParcelleController {
     @FXML
     private void openEditModal() throws IOException {
         Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
-        if (selected != null) showModal(selected);
+        if (selected != null)
+            showModal(selected);
     }
 
     private void showModal(Parcelle p) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/FormulaireParcelle.fxml"));
         Parent root = loader.load();
         FormulaireParcelleController controller = loader.getController();
-        if (p != null) controller.setParcelleData(p);
+        if (p != null)
+            controller.setParcelleData(p);
 
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
