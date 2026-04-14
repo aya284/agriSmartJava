@@ -1,5 +1,6 @@
 package services;
 
+import entities.CartItem;
 import entities.Commande;
 import interfaces.IService;
 import utils.MyConnection;
@@ -97,6 +98,75 @@ public class CommandeService implements IService<Commande> {
                 return rs.getInt(1);
             }
             return 0;
+        }
+    }
+
+    public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
+                                      List<CartItem> cartItems) throws SQLException {
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new SQLException("Le panier est vide.");
+        }
+
+        String insertCommande = "INSERT INTO commande (statut, mode_paiement, adresse_livraison, montant_total, " +
+                "created_at, updated_at, client_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
+        String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire, created_at) " +
+                "VALUES (?, ?, ?, ?, NOW())";
+        String updateStock = "UPDATE produit SET quantite_stock = quantite_stock - ?, updated_at=NOW() " +
+                "WHERE id = ? AND quantite_stock >= ?";
+
+        double total = cartItems.stream().mapToDouble(CartItem::getLineTotal).sum();
+        boolean previousAutoCommit = conn.getAutoCommit();
+
+        try {
+            conn.setAutoCommit(false);
+            int commandeId;
+
+            try (PreparedStatement psCommande = conn.prepareStatement(insertCommande, Statement.RETURN_GENERATED_KEYS)) {
+                psCommande.setString(1, "en_attente");
+                psCommande.setString(2, modePaiement);
+                psCommande.setString(3, adresseLivraison);
+                psCommande.setDouble(4, total);
+                psCommande.setInt(5, clientId);
+                psCommande.executeUpdate();
+
+                try (ResultSet keys = psCommande.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        throw new SQLException("Creation de commande impossible: ID non genere.");
+                    }
+                    commandeId = keys.getInt(1);
+                }
+            }
+
+            try (PreparedStatement psItem = conn.prepareStatement(insertItem);
+                 PreparedStatement psStock = conn.prepareStatement(updateStock)) {
+                for (CartItem item : cartItems) {
+                    int produitId = item.getProduit().getId();
+                    int quantite = item.getQuantite();
+
+                    psStock.setInt(1, quantite);
+                    psStock.setInt(2, produitId);
+                    psStock.setInt(3, quantite);
+                    int updated = psStock.executeUpdate();
+                    if (updated == 0) {
+                        throw new SQLException("Stock insuffisant pour le produit #" + produitId + ".");
+                    }
+
+                    psItem.setInt(1, commandeId);
+                    psItem.setInt(2, produitId);
+                    psItem.setInt(3, quantite);
+                    psItem.setDouble(4, item.getUnitPrice());
+                    psItem.addBatch();
+                }
+                psItem.executeBatch();
+            }
+
+            conn.commit();
+            return commandeId;
+        } catch (SQLException ex) {
+            conn.rollback();
+            throw ex;
+        } finally {
+            conn.setAutoCommit(previousAutoCommit);
         }
     }
 

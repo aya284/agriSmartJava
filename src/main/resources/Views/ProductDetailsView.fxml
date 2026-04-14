@@ -62,7 +62,7 @@
                             <Label fx:id="detailsOldPrice" text="" styleClass="details-old-price" visible="false" managed="false"/>
                             <Label fx:id="detailsConvertedPrice" text="≈ 0 EUR · 0 USD" styleClass="details-converted-price"/>
                             <Separator/>
-                            <Button text="Contacter amal" styleClass="details-outline-button"/>
+                            <Button text="Contacter le vendeur" styleClass="details-outline-button" onAction="#contactSeller"/>
                             <HBox alignment="CENTER_LEFT">
                                 <Label text="Quantite" styleClass="details-label-muted"/>
                                 <HBox HBox.hgrow="ALWAYS"/>

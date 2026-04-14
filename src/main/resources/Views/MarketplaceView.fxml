@@ -20,9 +20,10 @@
 
                     <HBox spacing="10">
                         <Button text="Espace vendeur" styleClass="action-chip" onAction="#openSellerSpace"/>
-                        <Button text="Messagerie 6" styleClass="action-chip gold"/>
+                        <Button fx:id="btnMessagingCenter" text="Messagerie" styleClass="action-chip gold" onAction="#openMessagingCenter"/>
+                        <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
                         <Button text="Publier une annonce" styleClass="action-chip primary" onAction="#openAjouterProduit"/>
-                        <Button text="Panier" styleClass="action-chip"/>
+                        <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">
@@ -110,13 +111,13 @@
                 <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
                     <columns>
                         <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
-                        <TableColumn fx:id="colNom" text="Produit" prefWidth="500"/>
-                        <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="150"/>
-                        <TableColumn fx:id="colType" text="Type" prefWidth="130"/>
-                        <TableColumn fx:id="colPrix" text="Prix" prefWidth="180"/>
-                        <TableColumn fx:id="colStock" text="Stock" prefWidth="170"/>
+                        <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
+                        <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
+                        <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
+                        <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
+                        <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
                         <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
-                        <TableColumn fx:id="colActions" text="Actions" prefWidth="220"/>
+                        <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -205,9 +206,9 @@
                 <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
                 <HBox HBox.hgrow="ALWAYS"/>
                 <Button text="Retour" styleClass="details-pill-button" onAction="#closeDetails"/>
-                <Button text="Messagerie 6" styleClass="details-pill-button gold"/>
+                <Button text="Messagerie" styleClass="details-pill-button gold" onAction="#openMessagingCenter"/>
                 <Button text="Copier le lien" styleClass="details-pill-button"/>
-                <Button text="Panier" styleClass="details-pill-button primary"/>
+                <Button text="Panier" styleClass="details-pill-button primary" onAction="#openPanier"/>
                 <Button text="X" styleClass="btn-close" onAction="#closeDetails"/>
             </HBox>
 
@@ -254,20 +255,75 @@
                         <Label fx:id="detailsOldPrice" text="" styleClass="details-old-price" visible="false" managed="false"/>
                         <Label fx:id="detailsConvertedPrice" text="≈ 0 EUR · 0 USD" styleClass="details-converted-price"/>
                         <Separator/>
-                        <Button text="Contacter amal" styleClass="details-outline-button"/>
+                        <Button text="Contacter le vendeur" styleClass="details-outline-button" onAction="#openMessagingCenter"/>
                         <HBox alignment="CENTER_LEFT">
                             <Label text="Quantite" styleClass="details-label-muted"/>
                             <HBox HBox.hgrow="ALWAYS"/>
                             <Spinner fx:id="detailsQuantitySpinner" prefWidth="130" editable="true"/>
                         </HBox>
                         <Button text="Ajouter au panier" styleClass="details-primary-button"/>
-                        <Button text="Voir mon panier" styleClass="details-outline-dark-button"/>
+                        <Button text="Voir mon panier" styleClass="details-outline-dark-button" onAction="#openPanier"/>
                         <Button text="Copier le lien" styleClass="details-outline-dark-button"/>
                     </VBox>
                 </VBox>
             </HBox>
         </VBox>
         </ScrollPane>
+    </StackPane>
+
+    <StackPane fx:id="wishlistOverlay" style="-fx-background-color: rgba(15,23,42,0.58);" visible="false">
+        <VBox styleClass="wishlist-shell" maxWidth="1280" maxHeight="860" spacing="0">
+            <HBox styleClass="wishlist-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="Ma Wishlist" styleClass="wishlist-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="wishlistMetaLabel" text="0 article" styleClass="wishlist-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeWishlistCenter"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                <content>
+                    <FlowPane fx:id="wishlistGrid" hgap="16" vgap="16" styleClass="wishlist-grid"/>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="messagingOverlay" style="-fx-background-color: rgba(15,23,42,0.58);" visible="false">
+        <VBox styleClass="chat-shell" maxWidth="1280" maxHeight="860" spacing="0">
+            <HBox styleClass="chat-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="Messagerie Marketplace" styleClass="chat-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="messagingMetaLabel" text="0 conversation" styleClass="chat-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeMessagingCenter"/>
+            </HBox>
+
+            <HBox styleClass="chat-body" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" spacing="0">
+                <VBox styleClass="chat-sidebar" prefWidth="330" minWidth="300" maxWidth="360" spacing="10">
+                    <Label text="Conversations" styleClass="chat-sidebar-title"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                        <content>
+                            <VBox fx:id="conversationListBox" spacing="8" style="-fx-padding: 2 6 6 2;"/>
+                        </content>
+                    </ScrollPane>
+                </VBox>
+
+                <VBox styleClass="chat-main" HBox.hgrow="ALWAYS" spacing="10">
+                    <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                        <content>
+                            <VBox fx:id="messageListBox" spacing="10" styleClass="chat-thread-list"/>
+                        </content>
+                    </ScrollPane>
+
+                    <VBox styleClass="chat-composer-wrap" spacing="8">
+                        <TextArea fx:id="messageInputArea" promptText="Ecrire votre message..." wrapText="true" prefRowCount="3" styleClass="chat-input"/>
+                        <HBox alignment="CENTER_RIGHT">
+                            <Button text="Envoyer" styleClass="chat-send-btn" onAction="#sendCurrentMessage"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </HBox>
+        </VBox>
     </StackPane>
 
 </StackPane>

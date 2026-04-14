@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
 
 public class ProductDetailsController {
 
@@ -27,6 +28,9 @@ public class ProductDetailsController {
     @FXML private Label detailsId;
     @FXML private ImageView detailsImageView;
     @FXML private Spinner<Integer> detailsQuantitySpinner;
+
+    private Produit currentProduct;
+    private Consumer<Produit> onContactSeller;
 
     private String safe(String value) {
         return value == null ? "" : value;
@@ -94,6 +98,8 @@ public class ProductDetailsController {
             return;
         }
 
+        currentProduct = p;
+
         detailsTitle.setText(normalizeText(safe(p.getNom())));
         detailsCategory.setText(normalizeText(safe(p.getCategorie())) + " - " + normalizeText(safe(p.getType())));
         detailsDesc.setText(normalizeText(safe(p.getDescription())));
@@ -121,6 +127,18 @@ public class ProductDetailsController {
             detailsOldPrice.setManaged(false);
             detailsConvertedPrice.setText(String.format("≈ %.2f EUR · %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
         }
+    }
+
+    public void setOnContactSeller(Consumer<Produit> onContactSeller) {
+        this.onContactSeller = onContactSeller;
+    }
+
+    @FXML
+    private void contactSeller() {
+        if (onContactSeller != null && currentProduct != null) {
+            onContactSeller.accept(currentProduct);
+        }
+        closeWindow();
     }
 
     @FXML

@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MarketplaceView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MarketplaceView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,7 +14,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="26" />
+    <option name="cachedIndexableFilesCount" value="27" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -49,6 +48,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "marketplace",
@@ -102,6 +102,7 @@
       <workItem from="1775745518901" duration="5350000" />
       <workItem from="1775751716719" duration="877000" />
       <workItem from="1775812583262" duration="106000" />
+      <workItem from="1775816309743" duration="207000" />
     </task>
     <servers />
   </component>
