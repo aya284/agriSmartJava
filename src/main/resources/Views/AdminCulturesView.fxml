@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.admin.AdminCulturesController"
+            styleClass="content-view">
+
+    <top>
+        <VBox spacing="15" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5); -fx-background-radius: 0 0 15 15;">
+            <padding>
+                <Insets top="20" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="Tableau Global des Cultures" styleClass="title-label" style="-fx-font-size: 26; -fx-font-weight: 900; -fx-text-fill: #2c3e50;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="📍 Vue Administrateur" style="-fx-text-fill: #2ecc71; -fx-font-weight: bold; -fx-font-size: 11;"/>
+                        <Label text="•  Suivi de toutes les parcelles par agriculteur" style="-fx-text-fill: #95a5a6; -fx-font-size: 11;"/>
+                    </HBox>
+                </VBox>
+                
+                <HBox spacing="14" alignment="CENTER_RIGHT">
+                    <VBox spacing="4">
+                        <Label text="Rechercher par Agriculteur / Parcelle / Culture" style="-fx-font-size: 10; -fx-text-fill: #7f8c8d; -fx-font-weight: bold;"/>
+                        <TextField fx:id="searchField" promptText="Tapez votre recherche..." prefWidth="320" styleClass="search-field" onKeyReleased="#handleSearch"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="Trier par" style="-fx-font-size: 10; -fx-text-fill: #7f8c8d; -fx-font-weight: bold;"/>
+                        <ComboBox fx:id="sortCombo" prefWidth="180" onAction="#handleSort" styleClass="combo-box"/>
+                    </VBox>
+                    <VBox spacing="4" alignment="BOTTOM_RIGHT">
+                        <Button onAction="#handleExport" text="📥" minWidth="45" maxWidth="45" minHeight="45" maxHeight="45" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-background-radius: 50; -fx-font-weight: bold; -fx-font-size: 20; -fx-cursor: hand;"/>
+                    </VBox>
+                </HBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="20">
+            <padding>
+                <Insets top="15" right="15" bottom="10" left="15"/>
+            </padding>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent;">
+                <TilePane fx:id="cardsContainer" hgap="15" vgap="15" alignment="TOP_LEFT" prefColumns="3"/>
+            </ScrollPane>
+            
+            <HBox alignment="CENTER">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Pagination fx:id="pagination" maxPageIndicatorCount="5" styleClass="custom-pagination"/>
+            </HBox>
+        </VBox>
+    </center>
+
+</BorderPane>

@@ -541,3 +541,17 @@
 .text-area:focused .content {
     -fx-background-color: #ffffff;
 }
+/* --- ADMIN CULTURE MANAGEMENT STYLES --- */
+.parcel-card-admin { -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5); -fx-cursor: hand; -fx-transition: all 0.3s; }
+.parcel-card-admin:hover { -fx-border-color: #2ecc71; -fx-translate-y: -5px; -fx-effect: dropshadow(three-pass-box, rgba(46,204,113,0.15), 20, 0, 0, 10); }
+.card-title-admin { -fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #1a202c; }
+.card-subtitle-admin { -fx-font-size: 12px; -fx-text-fill: #718096; }
+.section-label-admin { -fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #a0aec0; -fx-text-transform: uppercase; }
+.culture-tag-admin { -fx-background-color: #f0fff4; -fx-text-fill: #2f855a; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 4 10; -fx-background-radius: 6; -fx-border-color: #c6f6d5; -fx-border-radius: 6; }
+.location-text-admin { -fx-font-size: 11px; -fx-text-fill: #4a5568; -fx-font-style: italic; }
+.custom-pagination .pagination-control { -fx-background-color: transparent; }
+.custom-pagination .page-navigation-area .toggle-button:selected { -fx-background-color: #2ecc71; -fx-text-fill: white; }
+.title-label { -fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #2d3748; }
+.subtitle-label { -fx-font-size: 14px; -fx-text-fill: #718096; }
+.search-field { -fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #cbd5e0; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 13px; }
+.search-field:focused { -fx-border-color: #2ecc71; -fx-effect: dropshadow(three-pass-box, rgba(46,204,113,0.1), 10, 0, 0, 0); }

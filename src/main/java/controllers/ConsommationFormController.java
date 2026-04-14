@@ -11,10 +11,11 @@ import javafx.util.StringConverter;
 import services.ConsommationService;
 import services.RessourceService;
 
+import utils.NotificationUtil;
+import utils.SessionManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
-import utils.NotificationUtil;
 
 public class ConsommationFormController {
 
@@ -46,7 +47,8 @@ public class ConsommationFormController {
 
     private void setupRessourceComboBox() {
         try {
-            List<Ressource> ressources = rs.afficher();
+            int userId = SessionManager.getInstance().getCurrentUser().getId();
+            List<Ressource> ressources = rs.afficherByUser(userId);
             cbRessource.setItems(FXCollections.observableArrayList(ressources));
             
             cbRessource.setConverter(new StringConverter<Ressource>() {
