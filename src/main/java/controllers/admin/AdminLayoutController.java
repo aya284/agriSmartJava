@@ -57,7 +57,7 @@ public class AdminLayoutController {
     }
 
     @FXML public void openTaches() {
-        loadContent("/Views/TachesView.fxml",
+        loadContent("/Views/task.fxml",
                 "Tâches", "Admin / Tâches");
     }
 

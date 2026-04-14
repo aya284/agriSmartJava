@@ -4,13 +4,33 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
+    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/amine/OneDrive/Bureau/Pi dev/agriSmartJava" value="3C7nSuJCC4io7mllnscZwSuyjYs" />
+    </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedChatMode">
+    <option name="chatModeId" value="Agent" />
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="chat-panel" value="Claude Haiku 4.5" />
+      <entry key="agent-panel" value="Claude Haiku 4.5" />
+    </selectedModels>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="57" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -58,6 +78,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.MainApp.executor": "Run",
+    "Application.main.executor": "Run",
     "Maven.agrismart [org.openjfx:javafx-maven-plugin:0.0.8:run].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
@@ -68,7 +89,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "user",
+    "git-widget-placeholder": "taches",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
@@ -83,7 +104,7 @@
     "project.structure.last.edited": "SDKs",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.JavaFX",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "to.speed.mode.migration.done": "true",
     "vue.rearranger.settings.migration": "true"
   }
@@ -97,6 +118,14 @@
     </key>
   </component>
   <component name="RunManager">
+    <configuration name="main" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="main.MainApp" />
+      <module name="agrismart" />
+      <option name="VM_PARAMETERS" value="--module-path &quot;C:\Users\amine\OneDrive\Bureau\Pi dev\openjfx-17.0.18_windows-x64_bin-sdk\javafx-sdk-17.0.18\lib&quot; --add-modules javafx.controls,javafx.fxml" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="agriSmartJava" />
       <method v="2">
@@ -123,6 +152,7 @@
       <workItem from="1776010372212" duration="8323000" />
       <workItem from="1776103665595" duration="8979000" />
       <workItem from="1776162058484" duration="432000" />
+      <workItem from="1776206739153" duration="363000" />
     </task>
     <task id="LOCAL-00001" summary="login and register">
       <option name="closed" value="true" />
@@ -175,5 +205,13 @@
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
     <select />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>

@@ -41,7 +41,7 @@ public class MainController {
 
     @FXML
     public void openTaches() {
-        loadView("/Views/TachesView.fxml", "Gestion Tâches", "Gestion Taches");
+        loadView("/Views/task.fxml", "Gestion Tâches", "Gestion Taches");
     }
 
     @FXML
