@@ -7,7 +7,9 @@ import utils.MyConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CommandeService implements IService<Commande> {
     private final Connection conn = MyConnection.getInstance().getConn();
@@ -119,6 +121,21 @@ public class CommandeService implements IService<Commande> {
         }
     }
 
+    public List<Commande> getRecentSinceDays(int days) throws SQLException {
+        int safeDays = Math.max(1, Math.min(days, 3650));
+        List<Commande> list = new ArrayList<>();
+        String req = "SELECT * FROM commande WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) ORDER BY created_at ASC";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, safeDays);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSet(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
                                       List<CartItem> cartItems) throws SQLException {
         if (cartItems == null || cartItems.isEmpty()) {
@@ -129,15 +146,63 @@ public class CommandeService implements IService<Commande> {
                 "created_at, updated_at, client_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
         String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire, created_at) " +
                 "VALUES (?, ?, ?, ?, NOW())";
-        String updateStock = "UPDATE produit SET quantite_stock = quantite_stock - ?, updated_at=NOW() " +
-                "WHERE id = ? AND quantite_stock >= ?";
+        String lockProduit = "SELECT quantite_stock, prix, is_promotion, promotion_price, banned, vendeur_id " +
+                "FROM produit WHERE id=? FOR UPDATE";
+        String updateStock = "UPDATE produit SET quantite_stock = quantite_stock - ?, updated_at=NOW() WHERE id = ?";
 
-        double total = cartItems.stream().mapToDouble(CartItem::getLineTotal).sum();
+        Map<Integer, Integer> quantitiesByProduitId = new HashMap<>();
+        for (CartItem item : cartItems) {
+            if (item == null || item.getProduit() == null || item.getProduit().getId() <= 0) {
+                throw new SQLException("Panier invalide: produit manquant.");
+            }
+            int produitId = item.getProduit().getId();
+            int qty = Math.max(1, item.getQuantite());
+            quantitiesByProduitId.put(produitId, quantitiesByProduitId.getOrDefault(produitId, 0) + qty);
+        }
+
+        Map<Integer, Double> unitPriceByProduitId = new HashMap<>();
+        double total = 0.0;
         boolean previousAutoCommit = conn.getAutoCommit();
 
         try {
             conn.setAutoCommit(false);
             int commandeId;
+
+            try (PreparedStatement psLock = conn.prepareStatement(lockProduit)) {
+                for (Map.Entry<Integer, Integer> entry : quantitiesByProduitId.entrySet()) {
+                    int produitId = entry.getKey();
+                    int quantiteDemandee = entry.getValue();
+
+                    psLock.setInt(1, produitId);
+                    try (ResultSet rs = psLock.executeQuery()) {
+                        if (!rs.next()) {
+                            throw new SQLException("Le produit #" + produitId + " n'existe plus.");
+                        }
+
+                        if (rs.getBoolean("banned")) {
+                            throw new SQLException("Le produit #" + produitId + " est indisponible.");
+                        }
+
+                        int vendeurId = rs.getInt("vendeur_id");
+                        if (vendeurId > 0 && vendeurId == clientId) {
+                            throw new SQLException("Vous ne pouvez pas commander votre propre produit (#" + produitId + ").");
+                        }
+
+                        int stock = rs.getInt("quantite_stock");
+                        if (quantiteDemandee > stock) {
+                            throw new SQLException("Stock insuffisant pour le produit #" + produitId +
+                                    " (stock: " + stock + ", demande: " + quantiteDemandee + ").");
+                        }
+
+                        double unitPrice = rs.getBoolean("is_promotion") && rs.getDouble("promotion_price") > 0
+                                ? rs.getDouble("promotion_price")
+                                : rs.getDouble("prix");
+
+                        unitPriceByProduitId.put(produitId, unitPrice);
+                        total += unitPrice * quantiteDemandee;
+                    }
+                }
+            }
 
             try (PreparedStatement psCommande = conn.prepareStatement(insertCommande, Statement.RETURN_GENERATED_KEYS)) {
                 psCommande.setString(1, "en_attente");
@@ -157,13 +222,11 @@ public class CommandeService implements IService<Commande> {
 
             try (PreparedStatement psItem = conn.prepareStatement(insertItem);
                  PreparedStatement psStock = conn.prepareStatement(updateStock)) {
-                for (CartItem item : cartItems) {
-                    int produitId = item.getProduit().getId();
-                    int quantite = item.getQuantite();
-
+                for (Map.Entry<Integer, Integer> entry : quantitiesByProduitId.entrySet()) {
+                    int produitId = entry.getKey();
+                    int quantite = entry.getValue();
                     psStock.setInt(1, quantite);
                     psStock.setInt(2, produitId);
-                    psStock.setInt(3, quantite);
                     int updated = psStock.executeUpdate();
                     if (updated == 0) {
                         throw new SQLException("Stock insuffisant pour le produit #" + produitId + ".");
@@ -172,7 +235,7 @@ public class CommandeService implements IService<Commande> {
                     psItem.setInt(1, commandeId);
                     psItem.setInt(2, produitId);
                     psItem.setInt(3, quantite);
-                    psItem.setDouble(4, item.getUnitPrice());
+                    psItem.setDouble(4, unitPriceByProduitId.getOrDefault(produitId, 0.0));
                     psItem.addBatch();
                 }
                 psItem.executeBatch();

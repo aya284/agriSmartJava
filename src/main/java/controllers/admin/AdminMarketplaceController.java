@@ -1,29 +1,46 @@
 package controllers.admin;
 
+import entities.ProductModerationAudit;
+import entities.Commande;
 import entities.Produit;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.geometry.Side;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
+import services.CommandeService;
+import services.ProductModerationAuditService;
 import services.ProduitService;
+import utils.SessionManager;
 
 import java.sql.SQLException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.time.temporal.WeekFields;
 
 public class AdminMarketplaceController {
 
@@ -36,6 +53,9 @@ public class AdminMarketplaceController {
     @FXML private PieChart typeChart;
     @FXML private PieChart statusChart;
     @FXML private BarChart<String, Number> stockChart;
+    @FXML private ComboBox<String> periodCombo;
+    @FXML private LineChart<String, Number> kpiTrendChart;
+    @FXML private LineChart<String, Number> revenueTrendChart;
 
     @FXML private TextField searchField;
     @FXML private TableView<Produit> productsTable;
@@ -46,13 +66,29 @@ public class AdminMarketplaceController {
     @FXML private TableColumn<Produit, Integer> colStock;
     @FXML private TableColumn<Produit, Boolean> colBanned;
     @FXML private TableColumn<Produit, Void> colActions;
+    @FXML private TableView<ProductModerationAudit> moderationHistoryTable;
+    @FXML private TableColumn<ProductModerationAudit, String> colAuditTime;
+    @FXML private TableColumn<ProductModerationAudit, String> colAuditAction;
+    @FXML private TableColumn<ProductModerationAudit, String> colAuditProduct;
+    @FXML private TableColumn<ProductModerationAudit, String> colAuditAdmin;
+    @FXML private TableColumn<ProductModerationAudit, String> colAuditReason;
 
     private final ProduitService produitService = new ProduitService();
+    private final CommandeService commandeService = new CommandeService();
+    private final ProductModerationAuditService moderationAuditService = new ProductModerationAuditService();
     private List<Produit> allProducts = new ArrayList<>();
+    private static final DateTimeFormatter AUDIT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
+    private static final String PERIOD_DAILY = "Daily";
+    private static final String PERIOD_WEEKLY = "Weekly";
+    private static final String PERIOD_MONTHLY = "Monthly";
+    private static final DateTimeFormatter DAILY_LABEL_FORMAT = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter MONTHLY_LABEL_FORMAT = DateTimeFormatter.ofPattern("MM/yy");
 
     @FXML
     public void initialize() {
         setupTable();
+        setupAuditTable();
+        setupPeriodControl();
         refreshAll();
     }
 
@@ -70,15 +106,34 @@ public class AdminMarketplaceController {
     }
 
     @FXML
+    public void handlePeriodChange() {
+        try {
+            refreshKpiTrends();
+        } catch (SQLException e) {
+            showError("Erreur tendances KPI", e.getMessage());
+        }
+    }
+
+    @FXML
     public void refreshAll() {
         try {
             allProducts = produitService.afficherTous();
             applyFilter();
             refreshStats();
             refreshCharts();
+            refreshKpiTrends();
+            loadModerationHistory();
         } catch (SQLException e) {
             showError("Erreur chargement produits", e.getMessage());
         }
+    }
+
+    private void setupPeriodControl() {
+        if (periodCombo == null) {
+            return;
+        }
+        periodCombo.getItems().setAll(PERIOD_DAILY, PERIOD_WEEKLY, PERIOD_MONTHLY);
+        periodCombo.setValue(PERIOD_DAILY);
     }
 
     private void setupTable() {
@@ -150,12 +205,103 @@ public class AdminMarketplaceController {
             return;
         }
 
+        String reason = promptReason(action, produit);
+        if (reason == null) {
+            return;
+        }
+
         try {
             produitService.setBanned(produit.getId(), banned);
+            moderationAuditService.logAction(
+                    produit,
+                    banned,
+                    reason,
+                    getCurrentAdminId(),
+                    getCurrentAdminName()
+            );
             refreshAll();
         } catch (SQLException e) {
             showError("Erreur mise a jour", e.getMessage());
         }
+    }
+
+    private void setupAuditTable() {
+        if (moderationHistoryTable == null) {
+            return;
+        }
+
+        colAuditTime.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+                cell.getValue().getCreatedAt() == null
+                        ? "-"
+                        : cell.getValue().getCreatedAt().format(AUDIT_TIME_FORMAT)
+        ));
+        colAuditAction.setCellValueFactory(new PropertyValueFactory<>("actionType"));
+        colAuditProduct.setCellValueFactory(new PropertyValueFactory<>("produitNom"));
+        colAuditAdmin.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
+                safe(cell.getValue().getAdminName()).isBlank()
+                        ? ("Admin #" + cell.getValue().getAdminId())
+                        : cell.getValue().getAdminName()
+        ));
+        colAuditReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
+
+        colAuditAction.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText("BAN".equalsIgnoreCase(item) ? "BANNI" : "DEBANNI");
+            }
+        });
+    }
+
+    private void loadModerationHistory() throws SQLException {
+        if (moderationHistoryTable == null) {
+            return;
+        }
+        moderationHistoryTable.setItems(FXCollections.observableArrayList(moderationAuditService.getRecent(25)));
+    }
+
+    private String promptReason(String action, Produit produit) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Moderation produit");
+        dialog.setHeaderText("Raison requise pour " + action + " le produit");
+        dialog.setContentText("Raison:");
+        dialog.getEditor().setPromptText("Ex: annonce non conforme, contenu trompeur...");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        String reason = safe(result.get());
+        if (reason.isBlank()) {
+            showError("Moderation", "La raison est obligatoire pour tracer l'action.");
+            return null;
+        }
+        return reason;
+    }
+
+    private int getCurrentAdminId() {
+        entities.User user = SessionManager.getInstance().getCurrentUser();
+        if (user != null && user.getId() > 0) {
+            return user.getId();
+        }
+        return 0;
+    }
+
+    private String getCurrentAdminName() {
+        entities.User user = SessionManager.getInstance().getCurrentUser();
+        if (user == null) {
+            return "System";
+        }
+        String fullName = safe(user.getFullName());
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+        return safe(user.getEmail()).isBlank() ? "Admin" : user.getEmail();
     }
 
     private void applyFilter() {
@@ -231,6 +377,153 @@ public class AdminMarketplaceController {
             stockChart.setLegendVisible(false);
             stockChart.setAnimated(false);
         }
+    }
+
+    private void refreshKpiTrends() throws SQLException {
+        if (kpiTrendChart == null || revenueTrendChart == null) {
+            return;
+        }
+
+        String period = periodCombo == null || periodCombo.getValue() == null
+                ? PERIOD_DAILY
+                : periodCombo.getValue();
+        int days = daysForPeriod(period);
+
+        LinkedHashMap<String, KpiAccumulator> buckets = initBuckets(period, days);
+        List<Commande> commandes = commandeService.getRecentSinceDays(days);
+        List<ProductModerationAudit> audits = moderationAuditService.getRecentSinceDays(days);
+
+        for (Commande commande : commandes) {
+            LocalDateTime createdAt = commande.getCreatedAt();
+            if (createdAt == null) {
+                continue;
+            }
+            String bucket = resolveBucketLabel(createdAt.toLocalDate(), period);
+            KpiAccumulator acc = buckets.get(bucket);
+            if (acc == null) {
+                continue;
+            }
+
+            acc.orders += 1;
+            acc.revenue += Math.max(0.0, commande.getMontantTotal());
+
+            String status = safe(commande.getStatut()).toLowerCase(Locale.ROOT);
+            if (status.contains("annul") || status.contains("cancel")) {
+                acc.cancellations += 1;
+            }
+            if (status.contains("echec") || status.contains("failed")) {
+                acc.failedPayments += 1;
+            }
+        }
+
+        for (ProductModerationAudit audit : audits) {
+            if (audit.getCreatedAt() == null || !"BAN".equalsIgnoreCase(safe(audit.getActionType()))) {
+                continue;
+            }
+            String bucket = resolveBucketLabel(audit.getCreatedAt().toLocalDate(), period);
+            KpiAccumulator acc = buckets.get(bucket);
+            if (acc != null) {
+                acc.bans += 1;
+            }
+        }
+
+        XYChart.Series<String, Number> ordersSeries = new XYChart.Series<>();
+        ordersSeries.setName("Orders");
+        XYChart.Series<String, Number> bansSeries = new XYChart.Series<>();
+        bansSeries.setName("Bans");
+        XYChart.Series<String, Number> cancellationsSeries = new XYChart.Series<>();
+        cancellationsSeries.setName("Cancellations");
+        XYChart.Series<String, Number> failedSeries = new XYChart.Series<>();
+        failedSeries.setName("Failed Payments");
+        XYChart.Series<String, Number> conversionSeries = new XYChart.Series<>();
+        conversionSeries.setName("Conversion %");
+
+        XYChart.Series<String, Number> revenueSeries = new XYChart.Series<>();
+        revenueSeries.setName("Revenue TND");
+
+        for (Map.Entry<String, KpiAccumulator> entry : buckets.entrySet()) {
+            String label = entry.getKey();
+            KpiAccumulator acc = entry.getValue();
+
+            ordersSeries.getData().add(new XYChart.Data<>(label, acc.orders));
+            bansSeries.getData().add(new XYChart.Data<>(label, acc.bans));
+            cancellationsSeries.getData().add(new XYChart.Data<>(label, acc.cancellations));
+            failedSeries.getData().add(new XYChart.Data<>(label, acc.failedPayments));
+
+            double successful = Math.max(0, acc.orders - acc.cancellations - acc.failedPayments);
+            double conversion = acc.orders == 0 ? 0.0 : (successful * 100.0) / acc.orders;
+            conversionSeries.getData().add(new XYChart.Data<>(label, Math.min(100.0, Math.max(0.0, conversion))));
+
+            revenueSeries.getData().add(new XYChart.Data<>(label, acc.revenue));
+        }
+
+        kpiTrendChart.getData().setAll(ordersSeries, bansSeries, cancellationsSeries, failedSeries, conversionSeries);
+        revenueTrendChart.getData().setAll(revenueSeries);
+        kpiTrendChart.setLegendVisible(true);
+        revenueTrendChart.setLegendVisible(true);
+    }
+
+    private int daysForPeriod(String period) {
+        if (PERIOD_MONTHLY.equals(period)) {
+            return 365;
+        }
+        if (PERIOD_WEEKLY.equals(period)) {
+            return 84;
+        }
+        return 30;
+    }
+
+    private LinkedHashMap<String, KpiAccumulator> initBuckets(String period, int days) {
+        LinkedHashMap<String, KpiAccumulator> buckets = new LinkedHashMap<>();
+        LocalDate today = LocalDate.now();
+
+        if (PERIOD_MONTHLY.equals(period)) {
+            YearMonth current = YearMonth.from(today);
+            for (int i = 11; i >= 0; i--) {
+                YearMonth ym = current.minusMonths(i);
+                buckets.put(ym.format(MONTHLY_LABEL_FORMAT), new KpiAccumulator());
+            }
+            return buckets;
+        }
+
+        if (PERIOD_WEEKLY.equals(period)) {
+            LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+            for (int i = 11; i >= 0; i--) {
+                LocalDate start = weekStart.minusWeeks(i);
+                int week = start.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear());
+                buckets.put("W" + week, new KpiAccumulator());
+            }
+            return buckets;
+        }
+
+        LocalDate start = today.minusDays(days - 1L);
+        for (int i = 0; i < days; i++) {
+            LocalDate day = start.plusDays(i);
+            buckets.put(day.format(DAILY_LABEL_FORMAT), new KpiAccumulator());
+        }
+        return buckets;
+    }
+
+    private String resolveBucketLabel(LocalDate date, String period) {
+        if (date == null) {
+            return "-";
+        }
+        if (PERIOD_MONTHLY.equals(period)) {
+            return YearMonth.from(date).format(MONTHLY_LABEL_FORMAT);
+        }
+        if (PERIOD_WEEKLY.equals(period)) {
+            int week = date.with(DayOfWeek.MONDAY).get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear());
+            return "W" + week;
+        }
+        return date.format(DAILY_LABEL_FORMAT);
+    }
+
+    private static final class KpiAccumulator {
+        int orders;
+        int bans;
+        int cancellations;
+        int failedPayments;
+        double revenue;
     }
 
     private boolean confirm(String title, String message) {
