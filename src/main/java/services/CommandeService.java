@@ -60,7 +60,12 @@ public class CommandeService implements IService<Commande> {
             throw new SQLException("Commande invalide.");
         }
 
-        String nextStatus = normalizeStatus(c.getStatut());
+        String nextStatus;
+        try {
+            nextStatus = normalizeStatus(c.getStatut());
+        } catch (IllegalArgumentException ex) {
+            throw new SQLException(ex.getMessage(), ex);
+        }
         boolean previousAutoCommit = conn.getAutoCommit();
 
         try {
@@ -112,7 +117,12 @@ public class CommandeService implements IService<Commande> {
         if (id <= 0) {
             throw new SQLException("Commande invalide.");
         }
-        String nextStatus = normalizeStatus(statut);
+        String nextStatus;
+        try {
+            nextStatus = normalizeStatus(statut);
+        } catch (IllegalArgumentException ex) {
+            throw new SQLException(ex.getMessage(), ex);
+        }
         OrderActor effectiveActor = actor == null ? OrderActor.SYSTEM : actor;
         boolean previousAutoCommit = conn.getAutoCommit();
 
@@ -446,10 +456,10 @@ public class CommandeService implements IService<Commande> {
         }
     }
 
-    private String normalizeStatus(String value) throws SQLException {
+    private String normalizeStatus(String value) {
         String status = safe(value).toLowerCase();
         if (!Set.of("en_attente", "confirmee", "livree", "annulee").contains(status)) {
-            throw new SQLException("Statut de commande non supporte: " + value);
+            throw new IllegalArgumentException("Statut de commande non supporte: " + value);
         }
         return status;
     }
