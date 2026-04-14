@@ -104,6 +104,10 @@ public class MarketplaceValidator {
         if (paymentMode == null || paymentMode.trim().isEmpty()) {
             return "Mode de paiement obligatoire.";
         }
+        String payment = paymentMode.trim().toLowerCase();
+        if (!"domicile".equals(payment) && !"carte".equals(payment)) {
+            return "Mode de paiement autorise: domicile ou carte.";
+        }
         if (address == null || address.trim().isEmpty()) {
             return "Adresse de livraison obligatoire.";
         }
@@ -119,6 +123,10 @@ public class MarketplaceValidator {
         }
         if (modePaiement == null || modePaiement.trim().isEmpty()) {
             return "Mode de paiement obligatoire pour la commande.";
+        }
+        String payment = modePaiement.trim().toLowerCase();
+        if (!"domicile".equals(payment) && !"carte".equals(payment)) {
+            return "Mode de paiement autorise pour la commande: domicile ou carte.";
         }
         if (adresse == null || adresse.trim().isEmpty()) {
             return "Adresse de livraison obligatoire pour la commande.";

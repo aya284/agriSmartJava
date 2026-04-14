@@ -91,6 +91,24 @@ public class CommandeService implements IService<Commande> {
         return list;
     }
 
+    public List<Commande> getBySeller(int sellerId) throws SQLException {
+        List<Commande> list = new ArrayList<>();
+        String req = "SELECT DISTINCT c.* FROM commande c "
+                + "JOIN commande_item ci ON ci.commande_id = c.id "
+                + "JOIN produit p ON p.id = ci.produit_id "
+                + "WHERE p.vendeur_id = ? "
+                + "ORDER BY c.created_at DESC";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSet(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     public int countAll() throws SQLException {
         String req = "SELECT COUNT(*) FROM commande";
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(req)) {
