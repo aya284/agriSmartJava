@@ -111,4 +111,25 @@ public class ParcelleService implements IService<Parcelle> {
         }
         return list;
     }
+
+    public List<Parcelle> afficherByUser(int userId) throws SQLException {
+        List<Parcelle> list = new ArrayList<>();
+        String query = "SELECT * FROM parcelle WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Parcelle(
+                            rs.getInt("id"),
+                            rs.getString("nom"),
+                            rs.getDouble("surface"),
+                            rs.getDouble("latitude"),
+                            rs.getDouble("longitude"),
+                            rs.getString("type_sol"),
+                            rs.getInt("user_id")));
+                }
+            }
+        }
+        return list;
+    }
 }

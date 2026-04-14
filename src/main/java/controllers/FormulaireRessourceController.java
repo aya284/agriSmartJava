@@ -1,6 +1,7 @@
 package controllers;
 
 import entities.Ressource;
+import entities.User;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -9,6 +10,7 @@ import services.RessourceService;
 
 import java.sql.SQLException;
 import utils.NotificationUtil;
+import utils.SessionManager;
 
 public class FormulaireRessourceController {
 
@@ -78,7 +80,7 @@ public class FormulaireRessourceController {
                 finalType,
                 Double.parseDouble(txtStock.getText().replace(",", ".")),
                 cbUnite.getValue(),
-                1 // User ID statique pour le moment
+                SessionManager.getInstance().getCurrentUser().getId()
             );
 
             if (currentId == -1) {

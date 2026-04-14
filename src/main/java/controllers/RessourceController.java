@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Optional;
 import utils.NotificationUtil;
+import utils.SessionManager;
+import entities.User;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -98,7 +100,14 @@ public class RessourceController {
 
     private void refreshList() {
         try {
-            ressourceList.setAll(rs.afficher());
+            User current = SessionManager.getInstance().getCurrentUser();
+            if (current != null) {
+                if ("admin".equalsIgnoreCase(current.getRole())) {
+                    ressourceList.setAll(rs.afficher());
+                } else {
+                    ressourceList.setAll(rs.afficherByUser(current.getId()));
+                }
+            }
         } catch (SQLException e) {
             System.err.println("Error loading resources: " + e.getMessage());
         }

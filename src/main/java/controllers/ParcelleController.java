@@ -26,6 +26,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import utils.NotificationUtil;
+import utils.SessionManager;
+import entities.User;
 
 public class ParcelleController {
 
@@ -121,7 +123,14 @@ public class ParcelleController {
             Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
             int selectedId = selected != null ? selected.getId() : -1;
 
-            parcelleList.setAll(ps.afficher());
+            User current = SessionManager.getInstance().getCurrentUser();
+            if (current != null) {
+                if ("admin".equalsIgnoreCase(current.getRole())) {
+                    parcelleList.setAll(ps.afficher());
+                } else {
+                    parcelleList.setAll(ps.afficherByUser(current.getId()));
+                }
+            }
 
             // Si filteredList est déjà installé
             if (lvParcelles.getItems() != null && !lvParcelles.getItems().isEmpty()) {

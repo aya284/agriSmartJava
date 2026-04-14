@@ -1,6 +1,7 @@
 package controllers;
 
 import entities.Parcelle;
+import entities.User;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
@@ -20,6 +21,7 @@ import java.util.Locale;
 import java.util.Scanner;
 import org.json.JSONObject;
 import utils.NotificationUtil;
+import utils.SessionManager;
 
 public class FormulaireParcelleController {
     @FXML
@@ -219,7 +221,7 @@ public class FormulaireParcelleController {
                     Double.parseDouble(txtLat.getText().replace(",", ".")),
                     Double.parseDouble(txtLon.getText().replace(",", ".")),
                     finalType,
-                    1);
+                    SessionManager.getInstance().getCurrentUser().getId());
 
             if (currentId == -1) {
                 ps.ajouter(p);

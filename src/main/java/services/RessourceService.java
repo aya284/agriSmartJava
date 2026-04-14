@@ -66,4 +66,24 @@ public class RessourceService implements IService<Ressource> {
         }
         return list;
     }
+
+    public List<Ressource> afficherByUser(int userId) throws SQLException {
+        List<Ressource> list = new ArrayList<>();
+        String query = "SELECT * FROM ressource WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Ressource(
+                            rs.getInt("id"),
+                            rs.getString("nom"),
+                            rs.getString("type"),
+                            rs.getDouble("stock_restan"),
+                            rs.getString("unite"),
+                            rs.getInt("user_id")));
+                }
+            }
+        }
+        return list;
+    }
 }
