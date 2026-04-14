@@ -4,48 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-<<<<<<< Updated upstream
-    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController.class" beforeDir="false" afterPath="$PROJECT_DIR$/${project.build.directory}/classes/controllers/OffreController.class" afterDir="false" />
+    <list default="true" id="ff109d6b-ae63-4cb9-92b0-bafc64bffe06" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/OffreController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/CandidatOffreController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/CandidatOffreController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
     </list>
-=======
-    <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
->>>>>>> Stashed changes
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Interface" />
-        <option value="CSS File" />
-        <option value="Class" />
-        <option value="FxmlFile" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="JsbtTreeLayoutManager">
-    <layout place="tools.popupGrunt">
-      <scroll-view-position x="0" y="0" />
-    </layout>
-  </component>
-  <component name="McpProjectServerCommands">
-    <commands />
-    <urls />
-  </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 7,
-  &quot;fromUser&quot;: false
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 7
 }</component>
-  <component name="ProjectId" id="3C7nSuJCC4io7mllnscZwSuyjYs" />
+  <component name="ProjectId" id="3CJo54ovCsf7gvPzd9zjR3dgQDA" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -53,13 +29,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;Application.AppLauncher.executor&quot;: &quot;Run&quot;,
-<<<<<<< Updated upstream
     &quot;Application.MainApp.executor&quot;: &quot;Run&quot;,
-=======
-    &quot;Application.MainApp.executor&quot;: &quot;Debug&quot;,
->>>>>>> Stashed changes
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
@@ -67,78 +37,27 @@
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;condidature&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/aya/Desktop/agriSmartJava&quot;,
-    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/aya/Desktop/agriSmartJava/src/main/java/org/example/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\USER\Documents\Esprit\PI JAVA\agriSmartJava\src\main\resources\Views" />
-      <recent name="C:\Users\USER\Documents\Esprit\PI JAVA\agriSmartJava\src\main\resources\Views\Offres" />
-    </key>
-  </component>
-  <component name="RunManager">
-    <configuration name="AppLauncher" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="main.AppLauncher" />
-      <module name="agrismart" />
-      <option name="VM_PARAMETERS" value="--module-path &quot;C:\Users\USER\.m2\repository\org\openjfx&quot; --add-modules javafx.controls,javafx.fxml" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="main.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Application.AppLauncher" />
-      </list>
-    </recent_temporary>
-  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="" />
-      <created>1775745480629</created>
+      <changelist id="ff109d6b-ae63-4cb9-92b0-bafc64bffe06" name="Changes" comment="" />
+      <created>1776112848258</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1775745480629</updated>
-      <workItem from="1775745484470" duration="21000" />
-      <workItem from="1775745518901" duration="5350000" />
-      <workItem from="1775751716719" duration="877000" />
-      <workItem from="1775816919915" duration="2021000" />
-      <workItem from="1775819113798" duration="891000" />
-      <workItem from="1775923099488" duration="18193000" />
-      <workItem from="1775991950003" duration="3872000" />
-      <workItem from="1776009995932" duration="5399000" />
-      <workItem from="1776085437557" duration="952000" />
+      <updated>1776112848258</updated>
+      <workItem from="1776112850446" duration="3998000" />
+      <workItem from="1776157540990" duration="194000" />
+      <workItem from="1776160865559" duration="4063000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/example/Main.java</url>
-          <line>13</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

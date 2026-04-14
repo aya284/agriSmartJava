@@ -149,7 +149,7 @@ public class CandidatOffreController implements Initializable {
         } else {
             // Reset to default style if active
             btnPostuler.setDisable(false);
-            btnPostuler.setText("🚀 Postuler");
+            btnPostuler.setText(" Postuler");
             btnPostuler.setStyle("-fx-background-color: #1a3323; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-background-radius: 10;");
         }
     }
