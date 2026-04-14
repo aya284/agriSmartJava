@@ -27,7 +27,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -133,6 +132,7 @@ public class MarketplaceController implements Initializable {
     @FXML private TableColumn<Commande, Double> colCmdMontant;
     @FXML private TableColumn<Commande, String> colCmdPaiement;
     @FXML private TableColumn<Commande, Void> colCmdActions;
+    @FXML private ToggleButton btnManageProducts;
     @FXML private ToggleButton btnSoldOrders;
     @FXML private ToggleButton btnBoughtOrders;
     @FXML private Label sellerOrdersTitleLabel;
@@ -193,7 +193,8 @@ public class MarketplaceController implements Initializable {
     // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
     @FXML private StackPane sellerOverlay;
-    @FXML private SplitPane sellerSplitPane;
+    @FXML private VBox sellerProductsSection;
+    @FXML private VBox sellerOrdersSection;
     @FXML private Label modalTitle;
     @FXML private TextField fldNom;
     @FXML private TextArea fldDescription;
@@ -259,6 +260,7 @@ public class MarketplaceController implements Initializable {
     public void openSellerSpace() {
         loadProduits();
         loadCommandes();
+        showManageProducts();
         animateOverlayIn(sellerOverlay);
     }
 
@@ -268,39 +270,53 @@ public class MarketplaceController implements Initializable {
     }
 
     @FXML
+    public void showManageProducts() {
+        setSellerSectionVisibility(true);
+        applyOrderToggleSelection();
+    }
+
+    @FXML
     public void showSoldOrders() {
         showingBoughtOrders = false;
+        setSellerSectionVisibility(false);
         applyOrderToggleSelection();
-        expandOrdersSection();
         loadCommandes();
     }
 
     @FXML
     public void showBoughtOrders() {
         showingBoughtOrders = true;
+        setSellerSectionVisibility(false);
         applyOrderToggleSelection();
-        expandOrdersSection();
         loadCommandes();
     }
 
-    private void expandOrdersSection() {
-        if (sellerSplitPane == null) {
-            return;
+    private void setSellerSectionVisibility(boolean showProducts) {
+        if (sellerProductsSection != null) {
+            sellerProductsSection.setVisible(showProducts);
+            sellerProductsSection.setManaged(showProducts);
         }
-        // Keep a tiny top area and expand commandes section to fill almost all available space.
-        sellerSplitPane.setDividerPositions(0.08);
+        if (sellerOrdersSection != null) {
+            sellerOrdersSection.setVisible(!showProducts);
+            sellerOrdersSection.setManaged(!showProducts);
+        }
     }
 
     private void initializeOrderToggleState() {
+        setSellerSectionVisibility(true);
         applyOrderToggleSelection();
     }
 
     private void applyOrderToggleSelection() {
+        boolean showingProducts = sellerProductsSection != null && sellerProductsSection.isVisible();
+        if (btnManageProducts != null) {
+            btnManageProducts.setSelected(showingProducts);
+        }
         if (btnSoldOrders != null) {
-            btnSoldOrders.setSelected(!showingBoughtOrders);
+            btnSoldOrders.setSelected(!showingProducts && !showingBoughtOrders);
         }
         if (btnBoughtOrders != null) {
-            btnBoughtOrders.setSelected(showingBoughtOrders);
+            btnBoughtOrders.setSelected(!showingProducts && showingBoughtOrders);
         }
         if (sellerOrdersTitleLabel != null) {
             sellerOrdersTitleLabel.setText(showingBoughtOrders ? "Produits achetes" : "Produits vendus");

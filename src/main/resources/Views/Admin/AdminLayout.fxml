@@ -6,30 +6,22 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.admin.AdminLayoutController"
-            style="-fx-background-color: #f0f2f5;">
+            stylesheets="@../../css/style.css"
+            styleClass="admin-shell">
 
     <!-- ══ SIDEBAR ══ -->
     <left>
-        <VBox prefWidth="230"
-              style="-fx-background-color: #1a1f2e; -fx-padding: 0;">
+         <VBox prefWidth="230" styleClass="admin-sidebar">
 
             <!-- Logo -->
-            <VBox alignment="CENTER" spacing="4"
-                  style="-fx-padding: 28 20 24 20;
-                         -fx-border-color: #2d3446;
-                         -fx-border-width: 0 0 1 0;">
-                <Label text="🌿 AgriSmart"
-                       style="-fx-font-size: 20; -fx-font-weight: bold;
-                              -fx-text-fill: #2ecc71;"/>
-                <Label text="Administration"
-                       style="-fx-font-size: 11; -fx-text-fill: #8892a4;"/>
+            <VBox alignment="CENTER" spacing="4" styleClass="admin-sidebar-brand">
+                <Label text="AgriSmart" styleClass="admin-brand-title"/>
+                <Label text="Administration" styleClass="admin-brand-subtitle"/>
             </VBox>
 
             <!-- Menu -->
-            <VBox spacing="4" style="-fx-padding: 16 12;">
-                <Label text="MENU PRINCIPAL"
-                       style="-fx-font-size: 10; -fx-text-fill: #4a5568;
-                              -fx-padding: 8 8 4 8; -fx-font-weight: bold;"/>
+                     <VBox spacing="4" styleClass="admin-sidebar-menu">
+                            <Label text="MENU PRINCIPAL" styleClass="admin-sidebar-section-label"/>
 
                 <Button fx:id="btnDashboard"
                         text="📊  Tableau de bord"
@@ -43,9 +35,7 @@
                         maxWidth="Infinity" alignment="CENTER_LEFT"
                         styleClass="sidebar-btn"/>
 
-                <Label text="GESTION"
-                       style="-fx-font-size: 10; -fx-text-fill: #4a5568;
-                              -fx-padding: 12 8 4 8; -fx-font-weight: bold;"/>
+                <Label text="GESTION" styleClass="admin-sidebar-section-label"/>
 
                 <Button text="🌱  Cultures"
                         onAction="#openCultures"
@@ -72,32 +62,18 @@
             <VBox VBox.vgrow="ALWAYS"/>
 
             <!-- Profil admin en bas -->
-            <VBox style="-fx-padding: 12;
-                         -fx-border-color: #2d3446;
-                         -fx-border-width: 1 0 0 0;">
-                <HBox spacing="10" alignment="CENTER_LEFT"
-                      style="-fx-padding: 8 4;">
-                    <Label text="👤"  style="-fx-font-size: 22;"/>
+                     <VBox styleClass="admin-profile-box">
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="admin-profile-row">
+                                   <Label text="👤" styleClass="admin-profile-icon"/>
                     <VBox spacing="2">
-                        <Label fx:id="adminNameLabel"
-                               text="Admin"
-                               style="-fx-font-weight: bold;
-                                      -fx-text-fill: #e2e8f0;
-                                      -fx-font-size: 13;"/>
-                        <Label text="Administrateur"
-                               style="-fx-text-fill: #8892a4;
-                                      -fx-font-size: 11;"/>
+                                          <Label fx:id="adminNameLabel" text="Admin" styleClass="admin-profile-name"/>
+                                          <Label text="Administrateur" styleClass="admin-profile-role"/>
                     </VBox>
                 </HBox>
                 <Button text="🚪  Déconnexion"
                         onAction="#handleLogout"
                         maxWidth="Infinity" alignment="CENTER_LEFT"
-                        style="-fx-background-color: transparent;
-                               -fx-text-fill: #e74c3c;
-                               -fx-font-size: 13;
-                               -fx-padding: 8 12;
-                               -fx-cursor: hand;
-                               -fx-background-radius: 6;"/>
+                                          styleClass="admin-logout-btn"/>
             </VBox>
 
         </VBox>
@@ -105,27 +81,24 @@
 
     <!-- ══ ZONE PRINCIPALE ══ -->
     <center>
-        <VBox style="-fx-background-color: #f0f2f5;">
+       <VBox styleClass="admin-main-bg">
 
             <!-- Header -->
-            <HBox alignment="CENTER_LEFT" spacing="14"
-                  style="-fx-background-color: white;
-                         -fx-padding: 14 24;
-                         -fx-effect: dropshadow(gaussian,#ddd,4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="admin-topbar">
                 <VBox spacing="2">
-                    <Label fx:id="pageTitle" text="Tableau de bord"
-                           style="-fx-font-size: 18; -fx-font-weight: bold;"/>
-                    <Label fx:id="pageBreadcrumb" text="Admin / Tableau de bord"
-                           style="-fx-text-fill: #aaa; -fx-font-size: 11;"/>
+                    <Label fx:id="pageTitle" text="Tableau de bord" styleClass="admin-topbar-title"/>
+                    <Label fx:id="pageBreadcrumb" text="Admin / Tableau de bord" styleClass="admin-topbar-breadcrumb"/>
                 </VBox>
                 <HBox HBox.hgrow="ALWAYS"/>
-                <Label fx:id="dateLabel"
-                       style="-fx-text-fill: #888; -fx-font-size: 12;"/>
+                <Label fx:id="dateLabel" styleClass="admin-topbar-date"/>
             </HBox>
 
-            <!-- Contenu dynamique -->
-            <StackPane fx:id="adminContentArea" VBox.vgrow="ALWAYS"
-                       style="-fx-padding: 24;"/>
+                        <!-- Contenu dynamique (scrollable) -->
+                        <ScrollPane fitToWidth="true" fitToHeight="false" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="admin-content-scroll">
+                                <content>
+                                        <StackPane fx:id="adminContentArea" styleClass="admin-content-area"/>
+                                </content>
+                        </ScrollPane>
         </VBox>
     </center>
 

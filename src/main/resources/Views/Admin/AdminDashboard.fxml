@@ -5,75 +5,49 @@
 
 <VBox spacing="20"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.admin.AdminDashboardController">
+       fx:controller="controllers.admin.AdminDashboardController"
+       stylesheets="@../../css/style.css"
+       styleClass="admin-page-root">
 
     <!-- ── Cartes de statistiques ── -->
-    <HBox spacing="16">
+       <HBox spacing="16" styleClass="admin-stats-row">
 
         <!-- Total utilisateurs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
-            <Label text="👥" style="-fx-font-size: 28;"/>
-            <Label fx:id="totalUsersLabel" text="—"
-                   style="-fx-font-size: 32; -fx-font-weight: bold;
-                          -fx-text-fill: #2c3e50;"/>
-            <Label text="Utilisateurs"
-                   style="-fx-text-fill: #888; -fx-font-size: 13;"/>
+        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
+            <Label text="👥" styleClass="admin-stat-icon"/>
+            <Label fx:id="totalUsersLabel" text="—" styleClass="admin-stat-value"/>
+            <Label text="Utilisateurs" styleClass="admin-stat-title"/>
         </VBox>
 
         <!-- Actifs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
-            <Label text="✅" style="-fx-font-size: 28;"/>
-            <Label fx:id="activeUsersLabel" text="—"
-                   style="-fx-font-size: 32; -fx-font-weight: bold;
-                          -fx-text-fill: #27ae60;"/>
-            <Label text="Actifs"
-                   style="-fx-text-fill: #888; -fx-font-size: 13;"/>
+        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
+            <Label text="✅" styleClass="admin-stat-icon"/>
+            <Label fx:id="activeUsersLabel" text="—" styleClass="admin-stat-value admin-positive"/>
+            <Label text="Actifs" styleClass="admin-stat-title"/>
         </VBox>
 
         <!-- Inactifs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
-            <Label text="🚫" style="-fx-font-size: 28;"/>
-            <Label fx:id="inactiveUsersLabel" text="—"
-                   style="-fx-font-size: 32; -fx-font-weight: bold;
-                          -fx-text-fill: #e74c3c;"/>
-            <Label text="Inactifs"
-                   style="-fx-text-fill: #888; -fx-font-size: 13;"/>
+        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
+            <Label text="🚫" styleClass="admin-stat-icon"/>
+            <Label fx:id="inactiveUsersLabel" text="—" styleClass="admin-stat-value admin-negative"/>
+            <Label text="Inactifs" styleClass="admin-stat-title"/>
         </VBox>
 
         <!-- En attente -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
-            <Label text="⏳" style="-fx-font-size: 28;"/>
-            <Label fx:id="pendingUsersLabel" text="—"
-                   style="-fx-font-size: 32; -fx-font-weight: bold;
-                          -fx-text-fill: #f39c12;"/>
-            <Label text="En attente"
-                   style="-fx-text-fill: #888; -fx-font-size: 13;"/>
+        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
+            <Label text="⏳" styleClass="admin-stat-icon"/>
+            <Label fx:id="pendingUsersLabel" text="—" styleClass="admin-stat-value"/>
+            <Label text="En attente" styleClass="admin-stat-title"/>
         </VBox>
 
     </HBox>
 
     <!-- ── Répartition par rôle ── -->
-    <HBox spacing="16">
+       <HBox spacing="16">
 
-        <VBox HBox.hgrow="ALWAYS" spacing="14"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+              <VBox HBox.hgrow="ALWAYS" spacing="14" styleClass="admin-panel-card">
 
-            <Label text="Répartition par rôle"
-                   style="-fx-font-size: 15; -fx-font-weight: bold;"/>
+                     <Label text="Répartition par rôle" styleClass="admin-section-title"/>
 
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Label text="🌱 Agriculteurs"
@@ -102,18 +76,12 @@
         </VBox>
 
         <!-- Derniers inscrits -->
-        <VBox HBox.hgrow="ALWAYS" spacing="10"
-              style="-fx-background-color: white; -fx-padding: 20;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+        <VBox HBox.hgrow="ALWAYS" spacing="10" styleClass="admin-panel-card">
 
-            <Label text="Derniers inscrits"
-                   style="-fx-font-size: 15; -fx-font-weight: bold;"/>
+            <Label text="Derniers inscrits" styleClass="admin-section-title"/>
 
             <ListView fx:id="recentUsersList" VBox.vgrow="ALWAYS"
-                      prefHeight="180"
-                      style="-fx-background-color: transparent;
-                             -fx-border-color: transparent;"/>
+                      prefHeight="180" styleClass="admin-list-view"/>
         </VBox>
 
     </HBox>
