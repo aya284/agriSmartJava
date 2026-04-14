@@ -2338,9 +2338,26 @@ public class MarketplaceController implements Initializable {
         dialog.showAndWait().ifPresent(c -> {
             c.setId(commande.getId());
             try {
-                commandeService.modifier(c);
+                String currentStatus = safe(commande.getStatut()).trim().toLowerCase();
+                String nextStatus = safe(c.getStatut()).trim().toLowerCase();
+                CommandeService.OrderActor actor = showingBoughtOrders
+                        ? CommandeService.OrderActor.BUYER
+                        : CommandeService.OrderActor.SELLER;
+
+                if (currentStatus.equals(nextStatus)) {
+                    showToast("Aucun changement de statut.", false);
+                    return;
+                }
+
+                commandeService.updateStatut(
+                        commande.getId(),
+                        nextStatus,
+                        getCurrentUserId(),
+                        actor,
+                        "Mise a jour depuis Marketplace"
+                );
                 loadCommandes();
-                showToast("Commande modifiee.", true);
+                showToast("Statut commande mis a jour.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -2349,15 +2366,34 @@ public class MarketplaceController implements Initializable {
 
     private Dialog<Commande> buildCommandeDialog(Commande existing) {
         Dialog<Commande> dialog = new Dialog<>();
-        dialog.setTitle(existing == null ? "Ajouter Commande" : "Modifier Commande");
+        boolean isEditing = existing != null;
+        dialog.setTitle(isEditing ? "Mettre a jour statut" : "Ajouter Commande");
         dialog.getDialogPane().getStyleClass().add("commande-dialog-pane");
         applyDialogStylesheet(dialog.getDialogPane());
         ButtonType saveBtn = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
         ComboBox<String> statutField = new ComboBox<>();
-        statutField.getItems().setAll("en_attente", "confirmee", "livree", "annulee");
-        statutField.setValue(existing == null || safe(existing.getStatut()).isBlank() ? "en_attente" : existing.getStatut());
+        if (!isEditing) {
+            statutField.getItems().setAll("en_attente", "confirmee", "livree", "annulee");
+            statutField.setValue("en_attente");
+        } else {
+            String currentStatus = safe(existing.getStatut()).trim().toLowerCase();
+            CommandeService.OrderActor actor = showingBoughtOrders
+                    ? CommandeService.OrderActor.BUYER
+                    : CommandeService.OrderActor.SELLER;
+
+            List<String> statusOptions = new ArrayList<>();
+            statusOptions.add(currentStatus);
+            for (String candidate : commandeService.getAllowedTransitions(currentStatus, actor)) {
+                if (!statusOptions.contains(candidate)) {
+                    statusOptions.add(candidate);
+                }
+            }
+
+            statutField.getItems().setAll(statusOptions);
+            statutField.setValue(currentStatus);
+        }
 
         ComboBox<String> paiementField = new ComboBox<>();
         paiementField.getItems().setAll("domicile", "carte");
@@ -2367,6 +2403,14 @@ public class MarketplaceController implements Initializable {
         TextField montantField = new TextField(existing == null ? "0" : String.valueOf(existing.getMontantTotal()));
         TextField paymentRefField = new TextField(existing == null ? "" : safe(existing.getPaymentRef()));
         TextField clientIdField = new TextField(existing == null ? String.valueOf(getCurrentUserId()) : String.valueOf(existing.getClientId()));
+
+        if (isEditing) {
+            paiementField.setDisable(true);
+            adresseField.setDisable(true);
+            montantField.setDisable(true);
+            paymentRefField.setDisable(true);
+            clientIdField.setDisable(true);
+        }
 
         statutField.getStyleClass().add("commande-form-field");
         paiementField.getStyleClass().add("commande-form-field");
