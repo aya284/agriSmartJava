@@ -46,7 +46,7 @@ public class MainController {
 
     @FXML
     public void openMarketplace() {
-        loadView("/Views/MarketplaceView.fxml", "Marketplace loaded", "Marketplace", btnMarketplace);
+        loadView("/Views/Marketplace/MarketplaceView.fxml", "Marketplace loaded", "Marketplace", btnMarketplace);
     }
 
     @FXML
