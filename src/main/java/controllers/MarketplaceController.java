@@ -5,21 +5,23 @@ import entities.Commande;
 import entities.MarketplaceMessage;
 import entities.Produit;
 import entities.WishlistItem;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -52,8 +54,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.stage.Window;
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +62,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,11 +71,15 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.UUID;
+import utils.MarketplaceValidator;
+import javafx.util.Duration;
 
 public class MarketplaceController implements Initializable {
 
@@ -152,6 +157,8 @@ public class MarketplaceController implements Initializable {
     @FXML private Label messagingTitleLabel;
     @FXML private Label messagingMetaLabel;
     @FXML private TextArea messageInputArea;
+    @FXML private HBox toastContainer;
+    @FXML private Label toastLabel;
 
     @FXML private StackPane wishlistOverlay;
     @FXML private Label wishlistMetaLabel;
@@ -182,6 +189,13 @@ public class MarketplaceController implements Initializable {
     @FXML private ComboBox<String> fldType;
     @FXML private CheckBox chkPromo;
     @FXML private TextField fldPromoPrice;
+    @FXML private Label errNom;
+    @FXML private Label errCategorie;
+    @FXML private Label errType;
+    @FXML private Label errPrix;
+    @FXML private Label errStock;
+    @FXML private Label errDescription;
+    @FXML private Label errPromoPrice;
 
     @FXML private Label publishPreviewCategory;
     @FXML private Label publishPreviewTypeBadge;
@@ -203,43 +217,68 @@ public class MarketplaceController implements Initializable {
     @FXML private Label detailsStock;
     @FXML private Label detailsLocation;
     @FXML private Label detailsId;
+    @FXML private Label detailsTypeBadge;
+    @FXML private Label detailsTypePill;
     @FXML private ImageView detailsImageView;
     @FXML private Spinner<Integer> detailsQuantitySpinner;
+
+    @FXML private StackPane cartOverlay;
+    @FXML private VBox cartItemsBox;
+    @FXML private Label cartCountLabel;
+    @FXML private Label cartTotalLabel;
     
     private Produit currentEditProduit = null;
+    private Produit currentDetailsProduit = null;
     private entities.MarketplaceConversation selectedConversation = null;
     private int pendingProductId = -1;
     private int pendingSellerId = -1;
 
     @FXML
     public void closeModal() {
-        if (modalOverlay != null) {
-            modalOverlay.setVisible(false);
-        }
+        animateOverlayOut(modalOverlay);
         currentEditProduit = null;
+        clearProductFieldErrors();
     }
 
     @FXML
     public void openSellerSpace() {
         loadProduits();
-        if (sellerOverlay != null) {
-            sellerOverlay.setVisible(true);
-            sellerOverlay.toFront();
-        }
+        animateOverlayIn(sellerOverlay);
     }
 
     @FXML
     public void closeSellerSpace() {
-        if (sellerOverlay != null) {
-            sellerOverlay.setVisible(false);
-        }
+        animateOverlayOut(sellerOverlay);
     }
 
     @FXML
     public void closeDetails() {
-        if (detailsOverlay != null) {
-            detailsOverlay.setVisible(false);
+        animateOverlayOut(detailsOverlay);
+        currentDetailsProduit = null;
+    }
+
+    @FXML
+    public void closeCartOverlay() {
+        animateOverlayOut(cartOverlay);
+    }
+
+    @FXML
+    public void clearCartFromOverlay() {
+        cartSessionService.clear(CURRENT_SESSION_USER_ID);
+        renderCartOverlay();
+        updateCartStatus();
+        showToast("Panier vide avec succes.", true);
+    }
+
+    @FXML
+    public void checkoutFromOverlay() {
+        List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        if (cartItems.isEmpty()) {
+            showAlert("Panier", "Votre panier est vide.");
+            return;
         }
+        processCheckout(cartItems);
+        renderCartOverlay();
     }
 
     @Override
@@ -258,6 +297,89 @@ public class MarketplaceController implements Initializable {
         updateCartStatus();
         refreshMessagingBadge();
         refreshWishlistState();
+    }
+
+    private void animateOverlayIn(StackPane overlay) {
+        if (overlay == null) {
+            return;
+        }
+
+        Node shell = overlay.getChildren().isEmpty() ? overlay : overlay.getChildren().get(0);
+        overlay.setVisible(true);
+        overlay.toFront();
+        overlay.setOpacity(0);
+        shell.setScaleX(0.985);
+        shell.setScaleY(0.985);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(170), overlay);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(170), shell);
+        scale.setFromX(0.985);
+        scale.setFromY(0.985);
+        scale.setToX(1.0);
+        scale.setToY(1.0);
+
+        new ParallelTransition(fade, scale).play();
+    }
+
+    private void animateOverlayOut(StackPane overlay) {
+        if (overlay == null || !overlay.isVisible()) {
+            return;
+        }
+
+        Node shell = overlay.getChildren().isEmpty() ? overlay : overlay.getChildren().get(0);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(130), overlay);
+        fade.setFromValue(Math.max(0.0, overlay.getOpacity()));
+        fade.setToValue(0);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(130), shell);
+        scale.setFromX(1.0);
+        scale.setFromY(1.0);
+        scale.setToX(0.992);
+        scale.setToY(0.992);
+
+        ParallelTransition out = new ParallelTransition(fade, scale);
+        out.setOnFinished(e -> {
+            overlay.setVisible(false);
+            overlay.setOpacity(1);
+            shell.setScaleX(1.0);
+            shell.setScaleY(1.0);
+        });
+        out.play();
+    }
+
+    private void showToast(String message, boolean success) {
+        if (toastContainer == null || toastLabel == null) {
+            return;
+        }
+
+        toastContainer.getStyleClass().removeAll("toast-success", "toast-error");
+        toastContainer.getStyleClass().add(success ? "toast-success" : "toast-error");
+        toastLabel.setText(message);
+        toastContainer.setManaged(true);
+        toastContainer.setVisible(true);
+        toastContainer.setOpacity(0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(150), toastContainer);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        PauseTransition hold = new PauseTransition(Duration.seconds(2.4));
+        hold.setOnFinished(e -> {
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toastContainer);
+            fadeOut.setFromValue(1);
+            fadeOut.setToValue(0);
+            fadeOut.setOnFinished(evt -> {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            });
+            fadeOut.play();
+        });
+        hold.play();
     }
 
     private void setupFilters() {
@@ -593,8 +715,7 @@ public class MarketplaceController implements Initializable {
 
         clearPendingMessageContext();
         loadConversationsAndRender(null);
-        messagingOverlay.setVisible(true);
-        messagingOverlay.toFront();
+        animateOverlayIn(messagingOverlay);
     }
 
     @FXML
@@ -602,23 +723,18 @@ public class MarketplaceController implements Initializable {
         if (messagingOverlay == null) {
             return;
         }
-        messagingOverlay.setVisible(false);
+        animateOverlayOut(messagingOverlay);
     }
 
     @FXML
     public void openWishlistCenter() {
         refreshWishlistState();
-        if (wishlistOverlay != null) {
-            wishlistOverlay.setVisible(true);
-            wishlistOverlay.toFront();
-        }
+        animateOverlayIn(wishlistOverlay);
     }
 
     @FXML
     public void closeWishlistCenter() {
-        if (wishlistOverlay != null) {
-            wishlistOverlay.setVisible(false);
-        }
+        animateOverlayOut(wishlistOverlay);
     }
 
     @FXML
@@ -658,6 +774,7 @@ public class MarketplaceController implements Initializable {
             loadConversationsAndRender(selectedConversation.getId());
             refreshMessagingBadge();
             clearPendingMessageContext();
+            showToast("Message envoye.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -680,8 +797,7 @@ public class MarketplaceController implements Initializable {
 
             if (messagingOverlay != null) {
                 loadConversationsAndRender(existingConversation == null ? null : existingConversation.getId());
-                messagingOverlay.setVisible(true);
-                messagingOverlay.toFront();
+                animateOverlayIn(messagingOverlay);
             }
 
             if (existingConversation == null) {
@@ -721,11 +837,13 @@ public class MarketplaceController implements Initializable {
                 if (statusLabel != null) {
                     statusLabel.setText(normalizeText(safe(produit.getNom())) + " retire de la wishlist");
                 }
+                showToast("Retire de la wishlist.", true);
             } else {
                 wishlistService.ajouter(new WishlistItem(CURRENT_SESSION_USER_ID, produit.getId()));
                 if (statusLabel != null) {
                     statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute a la wishlist");
                 }
+                showToast("Ajoute a la wishlist.", true);
             }
 
             loadWishlist();
@@ -1017,81 +1135,33 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void openPanier() {
+        renderCartOverlay();
+        animateOverlayIn(cartOverlay);
+    }
+
+    private void renderCartOverlay() {
+        if (cartItemsBox == null) {
+            return;
+        }
+
         List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        cartItemsBox.getChildren().clear();
+
         if (cartItems.isEmpty()) {
-            showAlert("Panier", "Votre panier est vide.");
-            return;
-        }
-
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Mon panier");
-        dialog.getDialogPane().getStyleClass().add("cart-dialog-pane");
-        ButtonType checkoutBtn = new ButtonType("Passer commande", ButtonBar.ButtonData.OK_DONE);
-        ButtonType clearBtn = new ButtonType("Vider", ButtonBar.ButtonData.OTHER);
-        dialog.getDialogPane().getButtonTypes().addAll(checkoutBtn, clearBtn, ButtonType.CANCEL);
-        dialog.getDialogPane().setPrefWidth(700);
-        dialog.getDialogPane().setPrefHeight(560);
-
-        VBox content = new VBox(12);
-        content.getStyleClass().add("cart-dialog-content");
-        content.setPadding(new Insets(14));
-
-        Label heading = new Label("Liste du panier");
-        heading.getStyleClass().add("cart-title");
-
-        Label subHeading = new Label("Verifiez vos articles avant paiement.");
-        subHeading.getStyleClass().add("cart-subtitle");
-
-        VBox lineItemsBox = new VBox(8);
-        lineItemsBox.getStyleClass().add("cart-items-box");
-        for (CartItem item : cartItems) {
-            lineItemsBox.getChildren().add(buildCartRow(item));
-        }
-
-        ScrollPane itemsScroll = new ScrollPane(lineItemsBox);
-        itemsScroll.getStyleClass().addAll("invisible-scrollpane", "cart-items-scroll");
-        itemsScroll.setFitToWidth(true);
-        itemsScroll.setPrefHeight(340);
-
-        HBox totalsBox = new HBox(16);
-        totalsBox.getStyleClass().add("cart-total-box");
-        totalsBox.setAlignment(Pos.CENTER_LEFT);
-        totalsBox.setPadding(new Insets(10, 12, 10, 12));
-
-        Label countLabel = new Label("Articles: " + cartSessionService.countItems(CURRENT_SESSION_USER_ID));
-        countLabel.getStyleClass().add("cart-count-label");
-        Label totalLabel = new Label("Total: " + String.format("%.2f", cartSessionService.getTotal(CURRENT_SESSION_USER_ID)) + " TND");
-        totalLabel.getStyleClass().add("cart-grand-total");
-        Region totalSpacer = new Region();
-        HBox.setHgrow(totalSpacer, Priority.ALWAYS);
-        totalsBox.getChildren().addAll(countLabel, totalSpacer, totalLabel);
-
-        content.getChildren().addAll(heading, subHeading, itemsScroll, totalsBox);
-        dialog.getDialogPane().setContent(content);
-
-        Node checkoutButtonNode = dialog.getDialogPane().lookupButton(checkoutBtn);
-        Node clearButtonNode = dialog.getDialogPane().lookupButton(clearBtn);
-        Node cancelButtonNode = dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        checkoutButtonNode.getStyleClass().add("cart-checkout-btn");
-        clearButtonNode.getStyleClass().add("cart-clear-btn");
-        cancelButtonNode.getStyleClass().add("cart-cancel-btn");
-
-        Optional<ButtonType> result = dialog.showAndWait();
-        if (result.isEmpty()) {
-            return;
-        }
-
-        if (result.get() == clearBtn) {
-            cartSessionService.clear(CURRENT_SESSION_USER_ID);
-            updateCartStatus();
-            if (statusLabel != null) {
-                statusLabel.setText("Panier vide");
+            Label empty = new Label("Votre panier est vide.");
+            empty.getStyleClass().add("wishlist-empty-label");
+            cartItemsBox.getChildren().add(empty);
+        } else {
+            for (CartItem item : cartItems) {
+                cartItemsBox.getChildren().add(buildCartRow(item));
             }
-            return;
         }
 
-        if (result.get() == checkoutBtn) {
-            processCheckout(cartItems);
+        if (cartCountLabel != null) {
+            cartCountLabel.setText("Articles: " + cartSessionService.countItems(CURRENT_SESSION_USER_ID));
+        }
+        if (cartTotalLabel != null) {
+            cartTotalLabel.setText("Total: " + String.format("%.2f", cartSessionService.getTotal(CURRENT_SESSION_USER_ID)) + " TND");
         }
     }
 
@@ -1163,13 +1233,13 @@ public class MarketplaceController implements Initializable {
         boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
         String modePaiement = safe(modePaiementBox.getValue()).trim();
         String adresse = safe(adresseField.getText()).trim();
-        if (!homeDelivery) {
-            showAlert("Validation", "Selectionnez 'Livraison a domicile' pour passer au paiement.");
-            return;
-        }
-
-        if (modePaiement.isEmpty() || adresse.isEmpty()) {
-            showAlert("Validation", "Mode de paiement et adresse de livraison sont obligatoires.");
+        String checkoutError = MarketplaceValidator.validateCheckout(
+                modeLivraisonBox.getValue(),
+                modePaiement,
+                adresse
+        );
+        if (checkoutError != null) {
+            showAlert("Validation", checkoutError);
             return;
         }
 
@@ -1184,9 +1254,12 @@ public class MarketplaceController implements Initializable {
             loadCommandes();
             loadProduits();
             refreshStats();
+            renderCartOverlay();
+            closeCartOverlay();
             if (statusLabel != null) {
                 statusLabel.setText("Commande #" + commandeId + " creee avec succes");
             }
+            showToast("Commande #" + commandeId + " creee avec succes.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -1462,9 +1535,15 @@ public class MarketplaceController implements Initializable {
         if (fldType != null) {
             fldType.setValue(TYPE_VENTE);
         }
+        clearProductFieldErrors();
         updatePublishPreview();
-        modalOverlay.setVisible(true);
-        modalOverlay.toFront();
+        animateOverlayIn(modalOverlay);
+    }
+
+    @FXML
+    public void handleProductFormInput() {
+        updatePublishPreview();
+        clearProductFieldErrors();
     }
 
     @FXML
@@ -1540,12 +1619,43 @@ public class MarketplaceController implements Initializable {
                 return;
             }
 
-            fldImage.setText(selected.getAbsolutePath());
-            if (statusLabel != null) {
-                statusLabel.setText("Image selectionnee: " + selected.getName());
+            try {
+                String relativePath = storeImageForSharedProjects(selected);
+                fldImage.setText(relativePath);
+                if (statusLabel != null) {
+                    statusLabel.setText("Image enregistree: " + relativePath);
+                }
+                showToast("Image importee avec succes.", true);
+                updatePublishPreview();
+            } catch (IOException e) {
+                showAlert("Image", "Echec import image: " + e.getMessage());
             }
-            updatePublishPreview();
         }
+    }
+
+    private String storeImageForSharedProjects(File sourceFile) throws IOException {
+        String original = sourceFile.getName();
+        String extension = "";
+        int dot = original.lastIndexOf('.');
+        if (dot >= 0) {
+            extension = original.substring(dot).toLowerCase();
+        }
+
+        String generatedName = UUID.randomUUID() + extension;
+        Path uploadsDir = getSharedUploadsDir().resolve("produits");
+        Files.createDirectories(uploadsDir);
+
+        Path target = uploadsDir.resolve(generatedName);
+        Files.copy(sourceFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+        return "uploads/produits/" + generatedName;
+    }
+
+    private Path getSharedUploadsDir() {
+        String configured = System.getenv("AGRI_UPLOADS_DIR");
+        if (configured != null && !configured.isBlank()) {
+            return Paths.get(configured);
+        }
+        return Paths.get(System.getProperty("user.dir"), "uploads");
     }
 
     private void openModifierProduit(Produit produit) {
@@ -1571,34 +1681,24 @@ public class MarketplaceController implements Initializable {
         }
         chkPromo.setSelected(produit.isPromotion());
         fldPromoPrice.setText(String.valueOf(produit.getPromotionPrice()));
+        clearProductFieldErrors();
         updatePublishPreview();
-        modalOverlay.setVisible(true);
-        modalOverlay.toFront();
+        animateOverlayIn(modalOverlay);
     }
 
     @FXML
     public void saveFormProduct() {
-        Double prix = parseDouble(fldPrix.getText());
-        Double promoPrix = parseDouble(fldPromoPrice.getText());
-        Integer stock = parseInteger(fldStock.getText());
-        
-        if (prix == null || stock == null || fldNom.getText().isBlank()) {
-            showAlert("Erreur", "Champs invalides");
-            return;
-        }
-        
-        Produit p = currentEditProduit == null ? new Produit() : currentEditProduit;
-        String selectedCategory = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
-        if (selectedCategory.isEmpty() || CATEGORY_PLACEHOLDER.equals(selectedCategory)) {
-            showAlert("Erreur", "Veuillez choisir une categorie");
+        if (!validateProductForm(true)) {
             return;
         }
 
+        Double prix = parseDouble(fldPrix.getText());
+        Double promoPrix = parseDouble(fldPromoPrice.getText());
+        Integer stock = parseInteger(fldStock.getText());
+
+        Produit p = currentEditProduit == null ? new Produit() : currentEditProduit;
+        String selectedCategory = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
         String selectedType = fldType == null ? "" : safe(fldType.getValue()).trim();
-        if (selectedType.isEmpty()) {
-            showAlert("Erreur", "Veuillez choisir un type d'offre");
-            return;
-        }
 
         p.setNom(fldNom.getText().trim());
         p.setDescription(fldDescription.getText().trim());
@@ -1620,8 +1720,10 @@ public class MarketplaceController implements Initializable {
         try {
             if (currentEditProduit == null) {
                 produitService.ajouter(p);
+                showToast("Annonce ajoutee avec succes.", true);
             } else {
                 produitService.modifier(p);
+                showToast("Annonce modifiee avec succes.", true);
             }
             loadProduits();
             refreshStats();
@@ -1631,29 +1733,163 @@ public class MarketplaceController implements Initializable {
         }
     }
 
+    private boolean validateProductForm(boolean strictMode) {
+        clearProductFieldErrors();
+        boolean valid = true;
+
+        String nomErr = MarketplaceValidator.validateProductName(fldNom == null ? "" : fldNom.getText());
+        if (nomErr != null) {
+            showFieldError(fldNom, errNom, nomErr);
+            valid = false;
+        }
+
+        String categorieErr = MarketplaceValidator.validateProductCategory(
+                fldCategorie == null ? null : fldCategorie.getValue(),
+                CATEGORY_PLACEHOLDER
+        );
+        if (categorieErr != null) {
+            showFieldError(fldCategorie, errCategorie, categorieErr);
+            valid = false;
+        }
+
+        String typeErr = MarketplaceValidator.validateOfferType(fldType == null ? null : fldType.getValue());
+        if (typeErr != null) {
+            showFieldError(fldType, errType, typeErr);
+            valid = false;
+        }
+
+        String prixErr = MarketplaceValidator.validatePositivePrice(fldPrix == null ? "" : fldPrix.getText());
+        if (prixErr != null) {
+            showFieldError(fldPrix, errPrix, prixErr);
+            valid = false;
+        }
+
+        String stockErr = MarketplaceValidator.validateStock(fldStock == null ? "" : fldStock.getText());
+        if (stockErr != null) {
+            showFieldError(fldStock, errStock, stockErr);
+            valid = false;
+        }
+
+        String descErr = MarketplaceValidator.validateProductDescription(fldDescription == null ? "" : fldDescription.getText());
+        if (descErr != null) {
+            showFieldError(fldDescription, errDescription, descErr);
+            valid = false;
+        }
+
+        String promoErr = MarketplaceValidator.validatePromoPrice(
+                chkPromo != null && chkPromo.isSelected(),
+                fldPromoPrice == null ? "" : fldPromoPrice.getText(),
+                fldPrix == null ? "" : fldPrix.getText()
+        );
+        if (promoErr != null) {
+            showFieldError(fldPromoPrice, errPromoPrice, promoErr);
+            valid = false;
+        }
+
+        if (!valid && strictMode) {
+            showAlert("Validation", "Veuillez corriger les champs en rouge.");
+        }
+
+        return valid;
+    }
+
+    private void clearProductFieldErrors() {
+        clearFieldError(fldNom, errNom);
+        clearFieldError(fldCategorie, errCategorie);
+        clearFieldError(fldType, errType);
+        clearFieldError(fldPrix, errPrix);
+        clearFieldError(fldStock, errStock);
+        clearFieldError(fldDescription, errDescription);
+        clearFieldError(fldPromoPrice, errPromoPrice);
+    }
+
+    private void showFieldError(Control field, Label label, String message) {
+        if (field != null && !field.getStyleClass().contains("field-error")) {
+            field.getStyleClass().add("field-error");
+        }
+        if (label != null) {
+            label.setText(message);
+            label.setManaged(true);
+            label.setVisible(true);
+        }
+    }
+
+    private void clearFieldError(Control field, Label label) {
+        if (field != null) {
+            field.getStyleClass().remove("field-error");
+        }
+        if (label != null) {
+            label.setText(" ");
+            label.setManaged(false);
+            label.setVisible(false);
+        }
+    }
+
     @FXML
     public void showProductDetails(Produit p) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ProductDetailsView.fxml"));
-            Parent root = loader.load();
-
-            ProductDetailsController controller = loader.getController();
-            controller.setProduct(p);
-            controller.setOnContactSeller(this::openMessagingForProduct);
-
-            Stage stage = new Stage();
-            stage.setTitle("Details Produit");
-            stage.initModality(Modality.APPLICATION_MODAL);
-            if (mainContent != null && mainContent.getScene() != null) {
-                stage.initOwner(mainContent.getScene().getWindow());
-            }
-            stage.setScene(new Scene(root));
-            stage.setMinWidth(1100);
-            stage.setMinHeight(760);
-            stage.show();
-        } catch (IOException ex) {
-            showAlert("Erreur", "Impossible d'ouvrir la page details: " + ex.getMessage());
+        if (p == null || detailsOverlay == null) {
+            return;
         }
+
+        currentDetailsProduit = p;
+
+        detailsTitle.setText(normalizeText(safe(p.getNom())));
+        detailsCategory.setText(normalizeText(safe(p.getCategorie())));
+        detailsDesc.setText(normalizeText(safe(p.getDescription())));
+        detailsStock.setText("Stock: " + p.getQuantiteStock() + " unites disponibles");
+        detailsLocation.setText(normalizeText(safe(p.getLocationAddress())).isEmpty()
+                ? "Localisation: Non precisee"
+                : "Localisation: " + normalizeText(safe(p.getLocationAddress())));
+        detailsId.setText("# ID: " + p.getId());
+
+        String displayType = normalizeTypeForDisplay(p.getType());
+        if (detailsTypeBadge != null) {
+            detailsTypeBadge.setText(displayType.toUpperCase());
+        }
+        if (detailsTypePill != null) {
+            detailsTypePill.setText(displayType);
+        }
+
+        detailsImageView.setImage(resolveProductImage(p.getImage()));
+
+        int max = Math.max(1, p.getQuantiteStock());
+        detailsQuantitySpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, max, 1));
+
+        if (p.isPromotion()) {
+            detailsPrice.setText(String.format("%.2f", p.getPromotionPrice()));
+            detailsOldPrice.setText(String.format("%.2f TND", p.getPrix()));
+            detailsOldPrice.setVisible(true);
+            detailsOldPrice.setManaged(true);
+            detailsConvertedPrice.setText(String.format("≈ %.2f EUR · %.2f USD", p.getPromotionPrice() * 0.29, p.getPromotionPrice() * 0.32));
+        } else {
+            detailsPrice.setText(String.format("%.2f", p.getPrix()));
+            detailsOldPrice.setVisible(false);
+            detailsOldPrice.setManaged(false);
+            detailsConvertedPrice.setText(String.format("≈ %.2f EUR · %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
+        }
+
+        animateOverlayIn(detailsOverlay);
+    }
+
+    @FXML
+    public void openMessagingForCurrentProduct() {
+        if (currentDetailsProduit == null) {
+            openMessagingCenter();
+            return;
+        }
+        openMessagingForProduct(currentDetailsProduit);
+    }
+
+    @FXML
+    public void addCurrentDetailsToCart() {
+        if (currentDetailsProduit == null) {
+            return;
+        }
+        int quantity = 1;
+        if (detailsQuantitySpinner != null && detailsQuantitySpinner.getValue() != null) {
+            quantity = Math.max(1, detailsQuantitySpinner.getValue());
+        }
+        addToCart(currentDetailsProduit, quantity);
     }
 
     // legacy build dialog intact in case needed
@@ -1665,6 +1901,7 @@ public class MarketplaceController implements Initializable {
             produitService.supprimer(produit.getId());
             loadProduits();
             refreshStats();
+            showToast("Annonce supprimee.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -1678,6 +1915,7 @@ public class MarketplaceController implements Initializable {
                 commandeService.ajouter(c);
                 loadCommandes();
                 refreshStats();
+                showToast("Commande ajoutee.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1691,6 +1929,7 @@ public class MarketplaceController implements Initializable {
             try {
                 commandeService.modifier(c);
                 loadCommandes();
+                showToast("Commande modifiee.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1728,12 +1967,19 @@ public class MarketplaceController implements Initializable {
             if (btn != saveBtn) {
                 return null;
             }
-            Double montant = parseDouble(montantField.getText());
-            Integer clientId = parseInteger(clientIdField.getText());
-            if (montant == null || clientId == null || statutField.getText().isBlank()) {
-                showAlert("Validation", "Champs invalides pour la commande.");
+            String err = MarketplaceValidator.validateCommande(
+                    statutField.getText(),
+                    paiementField.getText(),
+                    adresseField.getText(),
+                    montantField.getText(),
+                    clientIdField.getText()
+            );
+            if (err != null) {
+                showAlert("Validation", err);
                 return null;
             }
+            Double montant = parseDouble(montantField.getText());
+            Integer clientId = parseInteger(clientIdField.getText());
             Commande c = new Commande();
             c.setStatut(statutField.getText().trim());
             c.setModePaiement(paiementField.getText().trim());
@@ -1755,6 +2001,7 @@ public class MarketplaceController implements Initializable {
             commandeService.supprimer(commande.getId());
             loadCommandes();
             refreshStats();
+            showToast("Commande supprimee.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -1768,6 +2015,7 @@ public class MarketplaceController implements Initializable {
                 wishlistService.ajouter(item);
                 loadWishlist();
                 refreshStats();
+                showToast("Element wishlist ajoute.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1781,6 +2029,7 @@ public class MarketplaceController implements Initializable {
             try {
                 wishlistService.modifier(updated);
                 loadWishlist();
+                showToast("Element wishlist modifie.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1808,12 +2057,16 @@ public class MarketplaceController implements Initializable {
             if (btn != saveBtn) {
                 return null;
             }
-            Integer userId = parseInteger(userIdField.getText());
-            Integer produitId = parseInteger(produitIdField.getText());
-            if (userId == null || produitId == null) {
-                showAlert("Validation", "IDs invalides pour la wishlist.");
+            String err = MarketplaceValidator.validateWishlist(
+                    userIdField.getText(),
+                    produitIdField.getText()
+            );
+            if (err != null) {
+                showAlert("Validation", err);
                 return null;
             }
+            Integer userId = parseInteger(userIdField.getText());
+            Integer produitId = parseInteger(produitIdField.getText());
             return new WishlistItem(userId, produitId);
         });
 
@@ -1828,6 +2081,7 @@ public class MarketplaceController implements Initializable {
             wishlistService.supprimer(item.getId());
             loadWishlist();
             refreshStats();
+            showToast("Element wishlist supprime.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -1841,6 +2095,7 @@ public class MarketplaceController implements Initializable {
                 messageService.ajouter(message);
                 loadMessages();
                 refreshStats();
+                showToast("Message ajoute.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1854,6 +2109,7 @@ public class MarketplaceController implements Initializable {
             try {
                 messageService.modifier(updated);
                 loadMessages();
+                showToast("Message modifie.", true);
             } catch (SQLException e) {
                 showSqlAlert(e);
             }
@@ -1891,12 +2147,17 @@ public class MarketplaceController implements Initializable {
             if (btn != saveBtn) {
                 return null;
             }
-            Integer conversationId = parseInteger(conversationIdField.getText());
-            Integer senderId = parseInteger(senderIdField.getText());
-            if (conversationId == null || senderId == null || contentField.getText().isBlank()) {
-                showAlert("Validation", "Champs invalides pour le message.");
+            String err = MarketplaceValidator.validateMessage(
+                    conversationIdField.getText(),
+                    senderIdField.getText(),
+                    contentField.getText()
+            );
+            if (err != null) {
+                showAlert("Validation", err);
                 return null;
             }
+            Integer conversationId = parseInteger(conversationIdField.getText());
+            Integer senderId = parseInteger(senderIdField.getText());
 
             MarketplaceMessage message = new MarketplaceMessage();
             message.setConversationId(conversationId);
@@ -1918,6 +2179,7 @@ public class MarketplaceController implements Initializable {
             messageService.supprimer(message.getId());
             loadMessages();
             refreshStats();
+            showToast("Message supprime.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -1952,6 +2214,7 @@ public class MarketplaceController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+        showToast(message, false);
     }
 
     private void showSqlAlert(SQLException exception) {
@@ -1960,6 +2223,7 @@ public class MarketplaceController implements Initializable {
         alert.setHeaderText("Operation base de donnees echouee");
         alert.setContentText(exception.getMessage());
         alert.showAndWait();
+        showToast("Echec: " + exception.getMessage(), false);
         if (statusLabel != null) {
             statusLabel.setText("Erreur SQL detectee");
         }
@@ -2015,27 +2279,143 @@ public class MarketplaceController implements Initializable {
         }
 
         try {
+            String normalizedRaw = raw.replace('\\', '/');
+
             if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("file:")) {
                 Image direct = new Image(raw, false);
                 return direct.isError() ? loadPlaceholderImage() : direct;
             }
 
+            // DB should ideally store relative paths like uploads/produits/<file>.
+            // Resolve them against shared directories used by both Symfony and Java.
+            if (normalizedRaw.startsWith("/uploads/") || normalizedRaw.startsWith("uploads/")) {
+                String relative = normalizedRaw.startsWith("/") ? normalizedRaw.substring(1) : normalizedRaw;
+
+                Path sharedUploads = getSharedUploadsDir();
+                if (relative.startsWith("uploads/")) {
+                    String subPath = relative.substring("uploads/".length());
+                    Path sharedPath = sharedUploads.resolve(subPath).toAbsolutePath();
+                    Image sharedImage = loadImageIfExists(sharedPath);
+                    if (sharedImage != null) {
+                        return sharedImage;
+                    }
+                }
+
+                for (Path symfonyPublic : getSymfonyPublicCandidates()) {
+                    Path symfonyPath = symfonyPublic.resolve(relative).toAbsolutePath();
+                    Image symfonyImage = loadImageIfExists(symfonyPath);
+                    if (symfonyImage != null) {
+                        return symfonyImage;
+                    }
+                }
+
+                Image remote = loadFromRemoteMedia(relative);
+                if (remote != null) {
+                    return remote;
+                }
+            }
+
             Path absolutePath = Paths.get(raw).toAbsolutePath();
-            if (Files.exists(absolutePath)) {
-                Image local = new Image(absolutePath.toUri().toString(), false);
-                return local.isError() ? loadPlaceholderImage() : local;
+            Image localAbsolute = loadImageIfExists(absolutePath);
+            if (localAbsolute != null) {
+                return localAbsolute;
             }
 
             Path projectRelative = Paths.get(System.getProperty("user.dir"), raw).toAbsolutePath();
-            if (Files.exists(projectRelative)) {
-                Image local = new Image(projectRelative.toUri().toString(), false);
-                return local.isError() ? loadPlaceholderImage() : local;
+            Image localRelative = loadImageIfExists(projectRelative);
+            if (localRelative != null) {
+                return localRelative;
+            }
+
+            Path rawPath = Paths.get(raw);
+            if (rawPath.getFileName() != null) {
+                String fileName = rawPath.getFileName().toString();
+                Image byName = findByFilenameFallback(fileName);
+                if (byName != null) {
+                    return byName;
+                }
             }
         } catch (Exception ignored) {
             return loadPlaceholderImage();
         }
 
         return loadPlaceholderImage();
+    }
+
+    private Image loadImageIfExists(Path path) {
+        if (path == null || !Files.exists(path)) {
+            return null;
+        }
+        Image image = new Image(path.toUri().toString(), false);
+        return image.isError() ? null : image;
+    }
+
+    private List<Path> getSymfonyPublicCandidates() {
+        LinkedHashSet<Path> candidates = new LinkedHashSet<>();
+
+        String envPath = System.getenv("SYMFONY_PUBLIC_DIR");
+        if (envPath != null && !envPath.isBlank()) {
+            candidates.add(Paths.get(envPath).toAbsolutePath());
+        }
+
+        // Local known Symfony setup: C:/Users/<user>/agrismart/public
+        Path homeSymfonyPublic = Paths.get(System.getProperty("user.home"), "agrismart", "public").toAbsolutePath();
+        candidates.add(homeSymfonyPublic);
+
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        Path parent = current.getParent();
+        if (parent != null) {
+            candidates.add(parent.resolve("agriSmartSymfony").resolve("public").toAbsolutePath());
+            candidates.add(parent.resolve("agrismart-symfony").resolve("public").toAbsolutePath());
+            candidates.add(parent.resolve("symfony").resolve("public").toAbsolutePath());
+            candidates.add(parent.resolve("project-symfony").resolve("public").toAbsolutePath());
+        }
+
+        return new ArrayList<>(candidates);
+    }
+
+    private Image loadFromRemoteMedia(String relative) {
+        LinkedHashSet<String> bases = new LinkedHashSet<>();
+
+        String envBase = System.getenv("MEDIA_BASE_URL");
+        if (envBase != null && !envBase.isBlank()) {
+            bases.add(envBase);
+        }
+
+        bases.add("http://localhost:8000");
+        bases.add("http://127.0.0.1:8000");
+
+        for (String base : bases) {
+            String normalizedBase = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
+            Image image = new Image(normalizedBase + "/" + relative, false);
+            if (!image.isError()) {
+                return image;
+            }
+        }
+
+        return null;
+    }
+
+    private Image findByFilenameFallback(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return null;
+        }
+
+        Path sharedCandidate = getSharedUploadsDir().resolve("produits").resolve(fileName).toAbsolutePath();
+        Image shared = loadImageIfExists(sharedCandidate);
+        if (shared != null) {
+            return shared;
+        }
+
+        for (Path symfonyPublic : getSymfonyPublicCandidates()) {
+            Path candidate = symfonyPublic.resolve("uploads").resolve("produits").resolve(fileName).toAbsolutePath();
+            Image found = loadImageIfExists(candidate);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private Image loadPlaceholderImage() {

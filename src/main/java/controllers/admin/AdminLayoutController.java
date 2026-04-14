@@ -52,7 +52,7 @@ public class AdminLayoutController {
     }
 
     @FXML public void openMarketplace() {
-        loadContent("/Views/MarketplaceView.fxml",
+        loadContent("/Views/Marketplace/MarketplaceView.fxml",
                 "Marketplace", "Admin / Marketplace");
     }
 

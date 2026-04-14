@@ -213,7 +213,9 @@
 
 .action-chip {
     -fx-background-color: #ffffff;
+    -fx-background-insets: 0;
     -fx-border-color: #d7e4da;
+    -fx-border-width: 1;
     -fx-border-radius: 18;
     -fx-background-radius: 18;
     -fx-padding: 7 16;
@@ -226,9 +228,30 @@
     -fx-background-color: #f4faf6;
 }
 
+.action-chip:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #8dbba2;
+    -fx-border-width: 1;
+}
+
+.action-chip:pressed {
+    -fx-background-color: #eaf5ee;
+}
+
 .action-chip.primary {
     -fx-background-color: #174f37;
     -fx-text-fill: #ffffff;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.action-chip.primary:hover {
+    -fx-background-color: #1b5c41;
+}
+
+.action-chip.primary:focused,
+.action-chip.primary:pressed {
+    -fx-background-color: #154a34;
     -fx-border-color: transparent;
 }
 
@@ -236,6 +259,17 @@
     -fx-background-color: #fff5df;
     -fx-border-color: #ebd08f;
     -fx-text-fill: #8a650f;
+    -fx-background-insets: 0;
+}
+
+.action-chip.gold:hover {
+    -fx-background-color: #ffefcc;
+}
+
+.action-chip.gold:focused,
+.action-chip.gold:pressed {
+    -fx-background-color: #fce7bc;
+    -fx-border-color: #dfbc62;
 }
 
 .module-chip-row {
@@ -356,6 +390,19 @@
     -fx-border-color: #dce8df;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
+}
+
+.form-error-label {
+    -fx-text-fill: #d64545;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: -2 0 0 2;
+}
+
+.field-error {
+    -fx-border-color: #d64545;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
 }
 
 .table-row-cell {
@@ -1608,4 +1655,31 @@
     -fx-font-weight: 700;
     -fx-padding: 8 14;
     -fx-cursor: hand;
+}
+
+.cart-shell {
+    -fx-background-color: linear-gradient(to bottom, #fcfefd, #f3f8f5);
+    -fx-border-color: #d4e2d9;
+    -fx-border-width: 1;
+    -fx-border-radius: 18;
+}
+
+.toast-base {
+    -fx-background-radius: 14;
+    -fx-padding: 10 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.28), 18, 0.22, 0, 4);
+}
+
+.toast-success {
+    -fx-background-color: linear-gradient(to right, #0f5f3b, #16784c);
+}
+
+.toast-error {
+    -fx-background-color: linear-gradient(to right, #a31228, #c11b35);
+}
+
+.toast-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
 }

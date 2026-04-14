@@ -4,7 +4,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ProductDetailsController" stylesheets="@../css/style.css" styleClass="details-shell">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ProductDetailsController" stylesheets="@../../css/style.css" styleClass="details-shell">
     <top>
         <HBox alignment="CENTER_LEFT" styleClass="details-topbar" spacing="12">
             <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
