@@ -103,47 +103,46 @@
                     <Label text="Gerez vos produits (edition, suppression, suivi du stock)." styleClass="seller-subtitle"/>
                 </VBox>
                 <HBox HBox.hgrow="ALWAYS"/>
+                <ToggleButton fx:id="btnManageProducts" text="Gestion annonces" styleClass="seller-order-toggle" onAction="#showManageProducts" selected="true"/>
                 <ToggleButton fx:id="btnSoldOrders" text="Produits vendus" styleClass="seller-order-toggle" onAction="#showSoldOrders" selected="true"/>
                 <ToggleButton fx:id="btnBoughtOrders" text="Produits achetes" styleClass="seller-order-toggle" onAction="#showBoughtOrders"/>
                 <Button text="Ajouter une offre" styleClass="seller-add-btn" onAction="#openAjouterProduit"/>
                 <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeSellerSpace"/>
             </HBox>
 
-            <SplitPane orientation="VERTICAL" VBox.vgrow="ALWAYS" dividerPositions="0.58" styleClass="seller-split-pane">
-                <items>
-                    <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
-                        <Label text="Mes Produits" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
-                        <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
-                            <columns>
-                                <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
-                                <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
-                                <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
-                                <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
-                                <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
-                                <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
-                                <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
-                                <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
+            <StackPane VBox.vgrow="ALWAYS">
+                <VBox fx:id="sellerProductsSection" styleClass="seller-table-card" VBox.vgrow="ALWAYS">
+                    <Label text="Gestion annonces" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                    <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
+                        <columns>
+                            <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
+                            <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
+                            <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
+                            <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
+                            <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
+                            <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
+                            <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
+                            <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
+                        </columns>
+                    </TableView>
+                </VBox>
 
-                    <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label fx:id="sellerOrdersTitleLabel" text="Produits vendus" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
-                            <HBox HBox.hgrow="ALWAYS"/>
-                        </HBox>
-                        <TableView fx:id="commandeTable" VBox.vgrow="ALWAYS" styleClass="seller-table commande-table">
-                            <columns>
-                                <TableColumn fx:id="colCmdId" text="#" prefWidth="90"/>
-                                <TableColumn fx:id="colCmdStatut" text="Statut" prefWidth="220"/>
-                                <TableColumn fx:id="colCmdMontant" text="Montant" prefWidth="180"/>
-                                <TableColumn fx:id="colCmdPaiement" text="Paiement" prefWidth="180"/>
-                                <TableColumn fx:id="colCmdActions" text="Actions" prefWidth="170"/>
-                            </columns>
-                        </TableView>
-                    </VBox>
-                </items>
-            </SplitPane>
+                <VBox fx:id="sellerOrdersSection" styleClass="seller-table-card" VBox.vgrow="ALWAYS" visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label fx:id="sellerOrdersTitleLabel" text="Produits vendus" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <TableView fx:id="commandeTable" VBox.vgrow="ALWAYS" styleClass="seller-table commande-table">
+                        <columns>
+                            <TableColumn fx:id="colCmdId" text="#" prefWidth="90"/>
+                            <TableColumn fx:id="colCmdStatut" text="Statut" prefWidth="220"/>
+                            <TableColumn fx:id="colCmdMontant" text="Montant" prefWidth="180"/>
+                            <TableColumn fx:id="colCmdPaiement" text="Paiement" prefWidth="180"/>
+                            <TableColumn fx:id="colCmdActions" text="Actions" prefWidth="170"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </StackPane>
         </VBox>
     </StackPane>
 

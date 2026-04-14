@@ -262,6 +262,473 @@
     -fx-background-insets: 0;
 }
 
+/* ===================== ADMIN THEME ===================== */
+
+.admin-shell {
+    -fx-background-color: linear-gradient(to bottom right, #eef6f1, #e8f2ec 45%, #edf8f2);
+}
+
+.admin-sidebar {
+    -fx-background-color: linear-gradient(to bottom, #184a34, #143d2b 62%, #123626);
+    -fx-padding: 0;
+}
+
+.admin-sidebar-brand {
+    -fx-padding: 28 20 24 20;
+    -fx-border-color: rgba(255,255,255,0.12);
+    -fx-border-width: 0 0 1 0;
+}
+
+.admin-brand-title {
+    -fx-font-size: 22;
+    -fx-font-weight: 800;
+    -fx-text-fill: #d9f6e5;
+}
+
+.admin-brand-subtitle {
+    -fx-font-size: 11;
+    -fx-text-fill: #a8d8bf;
+}
+
+.admin-sidebar-menu {
+    -fx-padding: 16 12;
+}
+
+.admin-sidebar-section-label {
+    -fx-font-size: 10;
+    -fx-font-weight: 800;
+    -fx-text-fill: #86b89c;
+    -fx-padding: 8 8 4 8;
+}
+
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e7f7ee;
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-padding: 10 12;
+    -fx-background-radius: 8;
+}
+
+.sidebar-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.12);
+}
+
+.admin-profile-box {
+    -fx-padding: 12;
+    -fx-border-color: rgba(255,255,255,0.12);
+    -fx-border-width: 1 0 0 0;
+}
+
+.admin-profile-row {
+    -fx-padding: 8 4;
+}
+
+.admin-profile-icon {
+    -fx-font-size: 22;
+}
+
+.admin-profile-name {
+    -fx-font-size: 13;
+    -fx-font-weight: 800;
+    -fx-text-fill: #e3f6ec;
+}
+
+.admin-profile-role {
+    -fx-font-size: 11;
+    -fx-text-fill: #98c8ad;
+}
+
+.admin-logout-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffd2cc;
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-padding: 8 12;
+    -fx-background-radius: 8;
+}
+
+.admin-logout-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.10);
+}
+
+.admin-main-bg {
+    -fx-background-color: transparent;
+}
+
+.admin-topbar {
+    -fx-background-color: linear-gradient(to right, #ffffff, #f3faf6);
+    -fx-padding: 14 24;
+    -fx-border-color: #d7e9dd;
+    -fx-border-width: 0 0 1 0;
+}
+
+.admin-topbar-title {
+    -fx-font-size: 19;
+    -fx-font-weight: 800;
+    -fx-text-fill: #123926;
+}
+
+.admin-topbar-breadcrumb {
+    -fx-font-size: 11;
+    -fx-text-fill: #6f8d7b;
+}
+
+.admin-topbar-date {
+    -fx-font-size: 12;
+    -fx-text-fill: #5f7f6c;
+    -fx-font-weight: 700;
+}
+
+.admin-content-area {
+    -fx-padding: 24;
+    -fx-alignment: TOP_LEFT;
+}
+
+.admin-content-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.admin-content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.admin-page-root {
+    -fx-padding: 4;
+    -fx-spacing: 16;
+}
+
+.admin-page-header {
+    -fx-padding: 0 0 2 0;
+}
+
+.admin-page-title {
+    -fx-font-size: 22;
+    -fx-font-weight: 800;
+    -fx-text-fill: #143b29;
+}
+
+.admin-meta-label {
+    -fx-font-size: 12;
+    -fx-text-fill: #648372;
+    -fx-font-weight: 700;
+}
+
+.admin-filter-label {
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-text-fill: #3d5e4d;
+}
+
+.admin-stats-row {
+    -fx-padding: 0;
+}
+
+.admin-stat-card,
+.admin-panel-card,
+.admin-filter-box,
+.admin-chart-card {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #f7fcf9);
+    -fx-background-radius: 12;
+    -fx-border-color: #d9e9de;
+    -fx-border-radius: 12;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(26,77,53,0.10), 10, 0.2, 0, 2);
+}
+
+.admin-panel-card {
+    -fx-padding: 20;
+}
+
+.admin-chart-card {
+    -fx-padding: 12;
+}
+
+.admin-stat-title {
+    -fx-font-size: 12;
+    -fx-text-fill: #6f8c7b;
+    -fx-font-weight: 700;
+}
+
+.admin-stat-value {
+    -fx-font-size: 24;
+    -fx-font-weight: 800;
+    -fx-text-fill: #113726;
+}
+
+.admin-stat-icon {
+    -fx-font-size: 24;
+}
+
+.admin-positive {
+    -fx-text-fill: #1c9a5f;
+}
+
+.admin-negative {
+    -fx-text-fill: #d9534f;
+}
+
+.admin-section-title {
+    -fx-font-size: 15;
+    -fx-font-weight: 800;
+    -fx-text-fill: #15432e;
+}
+
+.admin-empty-label {
+    -fx-text-fill: #96ac9f;
+    -fx-font-size: 14;
+}
+
+.admin-table-view {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-color: #d9e9de;
+    -fx-border-radius: 12;
+}
+
+.admin-list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.admin-btn-secondary,
+.admin-btn-positive,
+.admin-btn-danger,
+.admin-btn-warning {
+    -fx-font-size: 12;
+    -fx-font-weight: 700;
+    -fx-padding: 6 12;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.admin-btn-secondary {
+    -fx-background-color: #e9f3ed;
+    -fx-text-fill: #1f5a3e;
+}
+
+.admin-btn-secondary:hover {
+    -fx-background-color: #dcebe2;
+}
+
+.admin-btn-positive {
+    -fx-background-color: #22a06b;
+    -fx-text-fill: white;
+}
+
+.admin-btn-positive:hover {
+    -fx-background-color: #1d8f5f;
+}
+
+.admin-btn-danger {
+    -fx-background-color: #d9534f;
+    -fx-text-fill: white;
+}
+
+.admin-btn-danger:hover {
+    -fx-background-color: #c64541;
+}
+
+.admin-btn-warning {
+    -fx-background-color: #e6a629;
+    -fx-text-fill: white;
+}
+
+.admin-btn-warning:hover {
+    -fx-background-color: #d3951f;
+}
+
+.admin-status-badge {
+    -fx-text-fill: white;
+    -fx-font-size: 10;
+    -fx-font-weight: 800;
+    -fx-padding: 3 10;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.admin-status-badge.status-active {
+    -fx-background-color: #22a06b;
+}
+
+.admin-status-badge.status-inactive {
+    -fx-background-color: #d9534f;
+}
+
+.admin-status-badge.status-pending {
+    -fx-background-color: #e6a629;
+}
+
+.page-number-btn.active {
+    -fx-background-color: #1e7f54;
+    -fx-text-fill: white;
+}
+
+.chart {
+    -fx-background-color: transparent;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+}
+
+.default-color0.chart-pie { -fx-pie-color: #2a9d66; }
+.default-color1.chart-pie { -fx-pie-color: #ff8a5b; }
+.default-color2.chart-pie { -fx-pie-color: #2f78c4; }
+.default-color3.chart-pie { -fx-pie-color: #e6a629; }
+
+.default-color0.chart-bar { -fx-bar-fill: #2a9d66; }
+
+/* Special visual pass: Admin Marketplace dashboard */
+.admin-marketplace-special {
+    -fx-background-color: linear-gradient(to bottom, #f5fbf7, #eef8f2);
+}
+
+.admin-marketplace-hero {
+    -fx-padding: 14;
+    -fx-background-color: linear-gradient(to right, #0f5132, #146c43 45%, #0b7285);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-radius: 14;
+}
+
+.admin-marketplace-title {
+    -fx-text-fill: white;
+    -fx-font-size: 24;
+    -fx-font-weight: 900;
+}
+
+.admin-marketplace-subtitle {
+    -fx-text-fill: #d9f7e8;
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+}
+
+.admin-marketplace-hero .admin-btn-secondary {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-text-fill: white;
+    -fx-border-color: rgba(255,255,255,0.35);
+    -fx-border-radius: 8;
+}
+
+.admin-marketplace-hero .admin-btn-secondary:hover {
+    -fx-background-color: rgba(255,255,255,0.28);
+}
+
+.admin-stat-card.kpi-total {
+    -fx-background-color: linear-gradient(to bottom right, #f9fff9, #eefcf0);
+}
+
+.admin-stat-card.kpi-active {
+    -fx-background-color: linear-gradient(to bottom right, #f2fff8, #dcf8e8);
+}
+
+.admin-stat-card.kpi-banned {
+    -fx-background-color: linear-gradient(to bottom right, #fff5f5, #ffe6e6);
+}
+
+.admin-stat-card.kpi-vente {
+    -fx-background-color: linear-gradient(to bottom right, #f3f8ff, #e6f0ff);
+}
+
+.admin-stat-card.kpi-location {
+    -fx-background-color: linear-gradient(to bottom right, #fffaf1, #fff1d8);
+}
+
+.admin-stat-card.kpi-promo {
+    -fx-background-color: linear-gradient(to bottom right, #fff4fe, #f8e9ff);
+}
+
+.admin-marketplace-special .admin-stat-card {
+    -fx-padding: 16;
+}
+
+.admin-search-wrap {
+    -fx-padding: 10 12;
+    -fx-background-color: linear-gradient(to right, #ffffff, #f7fffb);
+    -fx-border-color: #b9dcca;
+}
+
+.admin-search-icon {
+    -fx-font-size: 18;
+    -fx-text-fill: #0b7a56;
+    -fx-padding: 0 6 0 2;
+}
+
+.admin-search-field {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-color: #b9dcca;
+    -fx-border-radius: 12;
+    -fx-padding: 10 14;
+    -fx-font-size: 14;
+}
+
+.admin-search-field:focused {
+    -fx-border-color: #1f9d6a;
+    -fx-background-color: #f9fffc;
+}
+
+.admin-marketplace-special .admin-stat-title {
+    -fx-text-fill: #335e48;
+    -fx-font-weight: 800;
+}
+
+.admin-marketplace-special .admin-chart-card {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #f8fcfa);
+    -fx-border-color: #cfe7d9;
+}
+
+.admin-marketplace-special .chart-title,
+.admin-marketplace-special .chart-pie-label,
+.admin-marketplace-special .axis-label,
+.admin-marketplace-special .axis {
+    -fx-text-fill: #234a37;
+}
+
+.admin-marketplace-special .axis-tick-mark,
+.admin-marketplace-special .axis-minor-tick-mark {
+    -fx-stroke: #9fc1ae;
+}
+
+.admin-marketplace-special .chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.admin-marketplace-special .chart-vertical-grid-lines,
+.admin-marketplace-special .chart-horizontal-grid-lines {
+    -fx-stroke: #e2efe7;
+}
+
+.admin-marketplace-special .admin-table-view .column-header-background {
+    -fx-background-color: linear-gradient(to right, #135c3b, #1a7b52);
+}
+
+.admin-marketplace-special .admin-table-view .column-header,
+.admin-marketplace-special .admin-table-view .filler {
+    -fx-size: 34;
+    -fx-border-color: transparent;
+}
+
+.admin-marketplace-special .admin-table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: 800;
+}
+
+.admin-marketplace-special .table-row-cell:filled:odd {
+    -fx-background-color: #fbfefc;
+}
+
+.admin-marketplace-special .table-row-cell:filled:even {
+    -fx-background-color: #f4faf6;
+}
+
+.admin-marketplace-special .table-row-cell:filled:selected {
+    -fx-background-color: #d5f0df;
+}
+
 .action-chip.gold:hover {
     -fx-background-color: #ffefcc;
 }

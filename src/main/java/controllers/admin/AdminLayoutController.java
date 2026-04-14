@@ -52,8 +52,8 @@ public class AdminLayoutController {
     }
 
     @FXML public void openMarketplace() {
-        loadContent("/Views/Marketplace/MarketplaceView.fxml",
-                "Marketplace", "Admin / Marketplace");
+        loadContent("/Views/Admin/AdminMarketplaceView.fxml",
+            "Marketplace Dashboard", "Admin / Marketplace");
     }
 
     @FXML public void openTaches() {

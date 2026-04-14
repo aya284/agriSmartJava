@@ -91,7 +91,7 @@ Tables principales:
 1. Cloner le repo
 
 ```bash
-git clone https://github.com/votre-username/agriSmartJava.git
+git clone https://github.com/aya284/agriSmartJava.git
 cd agriSmartJava
 ```
 
