@@ -1,22 +1,22 @@
 /* AtlantaFX PrimerLight-inspired palette */
 .root-pane {
     -fx-font-family: "Segoe UI", "Inter", sans-serif;
-    -fx-background-color: linear-gradient(to bottom, #f6fbf8, #eef6f1 38%, #e9f2ec);
+    -fx-background-color: linear-gradient(to bottom right, #f7fcf9, #eef7f1 40%, #e5f0ea 78%, #e9f6ee);
 }
 
 .app-header-wrap {
-    -fx-background-color: linear-gradient(to right, #ffffff, #f5faf7 58%, #f1f9f4);
+    -fx-background-color: linear-gradient(to right, #ffffff, #f7fcf9 58%, #f0f8f3);
     -fx-border-color: transparent transparent #dbe9df transparent;
     -fx-border-width: 0 0 1 0;
 }
 
 .app-header-top {
-    -fx-background-color: linear-gradient(to bottom, #ffffff, #fbfdfc);
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f8fdfb);
     -fx-padding: 10 14;
-    -fx-background-radius: 14;
+    -fx-background-radius: 16;
     -fx-border-color: #dce8df;
-    -fx-border-radius: 14;
-    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.10), 12, 0.22, 0, 2);
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.12), 16, 0.2, 0, 3);
 }
 
 .logo-text {
@@ -50,12 +50,12 @@
 }
 
 .module-pill-row {
-    -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfffd);
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f9fdfb);
     -fx-padding: 10 14;
-    -fx-background-radius: 14;
+    -fx-background-radius: 16;
     -fx-border-color: #dce8df;
-    -fx-border-radius: 14;
-    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.08), 10, 0.2, 0, 1);
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.10), 12, 0.18, 0, 2);
 }
 
 .module-label {
@@ -192,23 +192,23 @@
 }
 
 .feature-hero {
-    -fx-background-color: linear-gradient(to right, #f6fbf8, #eef8f2 62%, #fbf6e8);
+    -fx-background-color: linear-gradient(to right, #f8fcf9, #eef9f2 58%, #fbf8ee);
     -fx-border-color: #dce8df;
-    -fx-border-radius: 16;
-    -fx-background-radius: 16;
-    -fx-padding: 18;
-    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.10), 12, 0.2, 0, 2);
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(34,73,55,0.13), 16, 0.2, 0, 3);
 }
 
 .feature-title {
-    -fx-font-size: 34px;
-    -fx-text-fill: #112235;
+    -fx-font-size: 36px;
+    -fx-text-fill: #0d283c;
     -fx-font-weight: 800;
 }
 
 .feature-subtitle {
-    -fx-text-fill: #607080;
-    -fx-font-size: 17px;
+    -fx-text-fill: #5c7384;
+    -fx-font-size: 18px;
 }
 
 .action-chip {
@@ -273,10 +273,10 @@
 }
 
 .module-chip-row {
-    -fx-background-color: #ffffff;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #fbfdfc);
     -fx-border-color: #dce8df;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
     -fx-padding: 10;
 }
 
@@ -298,12 +298,12 @@
 }
 
 .panel-card {
-    -fx-background-color: #ffffff;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfefd);
     -fx-border-color: #dce8df;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
     -fx-padding: 14;
-    -fx-effect: dropshadow(gaussian, rgba(28,59,44,0.08), 10, 0.18, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(28,59,44,0.10), 12, 0.2, 0, 3);
 }
 
 .panel-title {
@@ -458,18 +458,18 @@
 
 /* Fluid and Beautiful Product Cards */
 .product-card {
-    -fx-background-color: white;
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
-    -fx-border-color: #e2ede6;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfffd);
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #deebe3;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(45, 106, 79, 0.06), 15, 0.1, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(18, 52, 36, 0.09), 16, 0.16, 0, 4);
     -fx-cursor: hand;
 }
 
 .product-card:hover {
-    -fx-effect: dropshadow(gaussian, rgba(45, 106, 79, 0.15), 20, 0.2, 0, 8);
-    -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfcfc);
+    -fx-effect: dropshadow(gaussian, rgba(20, 76, 49, 0.16), 22, 0.24, 0, 8);
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f8fdfb);
 }
 
 .product-image-container {
@@ -1043,6 +1043,28 @@
     -fx-font-weight: 700;
 }
 
+.seller-order-toggle {
+    -fx-background-color: #f4faf6;
+    -fx-border-color: #cfe1d7;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 6 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #2a4e3d;
+    -fx-cursor: hand;
+}
+
+.seller-order-toggle:selected {
+    -fx-background-color: linear-gradient(to right, #146341, #19744b);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+.seller-order-toggle:hover {
+    -fx-background-color: #eaf6ef;
+}
+
 .seller-add-btn {
     -fx-background-color: linear-gradient(to right, #146341, #19744b);
     -fx-text-fill: #ffffff;
@@ -1384,48 +1406,88 @@
 }
 
 .wishlist-grid {
-    -fx-padding: 16;
+    -fx-padding: 18;
 }
 
 .wishlist-card {
-    -fx-background-color: #ffffff;
-    -fx-background-radius: 14;
-    -fx-border-color: #deebe3;
-    -fx-border-radius: 14;
-    -fx-padding: 10;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 12, 0.16, 0, 2);
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #fbfefd);
+    -fx-background-radius: 16;
+    -fx-border-color: #d8e7de;
+    -fx-border-radius: 16;
+    -fx-padding: 12;
+    -fx-spacing: 8;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 14, 0.18, 0, 3);
 }
 
 .wishlist-image-wrap {
     -fx-background-color: #f4f9f6;
-    -fx-background-radius: 12;
+    -fx-background-radius: 14;
     -fx-border-color: #dce8e0;
-    -fx-border-radius: 12;
-    -fx-padding: 4;
+    -fx-border-radius: 14;
+    -fx-padding: 5;
 }
 
 .wishlist-card-title {
-    -fx-font-size: 15px;
+    -fx-font-size: 16px;
     -fx-font-weight: 900;
     -fx-text-fill: #102a43;
 }
 
-.wishlist-card-meta {
-    -fx-font-size: 12px;
-    -fx-text-fill: #64748b;
+.wishlist-chip-row {
+    -fx-padding: 1 0 0 0;
+}
+
+.wishlist-chip {
+    -fx-background-color: #eef6f1;
+    -fx-border-color: #cfe1d6;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 3 10;
+    -fx-text-fill: #2a4b3b;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.wishlist-chip-type {
+    -fx-background-color: #eaf2ff;
+    -fx-border-color: #c9d8f3;
+    -fx-text-fill: #234a80;
+}
+
+.wishlist-chip-type.location {
+    -fx-background-color: #e8f7fb;
+    -fx-border-color: #c8e7ee;
+    -fx-text-fill: #146a7a;
 }
 
 .wishlist-card-price {
-    -fx-font-size: 16px;
+    -fx-font-size: 18px;
     -fx-font-weight: 900;
     -fx-text-fill: #136344;
 }
 
+.wishlist-actions {
+    -fx-padding: 4 0 0 0;
+}
+
+.wishlist-view-btn {
+    -fx-background-color: linear-gradient(to bottom, #1c6f4a, #165b3d);
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+
+.wishlist-view-btn:hover {
+    -fx-background-color: linear-gradient(to bottom, #248157, #1c6b47);
+}
+
 .wishlist-remove-btn {
-    -fx-background-color: #fff3f5;
-    -fx-border-color: #f7c2cb;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-background-color: #fff4f6;
+    -fx-border-color: #f5bac4;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
     -fx-text-fill: #be123c;
     -fx-font-size: 12px;
     -fx-font-weight: 800;
@@ -1592,16 +1654,43 @@
 
 /* Checkout dialog redesign */
 .checkout-dialog-pane {
-    -fx-background-color: linear-gradient(to bottom, #f9fcfa, #f2f8f4);
+    -fx-background-color: linear-gradient(to bottom, #f8fcfa, #eef7f2);
+    -fx-padding: 8;
+}
+
+.checkout-content-shell {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d7e8de;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 12, 0.16, 0, 2);
+}
+
+.checkout-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #124731;
+}
+
+.checkout-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #597064;
+    -fx-font-weight: 600;
+}
+
+.checkout-inline-actions {
+    -fx-padding: 2 0 0 0;
 }
 
 .checkout-grid {
-    -fx-background-color: #ffffff;
+    -fx-background-color: #f9fdfa;
     -fx-border-color: #d7e8de;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-hgap: 12;
     -fx-vgap: 12;
+    -fx-padding: 12;
 }
 
 .checkout-grid .label {
@@ -1645,6 +1734,10 @@
     -fx-cursor: hand;
 }
 
+.checkout-save-btn:hover {
+    -fx-background-color: linear-gradient(to right, #126746, #228458 74%, #2c9865);
+}
+
 .checkout-cancel-btn {
     -fx-background-color: #ffffff;
     -fx-border-color: #c8d7cf;
@@ -1657,6 +1750,59 @@
     -fx-cursor: hand;
 }
 
+.checkout-cancel-btn:hover {
+    -fx-background-color: #f1f7f3;
+}
+
+.checkout-success-shell {
+    -fx-alignment: center;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d7e8de;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 16;
+    -fx-min-height: 245;
+}
+
+.checkout-success-icon {
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-alignment: center;
+    -fx-background-color: #e8f7ef;
+    -fx-border-color: #bde4cc;
+    -fx-border-radius: 22;
+    -fx-background-radius: 22;
+    -fx-text-fill: #14683f;
+    -fx-font-size: 24px;
+    -fx-font-weight: 900;
+}
+
+.checkout-success-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #11472f;
+}
+
+.checkout-success-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #5f7468;
+    -fx-font-weight: 600;
+}
+
+.checkout-success-grid {
+    -fx-background-color: #f8fdf9;
+    -fx-border-color: #d8e8de;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+}
+
+.checkout-success-grid .label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #284b3c;
+}
+
 .cart-shell {
     -fx-background-color: linear-gradient(to bottom, #fcfefd, #f3f8f5);
     -fx-border-color: #d4e2d9;
@@ -1664,22 +1810,235 @@
     -fx-border-radius: 18;
 }
 
-.toast-base {
+.cart-qty-box {
+    -fx-background-color: #f5faf7;
+    -fx-background-radius: 12;
+    -fx-border-color: #d7e6dd;
+    -fx-border-radius: 12;
+    -fx-padding: 4 8;
+}
+
+.cart-qty-btn {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cfe0d6;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-min-width: 26;
+    -fx-min-height: 26;
+    -fx-max-width: 26;
+    -fx-max-height: 26;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #145c3d;
+    -fx-cursor: hand;
+}
+
+.cart-qty-btn:hover {
+    -fx-background-color: #eaf5ef;
+}
+
+.cart-qty-value {
+    -fx-min-width: 22;
+    -fx-alignment: center;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1f4031;
+}
+
+/* Commande table + dialog */
+.commande-table .table-row-cell {
+    -fx-cell-size: 44px;
+}
+
+.cmd-status-chip {
+    -fx-padding: 5 11;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.cmd-status-chip.pending {
+    -fx-background-color: #fff4d8;
+    -fx-border-color: #f0d18b;
+    -fx-text-fill: #7f5b0d;
+}
+
+.cmd-status-chip.confirmed {
+    -fx-background-color: #e7f6ff;
+    -fx-border-color: #b7dbef;
+    -fx-text-fill: #145177;
+}
+
+.cmd-status-chip.delivered {
+    -fx-background-color: #e8f8ef;
+    -fx-border-color: #bce6cd;
+    -fx-text-fill: #1c6846;
+}
+
+.cmd-status-chip.cancelled {
+    -fx-background-color: #fff0f3;
+    -fx-border-color: #f1bcc8;
+    -fx-text-fill: #a11d3e;
+}
+
+.cmd-payment-chip {
+    -fx-padding: 5 11;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.cmd-payment-chip.card {
+    -fx-background-color: #eaf2ff;
+    -fx-border-color: #c2d4f4;
+    -fx-text-fill: #284f8a;
+}
+
+.cmd-payment-chip.home {
+    -fx-background-color: #ecf8f0;
+    -fx-border-color: #c7e7d3;
+    -fx-text-fill: #1f6241;
+}
+
+.cmd-amount {
+    -fx-font-size: 12px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #174f37;
+}
+
+.cmd-action-btn {
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+    -fx-max-width: 34;
+    -fx-max-height: 34;
+    -fx-background-radius: 17;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+.cmd-action-btn.edit {
+    -fx-background-color: #fff7e7;
+    -fx-border-color: #efd8a0;
+    -fx-text-fill: #7e5b11;
+    -fx-border-radius: 17;
+}
+
+.cmd-action-btn.delete {
+    -fx-background-color: #fff3f6;
+    -fx-border-color: #f0c2cc;
+    -fx-text-fill: #b42345;
+    -fx-border-radius: 17;
+}
+
+.cmd-action-btn:hover {
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.14), 8, 0.2, 0, 1);
+}
+
+.commande-dialog-pane {
+    -fx-background-color: linear-gradient(to bottom, #f8fcfa, #eff6f2);
+}
+
+.commande-dialog-grid {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e7de;
+    -fx-border-radius: 14;
     -fx-background-radius: 14;
-    -fx-padding: 10 14;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.28), 18, 0.22, 0, 4);
+    -fx-hgap: 12;
+    -fx-vgap: 12;
 }
 
-.toast-success {
-    -fx-background-color: linear-gradient(to right, #0f5f3b, #16784c);
+.commande-dialog-grid .label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #284b3c;
 }
 
-.toast-error {
-    -fx-background-color: linear-gradient(to right, #a31228, #c11b35);
+.commande-form-field {
+    -fx-background-color: #fbfefc;
+    -fx-border-color: #cfe2d6;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 8 10;
+    -fx-font-size: 13px;
 }
 
-.toast-label {
+.commande-form-field:focused {
+    -fx-border-color: #4fa576;
+    -fx-effect: dropshadow(gaussian, rgba(79,165,118,0.26), 8, 0.15, 0, 0);
+}
+
+.commande-save-btn {
+    -fx-background-color: linear-gradient(to right, #0f5b3a, #1a7147 74%, #238557);
     -fx-text-fill: #ffffff;
     -fx-font-size: 13px;
     -fx-font-weight: 800;
+    -fx-padding: 9 16;
+    -fx-background-radius: 20;
+}
+
+.commande-cancel-btn {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #c8d7cf;
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+    -fx-text-fill: #29453a;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.toast-base {
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 6 10;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.14), 10, 0.18, 0, 2);
+}
+
+.toast-success {
+    -fx-background-color: #ecf9f1;
+    -fx-border-color: #9ed2b7;
+}
+
+.toast-error {
+    -fx-background-color: #fff1f3;
+    -fx-border-color: #e9a2ad;
+}
+
+.toast-note {
+    -fx-background-color: #eef4ff;
+    -fx-border-color: #b9ccef;
+}
+
+.toast-label {
+    -fx-text-fill: #334155;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.toast-icon {
+    -fx-font-size: 10px;
+    -fx-font-weight: 900;
+    -fx-padding: 1 5;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+}
+
+.toast-success .toast-icon {
+    -fx-text-fill: #14683f;
+    -fx-background-color: #dff5e8;
+    -fx-border-color: #9fd3b8;
+}
+
+.toast-error .toast-icon {
+    -fx-text-fill: #b42336;
+    -fx-background-color: #ffe0e5;
+    -fx-border-color: #f0a7b1;
+}
+
+.toast-note .toast-icon {
+    -fx-text-fill: #204e8a;
+    -fx-background-color: #dce8fb;
+    -fx-border-color: #b3c8ec;
 }

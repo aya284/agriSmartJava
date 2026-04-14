@@ -9,6 +9,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -23,14 +24,17 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -49,6 +53,7 @@ import services.CartSessionService;
 import services.MarketplaceConversationService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
+import services.UserService;
 import services.WishlistService;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
@@ -128,6 +133,9 @@ public class MarketplaceController implements Initializable {
     @FXML private TableColumn<Commande, Double> colCmdMontant;
     @FXML private TableColumn<Commande, String> colCmdPaiement;
     @FXML private TableColumn<Commande, Void> colCmdActions;
+    @FXML private ToggleButton btnSoldOrders;
+    @FXML private ToggleButton btnBoughtOrders;
+    @FXML private Label sellerOrdersTitleLabel;
 
     @FXML private TableView<WishlistItem> wishlistTable;
     @FXML private TableColumn<WishlistItem, Integer> colWishId;
@@ -158,6 +166,8 @@ public class MarketplaceController implements Initializable {
     @FXML private Label messagingMetaLabel;
     @FXML private TextArea messageInputArea;
     @FXML private HBox toastContainer;
+    @FXML private Label toastIconLabel;
+    @FXML private Label toastTitleLabel;
     @FXML private Label toastLabel;
 
     @FXML private StackPane wishlistOverlay;
@@ -172,13 +182,18 @@ public class MarketplaceController implements Initializable {
     private final MarketplaceConversationService conversationService = new MarketplaceConversationService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
+    private final UserService userService = new UserService();
     private List<Produit> filteredProduits = new ArrayList<>();
     private final Set<Integer> wishlistProductIds = new HashSet<>();
+    private final Map<Integer, String> productNameById = new HashMap<>();
+    private final Map<Integer, String> userNameById = new HashMap<>();
+    private boolean showingBoughtOrders = false;
     private int currentPage = 0;
 
     // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
     @FXML private StackPane sellerOverlay;
+    @FXML private SplitPane sellerSplitPane;
     @FXML private Label modalTitle;
     @FXML private TextField fldNom;
     @FXML private TextArea fldDescription;
@@ -243,12 +258,58 @@ public class MarketplaceController implements Initializable {
     @FXML
     public void openSellerSpace() {
         loadProduits();
+        loadCommandes();
         animateOverlayIn(sellerOverlay);
     }
 
     @FXML
     public void closeSellerSpace() {
         animateOverlayOut(sellerOverlay);
+    }
+
+    @FXML
+    public void showSoldOrders() {
+        showingBoughtOrders = false;
+        applyOrderToggleSelection();
+        expandOrdersSection();
+        loadCommandes();
+    }
+
+    @FXML
+    public void showBoughtOrders() {
+        showingBoughtOrders = true;
+        applyOrderToggleSelection();
+        expandOrdersSection();
+        loadCommandes();
+    }
+
+    private void expandOrdersSection() {
+        if (sellerSplitPane == null) {
+            return;
+        }
+        // Keep a tiny top area and expand commandes section to fill almost all available space.
+        sellerSplitPane.setDividerPositions(0.08);
+    }
+
+    private void initializeOrderToggleState() {
+        applyOrderToggleSelection();
+    }
+
+    private void applyOrderToggleSelection() {
+        if (btnSoldOrders != null) {
+            btnSoldOrders.setSelected(!showingBoughtOrders);
+        }
+        if (btnBoughtOrders != null) {
+            btnBoughtOrders.setSelected(showingBoughtOrders);
+        }
+        if (sellerOrdersTitleLabel != null) {
+            sellerOrdersTitleLabel.setText(showingBoughtOrders ? "Produits achetes" : "Produits vendus");
+        }
+    }
+
+    private void resolveCurrentUserRole() {
+        // Role intentionally ignored in this view: all connected non-admin marketplace users
+        // can switch between sold and bought orders.
     }
 
     @FXML
@@ -288,6 +349,7 @@ public class MarketplaceController implements Initializable {
         setupWishlistTable();
         setupMessageTable();
         setupFilters();
+        initializeOrderToggleState();
 
         loadProduits();
         loadCommandes();
@@ -352,12 +414,23 @@ public class MarketplaceController implements Initializable {
     }
 
     private void showToast(String message, boolean success) {
+        String title = success ? "Succes" : "Attention";
+        showToast(title, message, success);
+    }
+
+    private void showToast(String title, String message, boolean success) {
         if (toastContainer == null || toastLabel == null) {
             return;
         }
 
-        toastContainer.getStyleClass().removeAll("toast-success", "toast-error");
+        toastContainer.getStyleClass().removeAll("toast-success", "toast-error", "toast-note");
         toastContainer.getStyleClass().add(success ? "toast-success" : "toast-error");
+        if (toastTitleLabel != null) {
+            toastTitleLabel.setText(title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title);
+        }
+        if (toastIconLabel != null) {
+            toastIconLabel.setText(success ? "✔" : "!");
+        }
         toastLabel.setText(message);
         toastContainer.setManaged(true);
         toastContainer.setVisible(true);
@@ -368,7 +441,45 @@ public class MarketplaceController implements Initializable {
         fadeIn.setToValue(1);
         fadeIn.play();
 
-        PauseTransition hold = new PauseTransition(Duration.seconds(2.4));
+        PauseTransition hold = new PauseTransition(Duration.seconds(success ? 2.2 : 3.2));
+        hold.setOnFinished(e -> {
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toastContainer);
+            fadeOut.setFromValue(1);
+            fadeOut.setToValue(0);
+            fadeOut.setOnFinished(evt -> {
+                toastContainer.setVisible(false);
+                toastContainer.setManaged(false);
+            });
+            fadeOut.play();
+        });
+        hold.play();
+    }
+
+    private void showNotice(String title, String message) {
+        if (toastContainer == null || toastLabel == null) {
+            return;
+        }
+
+        toastContainer.getStyleClass().removeAll("toast-success", "toast-error", "toast-note");
+        toastContainer.getStyleClass().add("toast-note");
+
+        if (toastTitleLabel != null) {
+            toastTitleLabel.setText(title == null || title.isBlank() ? "Information" : title);
+        }
+        if (toastIconLabel != null) {
+            toastIconLabel.setText("i");
+        }
+        toastLabel.setText(message);
+        toastContainer.setManaged(true);
+        toastContainer.setVisible(true);
+        toastContainer.setOpacity(0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(140), toastContainer);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        PauseTransition hold = new PauseTransition(Duration.seconds(2.8));
         hold.setOnFinished(e -> {
             FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toastContainer);
             fadeOut.setFromValue(1);
@@ -565,15 +676,69 @@ public class MarketplaceController implements Initializable {
         colCmdPaiement.setCellValueFactory(new PropertyValueFactory<>("modePaiement"));
 
         commandeTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        if (!commandeTable.getStyleClass().contains("commande-table")) {
+            commandeTable.getStyleClass().add("commande-table");
+        }
+
+        colCmdStatut.setCellFactory(col -> new TableCell<>() {
+            private final Label chip = new Label();
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                chip.getStyleClass().removeAll("cmd-status-chip", "pending", "confirmed", "delivered", "cancelled");
+                chip.getStyleClass().addAll("cmd-status-chip", resolveStatusStyle(item));
+                chip.setText(resolveStatusLabel(item));
+                setGraphic(chip);
+            }
+        });
+
+        colCmdMontant.setCellFactory(col -> new TableCell<>() {
+            private final Label amount = new Label();
+
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                amount.getStyleClass().setAll("cmd-amount");
+                amount.setText(String.format("%.2f TND", item));
+                setGraphic(amount);
+            }
+        });
+
+        colCmdPaiement.setCellFactory(col -> new TableCell<>() {
+            private final Label chip = new Label();
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    return;
+                }
+                chip.getStyleClass().removeAll("cmd-payment-chip", "card", "home");
+                chip.getStyleClass().addAll("cmd-payment-chip", resolvePaymentStyle(item));
+                chip.setText(resolvePaymentLabel(item));
+                setGraphic(chip);
+            }
+        });
 
         colCmdActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit = new Button("Edit");
-            private final Button btnDelete = new Button("Delete");
+            private final Button btnEdit = new Button("✎");
+            private final Button btnDelete = new Button("🗑");
             private final HBox box = new HBox(8, btnEdit, btnDelete);
 
             {
-                btnEdit.getStyleClass().add("btn-gold");
-                btnDelete.getStyleClass().add("btn-danger");
+                box.setAlignment(Pos.CENTER_LEFT);
+                btnEdit.getStyleClass().addAll("cmd-action-btn", "edit");
+                btnDelete.getStyleClass().addAll("cmd-action-btn", "delete");
                 btnEdit.setOnAction(e -> openModifierCommande(getTableView().getItems().get(getIndex())));
                 btnDelete.setOnAction(e -> handleDeleteCommande(getTableView().getItems().get(getIndex())));
             }
@@ -669,7 +834,12 @@ public class MarketplaceController implements Initializable {
             return;
         }
         try {
-            List<Commande> commandes = commandeService.afficher();
+            List<Commande> commandes;
+            if (showingBoughtOrders) {
+                commandes = commandeService.getByClient(CURRENT_SESSION_USER_ID);
+            } else {
+                commandes = commandeService.getBySeller(CURRENT_SESSION_USER_ID);
+            }
             commandeTable.setItems(FXCollections.observableArrayList(commandes));
         } catch (SQLException e) {
             showSqlAlert(e);
@@ -803,7 +973,8 @@ public class MarketplaceController implements Initializable {
             if (existingConversation == null) {
                 selectedConversation = null;
                 if (messagingTitleLabel != null) {
-                    messagingTitleLabel.setText("Nouveau message - Produit #" + pendingProductId + " - vendeur #" + pendingSellerId);
+                    refreshMessagingDisplayMaps();
+                    messagingTitleLabel.setText("Nouveau message - " + buildConversationHeader(pendingProductId, pendingSellerId));
                 }
                 if (messagingMetaLabel != null) {
                     messagingMetaLabel.setText("Conversation creee a l'envoi du premier message");
@@ -928,8 +1099,18 @@ public class MarketplaceController implements Initializable {
                 title.getStyleClass().add("wishlist-card-title");
                 title.setWrapText(true);
 
-                Label meta = new Label(normalizeText(safe(produit.getCategorie())) + " - " + normalizeTypeForDisplay(produit.getType()));
-                meta.getStyleClass().add("wishlist-card-meta");
+                Label categoryChip = new Label(normalizeText(safe(produit.getCategorie())));
+                categoryChip.getStyleClass().add("wishlist-chip");
+
+                Label typeChip = new Label(normalizeTypeForDisplay(produit.getType()));
+                typeChip.getStyleClass().addAll("wishlist-chip", "wishlist-chip-type");
+                if (TYPE_LOCATION.equalsIgnoreCase(normalizeTypeForDisplay(produit.getType()))) {
+                    typeChip.getStyleClass().add("location");
+                }
+
+                HBox chips = new HBox(6, categoryChip, typeChip);
+                chips.getStyleClass().add("wishlist-chip-row");
+                chips.setAlignment(Pos.CENTER_LEFT);
 
                 double displayPrice = (produit.isPromotion() && produit.getPromotionPrice() > 0)
                         ? produit.getPromotionPrice()
@@ -938,7 +1119,7 @@ public class MarketplaceController implements Initializable {
                 price.getStyleClass().add("wishlist-card-price");
 
                 Button viewBtn = new Button("Voir");
-                viewBtn.getStyleClass().add("btn-primary-small");
+                viewBtn.getStyleClass().add("wishlist-view-btn");
                 viewBtn.setOnAction(e -> showProductDetails(produit));
 
                 Button removeBtn = new Button("Retirer");
@@ -946,13 +1127,15 @@ public class MarketplaceController implements Initializable {
                 removeBtn.setOnAction(e -> toggleWishlistForProduct(produit));
 
                 HBox actions = new HBox(8, viewBtn, removeBtn);
+                actions.getStyleClass().add("wishlist-actions");
                 actions.setAlignment(Pos.CENTER_LEFT);
                 HBox.setHgrow(viewBtn, Priority.ALWAYS);
                 HBox.setHgrow(removeBtn, Priority.ALWAYS);
                 viewBtn.setMaxWidth(Double.MAX_VALUE);
                 removeBtn.setMaxWidth(Double.MAX_VALUE);
 
-                card.getChildren().addAll(imageWrap, title, meta, price, actions);
+                card.getChildren().addAll(imageWrap, title, chips, price, actions);
+                attachWishlistCardMotion(card);
                 wishlistGrid.getChildren().add(card);
             }
         } catch (SQLException e) {
@@ -969,6 +1152,7 @@ public class MarketplaceController implements Initializable {
         messageListBox.getChildren().clear();
 
         try {
+            refreshMessagingDisplayMaps();
             List<entities.MarketplaceConversation> conversations = conversationService.getByUser(CURRENT_SESSION_USER_ID);
             if (conversations.isEmpty()) {
                 Label empty = new Label("Aucune conversation pour le moment. Ouvrez un produit puis cliquez sur Contacter le vendeur.");
@@ -1013,13 +1197,10 @@ public class MarketplaceController implements Initializable {
     }
 
     private VBox buildConversationTile(entities.MarketplaceConversation conversation) {
-        Label title = new Label("Produit #" + conversation.getProduitId());
+        Label title = new Label(resolveProductDisplayName(conversation.getProduitId()));
         title.getStyleClass().add("chat-tile-title");
 
-        int otherUser = conversation.getBuyerId() == CURRENT_SESSION_USER_ID
-                ? conversation.getSellerId()
-                : conversation.getBuyerId();
-        Label subtitle = new Label("Avec utilisateur #" + otherUser);
+        Label subtitle = new Label("Vendeur: " + resolveUserDisplayName(conversation.getSellerId()));
         subtitle.getStyleClass().add("chat-tile-subtitle");
 
         Label date = new Label(formatDateTime(conversation.getLastMessageAt()));
@@ -1040,10 +1221,7 @@ public class MarketplaceController implements Initializable {
         renderMessages(conversation);
 
         if (messagingTitleLabel != null) {
-            int otherUser = conversation.getBuyerId() == CURRENT_SESSION_USER_ID
-                    ? conversation.getSellerId()
-                    : conversation.getBuyerId();
-            messagingTitleLabel.setText("Conversation avec utilisateur #" + otherUser);
+            messagingTitleLabel.setText(buildConversationHeader(conversation.getProduitId(), conversation.getSellerId()));
         }
 
         try {
@@ -1076,7 +1254,8 @@ public class MarketplaceController implements Initializable {
                 body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
                 body.setMaxWidth(460);
 
-                Label meta = new Label("#" + message.getSenderId() + " - " + formatDateTime(message.getCreatedAt()));
+                String senderDisplay = mine ? "Vous" : resolveUserDisplayName(message.getSenderId());
+                Label meta = new Label(senderDisplay + " - " + formatDateTime(message.getCreatedAt()));
                 meta.getStyleClass().add("chat-bubble-meta");
 
                 VBox bubble = new VBox(4, body, meta);
@@ -1126,6 +1305,59 @@ public class MarketplaceController implements Initializable {
         pendingSellerId = -1;
     }
 
+    private void refreshMessagingDisplayMaps() throws SQLException {
+        productNameById.clear();
+        userNameById.clear();
+
+        for (Produit produit : produitService.afficher()) {
+            if (produit == null) {
+                continue;
+            }
+            productNameById.put(produit.getId(), normalizeText(safe(produit.getNom())));
+        }
+
+        for (entities.User user : userService.getAllUsers()) {
+            if (user == null) {
+                continue;
+            }
+            userNameById.put(user.getId(), buildUserDisplayName(user));
+        }
+    }
+
+    private String resolveProductDisplayName(int productId) {
+        String name = productNameById.get(productId);
+        if (name == null || name.isBlank()) {
+            return "Produit non disponible";
+        }
+        return name;
+    }
+
+    private String resolveUserDisplayName(int userId) {
+        String name = userNameById.get(userId);
+        if (name == null || name.isBlank()) {
+            return "Vendeur inconnu";
+        }
+        return name;
+    }
+
+    private String buildUserDisplayName(entities.User user) {
+        String first = normalizeText(safe(user.getFirstName()));
+        String last = normalizeText(safe(user.getLastName()));
+        String fullName = (first + " " + last).trim();
+        if (!fullName.isBlank()) {
+            return fullName;
+        }
+        String email = normalizeText(safe(user.getEmail()));
+        if (!email.isBlank()) {
+            return email;
+        }
+        return "Utilisateur";
+    }
+
+    private String buildConversationHeader(int productId, int sellerId) {
+        return resolveProductDisplayName(productId) + " - vendeur: " + resolveUserDisplayName(sellerId);
+    }
+
     private String formatDateTime(LocalDateTime value) {
         if (value == null) {
             return "-";
@@ -1166,15 +1398,42 @@ public class MarketplaceController implements Initializable {
     }
 
     private void processCheckout(List<CartItem> cartItems) {
+        for (CartItem item : cartItems) {
+            Produit cartProduit = item == null ? null : item.getProduit();
+            if (cartProduit == null) {
+                showAlert("Panier", "Un article du panier est invalide.");
+                return;
+            }
+
+            if (cartProduit.getVendeurId() > 0 && cartProduit.getVendeurId() == CURRENT_SESSION_USER_ID) {
+                showAlert("Panier", "Vous ne pouvez pas commander vos propres produits.");
+                return;
+            }
+
+            Produit latest = findLatestProduitById(cartProduit.getId());
+            if (latest == null) {
+                showAlert("Stock", "Le produit '" + normalizeText(safe(cartProduit.getNom())) + "' n'existe plus.");
+                return;
+            }
+
+            if (item.getQuantite() > latest.getQuantiteStock()) {
+                showAlert("Stock", "Stock insuffisant pour '" + normalizeText(safe(latest.getNom()))
+                        + "' (stock: " + latest.getQuantiteStock() + ", demande: " + item.getQuantite() + ").");
+                return;
+            }
+        }
+
         Dialog<ButtonType> checkoutDialog = new Dialog<>();
         checkoutDialog.setTitle("Passer commande");
         checkoutDialog.getDialogPane().getStyleClass().add("checkout-dialog-pane");
-        ButtonType saveBtn = new ButtonType("Valider", ButtonBar.ButtonData.OK_DONE);
-        checkoutDialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
+        applyDialogStylesheet(checkoutDialog.getDialogPane());
+        checkoutDialog.getDialogPane().setPrefWidth(520);
+        checkoutDialog.getDialogPane().setPrefHeight(340);
+        checkoutDialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
 
         ComboBox<String> modePaiementBox = new ComboBox<>();
-        modePaiementBox.getItems().setAll("carte", "especes", "virement");
-        modePaiementBox.setValue("carte");
+        modePaiementBox.getItems().setAll("domicile", "carte");
+        modePaiementBox.setValue("domicile");
 
         ComboBox<String> modeLivraisonBox = new ComboBox<>();
         modeLivraisonBox.getItems().setAll("Retrait sur place", "Livraison a domicile");
@@ -1187,8 +1446,14 @@ public class MarketplaceController implements Initializable {
         modePaiementBox.getStyleClass().add("checkout-field");
         adresseField.getStyleClass().add("checkout-field");
 
-        Label policyLabel = new Label("Paiement autorise uniquement avec Livraison a domicile.");
+        Label policyLabel = new Label("Modes de paiement disponibles: domicile ou carte.");
         policyLabel.getStyleClass().add("checkout-policy-label");
+
+        Label sectionTitle = new Label("Finalisez votre commande");
+        sectionTitle.getStyleClass().add("checkout-title");
+
+        Label sectionSubtitle = new Label("Choisissez le mode de paiement, puis confirmez.");
+        sectionSubtitle.getStyleClass().add("checkout-subtitle");
 
         GridPane grid = new GridPane();
         grid.getStyleClass().add("checkout-grid");
@@ -1202,12 +1467,38 @@ public class MarketplaceController implements Initializable {
         grid.add(new Label("Adresse"), 0, 2);
         grid.add(adresseField, 1, 2);
         grid.add(policyLabel, 0, 3, 2, 1);
-        checkoutDialog.getDialogPane().setContent(grid);
 
-        Node saveButtonNode = checkoutDialog.getDialogPane().lookupButton(saveBtn);
-        Node cancelButtonNode = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        saveButtonNode.getStyleClass().add("checkout-save-btn");
-        cancelButtonNode.getStyleClass().add("checkout-cancel-btn");
+        Button validateInlineButton = new Button("Valider");
+        validateInlineButton.getStyleClass().add("checkout-save-btn");
+
+        Button closeInlineButton = new Button("Fermer");
+        closeInlineButton.getStyleClass().add("checkout-cancel-btn");
+        closeInlineButton.setOnAction(e -> {
+            checkoutDialog.setResult(ButtonType.CANCEL);
+            checkoutDialog.close();
+        });
+
+        HBox inlineActions = new HBox(10, validateInlineButton, closeInlineButton);
+        inlineActions.setAlignment(Pos.CENTER_RIGHT);
+        inlineActions.getStyleClass().add("checkout-inline-actions");
+
+        VBox content = new VBox(10, sectionTitle, sectionSubtitle, grid, inlineActions);
+        content.getStyleClass().add("checkout-content-shell");
+        checkoutDialog.getDialogPane().setContent(content);
+
+        Node hiddenCancelNode = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (hiddenCancelNode != null) {
+            hiddenCancelNode.setVisible(false);
+            hiddenCancelNode.setManaged(false);
+        }
+        checkoutDialog.setOnShown(e -> {
+            Node cancelNodeOnShow = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+            if (cancelNodeOnShow != null) {
+                cancelNodeOnShow.setVisible(false);
+                cancelNodeOnShow.setManaged(false);
+            }
+        });
+
         Runnable updateCheckoutValidation = () -> {
             boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
             adresseField.setDisable(!homeDelivery);
@@ -1217,7 +1508,7 @@ public class MarketplaceController implements Initializable {
 
             String modePaiement = safe(modePaiementBox.getValue()).trim();
             String adresse = safe(adresseField.getText()).trim();
-            saveButtonNode.setDisable(!homeDelivery || modePaiement.isEmpty() || adresse.isEmpty());
+            validateInlineButton.setDisable(!homeDelivery || modePaiement.isEmpty() || adresse.isEmpty());
         };
 
         modeLivraisonBox.valueProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
@@ -1225,44 +1516,60 @@ public class MarketplaceController implements Initializable {
         adresseField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
         updateCheckoutValidation.run();
 
-        Optional<ButtonType> result = checkoutDialog.showAndWait();
-        if (result.isEmpty() || result.get() != saveBtn) {
-            return;
-        }
+        validateInlineButton.setOnAction(event -> {
+            boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
+            String modePaiement = safe(modePaiementBox.getValue()).trim();
+            String adresse = safe(adresseField.getText()).trim();
 
-        boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
-        String modePaiement = safe(modePaiementBox.getValue()).trim();
-        String adresse = safe(adresseField.getText()).trim();
-        String checkoutError = MarketplaceValidator.validateCheckout(
-                modeLivraisonBox.getValue(),
-                modePaiement,
-                adresse
-        );
-        if (checkoutError != null) {
-            showAlert("Validation", checkoutError);
-            return;
-        }
-
-        try {
-            int commandeId = commandeService.createCommandeFromCart(
-                    CURRENT_SESSION_USER_ID,
+            String checkoutError = MarketplaceValidator.validateCheckout(
+                    modeLivraisonBox.getValue(),
                     modePaiement,
-                    adresse,
-                    cartItems
+                    adresse
             );
-            cartSessionService.clear(CURRENT_SESSION_USER_ID);
-            loadCommandes();
-            loadProduits();
-            refreshStats();
-            renderCartOverlay();
-            closeCartOverlay();
-            if (statusLabel != null) {
-                statusLabel.setText("Commande #" + commandeId + " creee avec succes");
+            if (checkoutError != null) {
+                showAlert("Validation", checkoutError);
+                return;
             }
-            showToast("Commande #" + commandeId + " creee avec succes.", true);
-        } catch (SQLException e) {
-            showSqlAlert(e);
-        }
+
+            try {
+                int commandeId = commandeService.createCommandeFromCart(
+                        CURRENT_SESSION_USER_ID,
+                        modePaiement,
+                        adresse,
+                        cartItems
+                );
+
+                int itemCount = 0;
+                double totalAmount = 0.0;
+                for (CartItem cartItem : cartItems) {
+                    if (cartItem == null) {
+                        continue;
+                    }
+                    itemCount += Math.max(0, cartItem.getQuantite());
+                    totalAmount += cartItem.getLineTotal();
+                }
+
+                cartSessionService.clear(CURRENT_SESSION_USER_ID);
+                loadCommandes();
+                loadProduits();
+                refreshStats();
+                renderCartOverlay();
+                closeCartOverlay();
+
+                if (statusLabel != null) {
+                    statusLabel.setText("Commande #" + commandeId + " creee avec succes");
+                }
+
+                checkoutDialog.setTitle("Commande validee");
+                checkoutDialog.getDialogPane().setContent(
+                        buildCheckoutSuccessPane(checkoutDialog, commandeId, modePaiement, adresse, itemCount, totalAmount)
+                );
+            } catch (SQLException e) {
+                showSqlAlert(e);
+            }
+        });
+
+        checkoutDialog.showAndWait();
     }
 
     private HBox buildCartRow(CartItem item) {
@@ -1293,14 +1600,81 @@ public class MarketplaceController implements Initializable {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        Button minusBtn = new Button("-");
+        minusBtn.getStyleClass().add("cart-qty-btn");
+
+        Label qtyLabel = new Label(String.valueOf(item.getQuantite()));
+        qtyLabel.getStyleClass().add("cart-qty-value");
+
+        Button plusBtn = new Button("+");
+        plusBtn.getStyleClass().add("cart-qty-btn");
+
+        minusBtn.setOnAction(e -> {
+            adjustCartQuantity(item, -1);
+            e.consume();
+        });
+
+        plusBtn.setOnAction(e -> {
+            adjustCartQuantity(item, 1);
+            e.consume();
+        });
+
+        HBox qtyBox = new HBox(8, minusBtn, qtyLabel, plusBtn);
+        qtyBox.setAlignment(Pos.CENTER_LEFT);
+        qtyBox.getStyleClass().add("cart-qty-box");
+
         Label totalBadge = new Label(String.format("%.2f TND", item.getLineTotal()));
         totalBadge.getStyleClass().add("cart-line-total");
 
-        HBox row = new HBox(12, thumbWrap, left, spacer, totalBadge);
+        HBox row = new HBox(12, thumbWrap, left, spacer, qtyBox, totalBadge);
         row.getStyleClass().add("cart-line-row");
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(10, 12, 10, 12));
         return row;
+    }
+
+    private void adjustCartQuantity(CartItem item, int delta) {
+        if (item == null || item.getProduit() == null || delta == 0) {
+            return;
+        }
+
+        Produit produit = item.getProduit();
+
+        if (delta > 0) {
+            Produit latest = findLatestProduitById(produit.getId());
+            int availableStock = latest == null ? produit.getQuantiteStock() : latest.getQuantiteStock();
+            if (item.getQuantite() >= availableStock) {
+                showAlert("Stock", "Stock maximum atteint pour ce produit (" + availableStock + ").");
+                return;
+            }
+            cartSessionService.addProduit(CURRENT_SESSION_USER_ID, produit, 1);
+            showToast("Quantite augmentee.", true);
+        } else {
+            if (item.getQuantite() <= 1) {
+                cartSessionService.removeProduit(CURRENT_SESSION_USER_ID, produit.getId());
+                showToast("Article retire du panier.", true);
+            } else {
+                item.increment(-1);
+                showToast("Quantite reduite.", true);
+            }
+        }
+
+        renderCartOverlay();
+        updateCartStatus();
+    }
+
+    private Produit findLatestProduitById(int produitId) {
+        try {
+            List<Produit> all = produitService.afficher();
+            for (Produit p : all) {
+                if (p.getId() == produitId) {
+                    return p;
+                }
+            }
+        } catch (SQLException e) {
+            showSqlAlert(e);
+        }
+        return null;
     }
 
     private String buildCartSummary(List<CartItem> items) {
@@ -1331,8 +1705,28 @@ public class MarketplaceController implements Initializable {
         if (produit == null) {
             return;
         }
+        if (produit.getVendeurId() > 0 && produit.getVendeurId() == CURRENT_SESSION_USER_ID) {
+            showAlert("Panier", "Vous ne pouvez pas ajouter vos propres produits au panier.");
+            return;
+        }
         if (produit.getQuantiteStock() <= 0) {
             showAlert("Stock", "Ce produit est en rupture de stock.");
+            return;
+        }
+
+        List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        int currentQty = 0;
+        for (CartItem item : cartItems) {
+            if (item.getProduit() != null && item.getProduit().getId() == produit.getId()) {
+                currentQty = item.getQuantite();
+                break;
+            }
+        }
+
+        Produit latest = findLatestProduitById(produit.getId());
+        int availableStock = latest == null ? produit.getQuantiteStock() : latest.getQuantiteStock();
+        if (currentQty + quantite > availableStock) {
+            showAlert("Stock", "Stock insuffisant. Disponible: " + availableStock + ".");
             return;
         }
 
@@ -1939,17 +2333,33 @@ public class MarketplaceController implements Initializable {
     private Dialog<Commande> buildCommandeDialog(Commande existing) {
         Dialog<Commande> dialog = new Dialog<>();
         dialog.setTitle(existing == null ? "Ajouter Commande" : "Modifier Commande");
+        dialog.getDialogPane().getStyleClass().add("commande-dialog-pane");
+        applyDialogStylesheet(dialog.getDialogPane());
         ButtonType saveBtn = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
-        TextField statutField = new TextField(existing == null ? "en_attente" : existing.getStatut());
-        TextField paiementField = new TextField(existing == null ? "carte" : existing.getModePaiement());
+        ComboBox<String> statutField = new ComboBox<>();
+        statutField.getItems().setAll("en_attente", "confirmee", "livree", "annulee");
+        statutField.setValue(existing == null || safe(existing.getStatut()).isBlank() ? "en_attente" : existing.getStatut());
+
+        ComboBox<String> paiementField = new ComboBox<>();
+        paiementField.getItems().setAll("domicile", "carte");
+        paiementField.setValue(existing == null || safe(existing.getModePaiement()).isBlank() ? "domicile" : existing.getModePaiement());
+
         TextField adresseField = new TextField(existing == null ? "" : safe(existing.getAdresseLivraison()));
         TextField montantField = new TextField(existing == null ? "0" : String.valueOf(existing.getMontantTotal()));
         TextField paymentRefField = new TextField(existing == null ? "" : safe(existing.getPaymentRef()));
         TextField clientIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getClientId()));
 
+        statutField.getStyleClass().add("commande-form-field");
+        paiementField.getStyleClass().add("commande-form-field");
+        adresseField.getStyleClass().add("commande-form-field");
+        montantField.getStyleClass().add("commande-form-field");
+        paymentRefField.getStyleClass().add("commande-form-field");
+        clientIdField.getStyleClass().add("commande-form-field");
+
         GridPane grid = new GridPane();
+        grid.getStyleClass().add("commande-dialog-grid");
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(18));
@@ -1963,13 +2373,22 @@ public class MarketplaceController implements Initializable {
 
         dialog.getDialogPane().setContent(grid);
 
+        Node saveButtonNode = dialog.getDialogPane().lookupButton(saveBtn);
+        Node cancelButtonNode = dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+        if (saveButtonNode != null) {
+            saveButtonNode.getStyleClass().add("commande-save-btn");
+        }
+        if (cancelButtonNode != null) {
+            cancelButtonNode.getStyleClass().add("commande-cancel-btn");
+        }
+
         dialog.setResultConverter(btn -> {
             if (btn != saveBtn) {
                 return null;
             }
             String err = MarketplaceValidator.validateCommande(
-                    statutField.getText(),
-                    paiementField.getText(),
+                    statutField.getValue(),
+                    paiementField.getValue(),
                     adresseField.getText(),
                     montantField.getText(),
                     clientIdField.getText()
@@ -1981,8 +2400,8 @@ public class MarketplaceController implements Initializable {
             Double montant = parseDouble(montantField.getText());
             Integer clientId = parseInteger(clientIdField.getText());
             Commande c = new Commande();
-            c.setStatut(statutField.getText().trim());
-            c.setModePaiement(paiementField.getText().trim());
+            c.setStatut(safe(statutField.getValue()).trim());
+            c.setModePaiement(safe(paiementField.getValue()).trim());
             c.setAdresseLivraison(adresseField.getText().trim());
             c.setMontantTotal(montant);
             c.setPaymentRef(paymentRefField.getText().trim());
@@ -1991,6 +2410,107 @@ public class MarketplaceController implements Initializable {
         });
 
         return dialog;
+    }
+
+    private String resolveStatusLabel(String rawStatus) {
+        String value = safe(rawStatus).trim().toLowerCase();
+        if ("confirmee".equals(value)) {
+            return "Confirmee";
+        }
+        if ("livree".equals(value)) {
+            return "Livree";
+        }
+        if ("annulee".equals(value)) {
+            return "Annulee";
+        }
+        return "En attente";
+    }
+
+    private String resolveStatusStyle(String rawStatus) {
+        String value = safe(rawStatus).trim().toLowerCase();
+        if ("confirmee".equals(value)) {
+            return "confirmed";
+        }
+        if ("livree".equals(value)) {
+            return "delivered";
+        }
+        if ("annulee".equals(value)) {
+            return "cancelled";
+        }
+        return "pending";
+    }
+
+    private String resolvePaymentLabel(String rawPayment) {
+        String value = safe(rawPayment).trim().toLowerCase();
+        if ("carte".equals(value)) {
+            return "Carte";
+        }
+        if ("domicile".equals(value)) {
+            return "Domicile";
+        }
+        return "Domicile";
+    }
+
+    private String resolvePaymentStyle(String rawPayment) {
+        String value = safe(rawPayment).trim().toLowerCase();
+        return "carte".equals(value) ? "card" : "home";
+    }
+
+    private VBox buildCheckoutSuccessPane(Dialog<ButtonType> checkoutDialog, int commandeId, String modePaiement, String adresse, int itemCount, double totalAmount) {
+        Label icon = new Label("✓");
+        icon.getStyleClass().add("checkout-success-icon");
+
+        Label title = new Label("Felicitations, commande validee");
+        title.getStyleClass().add("checkout-success-title");
+
+        Label subtitle = new Label("Votre commande a ete enregistree avec succes.");
+        subtitle.getStyleClass().add("checkout-success-subtitle");
+
+        GridPane summary = new GridPane();
+        summary.getStyleClass().add("checkout-success-grid");
+        summary.setHgap(10);
+        summary.setVgap(8);
+        summary.add(new Label("Commande"), 0, 0);
+        summary.add(new Label("#" + commandeId), 1, 0);
+        summary.add(new Label("Paiement"), 0, 1);
+        summary.add(new Label(resolvePaymentLabel(modePaiement)), 1, 1);
+        summary.add(new Label("Adresse"), 0, 2);
+        summary.add(new Label(adresse), 1, 2);
+        summary.add(new Label("Articles"), 0, 3);
+        summary.add(new Label(String.valueOf(itemCount)), 1, 3);
+        summary.add(new Label("Montant total"), 0, 4);
+        summary.add(new Label(String.format("%.2f TND", totalAmount)), 1, 4);
+
+        Button closeSuccessButton = new Button("Fermer");
+        closeSuccessButton.getStyleClass().add("checkout-save-btn");
+        closeSuccessButton.setOnAction(e -> {
+            if (checkoutDialog != null) {
+                checkoutDialog.setResult(ButtonType.CANCEL);
+                checkoutDialog.close();
+            }
+        });
+
+        HBox actions = new HBox(closeSuccessButton);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.getStyleClass().add("checkout-inline-actions");
+
+        VBox shell = new VBox(10, icon, title, subtitle, summary, actions);
+        shell.getStyleClass().add("checkout-success-shell");
+        return shell;
+    }
+
+    private void applyDialogStylesheet(DialogPane pane) {
+        if (pane == null) {
+            return;
+        }
+        URL css = getClass().getResource("/css/style.css");
+        if (css == null) {
+            return;
+        }
+        String cssUrl = css.toExternalForm();
+        if (!pane.getStylesheets().contains(cssUrl)) {
+            pane.getStylesheets().add(cssUrl);
+        }
     }
 
     private void handleDeleteCommande(Commande commande) {
@@ -2209,21 +2729,11 @@ public class MarketplaceController implements Initializable {
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-        showToast(message, false);
+        showNotice(title, message);
     }
 
     private void showSqlAlert(SQLException exception) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Erreur SQL");
-        alert.setHeaderText("Operation base de donnees echouee");
-        alert.setContentText(exception.getMessage());
-        alert.showAndWait();
-        showToast("Echec: " + exception.getMessage(), false);
+        showToast("Erreur SQL", "Operation base de donnees echouee: " + exception.getMessage(), false);
         if (statusLabel != null) {
             statusLabel.setText("Erreur SQL detectee");
         }
@@ -2577,9 +3087,72 @@ public class MarketplaceController implements Initializable {
             infoBox.getChildren().addAll(titre, categorieLib, spacer, priceRow, actions);
             card.getChildren().addAll(imageContainer, infoBox);
             card.setOnMouseClicked(e -> showProductDetails(p));
+            attachCardHoverMotion(card);
+            animateCardEntry(card, productGrid.getChildren().size());
             
             productGrid.getChildren().add(card);
         }
+    }
+
+    private void animateCardEntry(Node card, int index) {
+        if (card == null) {
+            return;
+        }
+
+        card.setOpacity(0);
+        card.setTranslateY(14);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(220), card);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        TranslateTransition slide = new TranslateTransition(Duration.millis(220), card);
+        slide.setFromY(14);
+        slide.setToY(0);
+
+        ParallelTransition in = new ParallelTransition(fade, slide);
+        in.setDelay(Duration.millis(Math.min(index, 10) * 26L));
+        in.play();
+    }
+
+    private void attachCardHoverMotion(VBox card) {
+        if (card == null) {
+            return;
+        }
+
+        card.setOnMouseEntered(e -> {
+            ScaleTransition grow = new ScaleTransition(Duration.millis(110), card);
+            grow.setToX(1.015);
+            grow.setToY(1.015);
+            grow.play();
+        });
+
+        card.setOnMouseExited(e -> {
+            ScaleTransition reset = new ScaleTransition(Duration.millis(110), card);
+            reset.setToX(1.0);
+            reset.setToY(1.0);
+            reset.play();
+        });
+    }
+
+    private void attachWishlistCardMotion(VBox card) {
+        if (card == null) {
+            return;
+        }
+
+        card.setOnMouseEntered(e -> {
+            ScaleTransition grow = new ScaleTransition(Duration.millis(110), card);
+            grow.setToX(1.012);
+            grow.setToY(1.012);
+            grow.play();
+        });
+
+        card.setOnMouseExited(e -> {
+            ScaleTransition reset = new ScaleTransition(Duration.millis(110), card);
+            reset.setToX(1.0);
+            reset.setToY(1.0);
+            reset.play();
+        });
     }
 }
 

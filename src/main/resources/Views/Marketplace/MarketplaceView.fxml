@@ -20,14 +20,14 @@
 
                     <HBox spacing="10">
                         <Button text="Espace vendeur" styleClass="action-chip" onAction="#openSellerSpace"/>
-                        <Button fx:id="btnMessagingCenter" text="Messagerie" styleClass="action-chip gold" onAction="#openMessagingCenter"/>
+                        <Button fx:id="btnMessagingCenter" text="Messagerie" styleClass="action-chip,gold" onAction="#openMessagingCenter"/>
                         <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
-                        <Button text="Publier une annonce" styleClass="action-chip primary" onAction="#openAjouterProduit"/>
+                        <Button text="Publier une annonce" styleClass="action-chip,primary" onAction="#openAjouterProduit"/>
                         <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">
-                        <Button text="Toutes" styleClass="module-chip active" onAction="#handleCategoryChipFilter"/>
+                        <Button text="Toutes" styleClass="module-chip,active" onAction="#handleCategoryChipFilter"/>
                         <Button text="legumes" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
                         <Button text="fruits" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
                         <Button text="cereales" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
@@ -103,24 +103,47 @@
                     <Label text="Gerez vos produits (edition, suppression, suivi du stock)." styleClass="seller-subtitle"/>
                 </VBox>
                 <HBox HBox.hgrow="ALWAYS"/>
+                <ToggleButton fx:id="btnSoldOrders" text="Produits vendus" styleClass="seller-order-toggle" onAction="#showSoldOrders" selected="true"/>
+                <ToggleButton fx:id="btnBoughtOrders" text="Produits achetes" styleClass="seller-order-toggle" onAction="#showBoughtOrders"/>
                 <Button text="Ajouter une offre" styleClass="seller-add-btn" onAction="#openAjouterProduit"/>
                 <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeSellerSpace"/>
             </HBox>
 
-            <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
-                <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
-                    <columns>
-                        <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
-                        <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
-                        <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
-                        <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
-                        <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
-                        <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
-                        <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
-                        <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
-                    </columns>
-                </TableView>
-            </VBox>
+            <SplitPane orientation="VERTICAL" VBox.vgrow="ALWAYS" dividerPositions="0.58" styleClass="seller-split-pane">
+                <items>
+                    <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
+                        <Label text="Mes Produits" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                        <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
+                            <columns>
+                                <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
+                                <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
+                                <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
+                                <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
+                                <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
+                                <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
+                                <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
+                                <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                    <VBox styleClass="seller-table-card" VBox.vgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label fx:id="sellerOrdersTitleLabel" text="Produits vendus" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                            <HBox HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <TableView fx:id="commandeTable" VBox.vgrow="ALWAYS" styleClass="seller-table commande-table">
+                            <columns>
+                                <TableColumn fx:id="colCmdId" text="#" prefWidth="90"/>
+                                <TableColumn fx:id="colCmdStatut" text="Statut" prefWidth="220"/>
+                                <TableColumn fx:id="colCmdMontant" text="Montant" prefWidth="180"/>
+                                <TableColumn fx:id="colCmdPaiement" text="Paiement" prefWidth="180"/>
+                                <TableColumn fx:id="colCmdActions" text="Actions" prefWidth="170"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </items>
+            </SplitPane>
         </VBox>
     </StackPane>
 
@@ -131,7 +154,7 @@
                 <Label fx:id="modalTitle" text="Nouvelle Annonce" styleClass="publish-modal-title"/>
                 <HBox HBox.hgrow="ALWAYS"/>
                 <Button text="Retour" styleClass="publish-header-btn" onAction="#closeModal"/>
-                <Button text="X" styleClass="publish-header-btn danger" onAction="#closeModal"/>
+                <Button text="X" styleClass="publish-header-btn,danger" onAction="#closeModal"/>
             </HBox>
 
             <ScrollPane fitToWidth="true" styleClass="invisible-scrollpane" VBox.vgrow="ALWAYS">
@@ -213,9 +236,8 @@
                 <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
                 <HBox HBox.hgrow="ALWAYS"/>
                 <Button text="Retour" styleClass="details-pill-button" onAction="#closeDetails"/>
-                <Button text="Messagerie" styleClass="details-pill-button gold" onAction="#openMessagingCenter"/>
-                <Button text="Copier le lien" styleClass="details-pill-button"/>
-                <Button text="Panier" styleClass="details-pill-button primary" onAction="#openPanier"/>
+                <Button text="Messagerie" styleClass="details-pill-button,gold" onAction="#openMessagingCenter"/>
+                <Button text="Panier" styleClass="details-pill-button,primary" onAction="#openPanier"/>
                 <Button text="X" styleClass="btn-close" onAction="#closeDetails"/>
             </HBox>
 
@@ -270,7 +292,6 @@
                         </HBox>
                         <Button text="Ajouter au panier" styleClass="details-primary-button" onAction="#addCurrentDetailsToCart"/>
                         <Button text="Voir mon panier" styleClass="details-outline-dark-button" onAction="#openPanier"/>
-                        <Button text="Copier le lien" styleClass="details-outline-dark-button"/>
                     </VBox>
                 </VBox>
             </HBox>
@@ -279,7 +300,7 @@
     </StackPane>
 
     <StackPane fx:id="cartOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
-        <VBox spacing="12" styleClass="panel-card cart-shell" style="-fx-padding: 16; -fx-background-radius: 16;" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+        <VBox spacing="12" styleClass="panel-card,cart-shell" style="-fx-padding: 16; -fx-background-radius: 16;" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <Label text="Mon Panier" style="-fx-font-size: 22px; -fx-font-weight: 800; -fx-text-fill: #163a2c;"/>
                 <HBox HBox.hgrow="ALWAYS"/>
@@ -296,7 +317,7 @@
 
             <HBox alignment="CENTER_RIGHT" spacing="10">
                 <Button text="Vider" styleClass="action-chip" onAction="#clearCartFromOverlay"/>
-                <Button text="Passer commande" styleClass="action-chip primary" onAction="#checkoutFromOverlay"/>
+                <Button text="Passer commande" styleClass="action-chip,primary" onAction="#checkoutFromOverlay"/>
             </HBox>
         </VBox>
     </StackPane>
@@ -357,7 +378,8 @@
     </StackPane>
 
     <HBox fx:id="toastContainer" alignment="CENTER_LEFT" spacing="8" managed="false" visible="false"
-          StackPane.alignment="TOP_RIGHT" styleClass="toast-base toast-success" style="-fx-translate-x: -18; -fx-translate-y: 18;">
+          StackPane.alignment="BOTTOM_RIGHT" styleClass="toast-base,toast-success" style="-fx-translate-x: -18; -fx-translate-y: -18;">
+        <Label fx:id="toastIconLabel" text="✔" styleClass="toast-icon"/>
         <Label fx:id="toastLabel" text="Operation terminee" styleClass="toast-label"/>
     </HBox>
 

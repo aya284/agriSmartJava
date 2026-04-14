@@ -245,6 +245,18 @@ public class UserService {
         return users;
     }
 
+    public Optional<User> getById(int userId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapUser(rs));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     // ── CHANGER LE STATUT ─────────────────────────────────────
     public void updateStatus(int userId, String status) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
