@@ -49,46 +49,6 @@ JavaFX Desktop App --------------------------'
 
 ---
 
-## Architecture du projet
-
-```text
-agriSmartJava/
-|-- src/
-|   `-- main/
-|       |-- java/
-|       |   |-- controllers/
-|       |   |   |-- MainController.java
-|       |   |   `-- MarketplaceController.java
-|       |   |-- entities/
-|       |   |   |-- Commande.java
-|       |   |   |-- MarketplaceConversation.java
-|       |   |   |-- MarketplaceMessage.java
-|       |   |   |-- Produit.java
-|       |   |   |-- User.java
-|       |   |   `-- WishlistItem.java
-|       |   |-- interfaces/
-|       |   |   `-- IService.java
-|       |   |-- main/
-|       |   |   `-- MainApp.java
-|       |   |-- services/
-|       |   |   |-- CommandeService.java
-|       |   |   |-- ProduitService.java
-|       |   |   `-- WishlistService.java
-|       |   `-- utils/
-|       |       `-- MyConnection.java
-|       `-- resources/
-|           |-- css/
-|           |   `-- style.css
-|           `-- Views/
-|               |-- MainView.fxml
-|               |-- MarketplaceView.fxml
-|               `-- ProductDetailsView.fxml
-|-- pom.xml
-`-- README.md
-```
-
----
-
 ## Base de donnees
 
 > Attention: la base est partagee avec le projet Symfony. Ne pas renommer les tables existantes.
@@ -147,49 +107,6 @@ mvn clean javafx:run
 ```
 
 ---
-
-## Dependances Maven
-
-```xml
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <version>8.0.33</version>
-</dependency>
-
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-controls</artifactId>
-    <version>17.0.2</version>
-</dependency>
-
-<dependency>
-    <groupId>org.openjfx</groupId>
-    <artifactId>javafx-fxml</artifactId>
-    <version>17.0.2</version>
-</dependency>
-
-<dependency>
-    <groupId>io.github.mkpaz</groupId>
-    <artifactId>atlantafx-base</artifactId>
-    <version>2.0.1</version>
-</dependency>
-```
-
----
-
-## Design system
-
-| Couleur | Code | Usage |
-|---------|------|-------|
-| Vert foret | `#2D6A4F` | Primaire, header, boutons |
-| Vert sombre | `#1B4332` | Sidebar, footer |
-| Vert accent | `#74C69D` | Highlights |
-| Or ble | `#D4A853` | Badges promo |
-| Fond | `#F7F9F4` | Arriere-plan |
-
----
-
 ## Equipe et modules
 
 | Developpeur | Module | Tables DB |
@@ -226,16 +143,6 @@ public class ProduitService implements IService<Produit> {
     }
 }
 ```
-
----
-
-## Guide coequipiers
-
-1. Creer l'entite dans `src/main/java/entities/`
-2. Creer le service dans `src/main/java/services/` qui implemente `IService<VotreEntite>`
-3. Creer la vue FXML dans `src/main/resources/Views/`
-4. Creer le controller dans `src/main/java/controllers/`
-5. Brancher la navigation dans `MainController.java` si necessaire
 
 ---
 
