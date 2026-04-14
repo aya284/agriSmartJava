@@ -25,19 +25,33 @@ public class EditProfileController {
     @FXML private TextField     addressField;
     @FXML private Label         roleLabel;
 
+    // ── Erreurs par champ ─────────────────────────────────────
+    @FXML private Label         firstNameError;
+    @FXML private Label         lastNameError;
+    @FXML private Label         emailError;
+    @FXML private Label         phoneError;
+    @FXML private Label         addressError;
+
     // ── Photo de profil ───────────────────────────────────────
     @FXML private ImageView     profilePreview;
     @FXML private Label         imageFileLabel;
+    @FXML private Label         imageMessage;
 
     // ── Document justificatif ─────────────────────────────────
     @FXML private Label         documentFileLabel;
+    @FXML private Label         documentMessage;
 
     // ── Changement mot de passe ───────────────────────────────
     @FXML private PasswordField currentPasswordField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmNewPasswordField;
 
-    // ── Feedback ──────────────────────────────────────────────
+    // ── Erreurs mot de passe ──────────────────────────────────
+    @FXML private Label         currentPasswordError;
+    @FXML private Label         newPasswordError;
+    @FXML private Label         confirmPasswordError;
+
+    // ── Feedback global ───────────────────────────────────────
     @FXML private Label         infoMessage;
     @FXML private Label         passwordMessage;
     @FXML private Button        saveBtn;
@@ -49,7 +63,6 @@ public class EditProfileController {
     private final UserService    userService    = new UserService();
     private final SessionManager sessionManager = SessionManager.getInstance();
 
-    // ─────────────────────────────────────────────────────────
     @FXML
     public void initialize() {
         loadCurrentUser();
@@ -66,7 +79,6 @@ public class EditProfileController {
         addressField.setText(user.getAddress() != null ? user.getAddress() : "");
         roleLabel.setText(user.getRole());
 
-        // Afficher la photo de profil actuelle
         if (user.getImage() != null) {
             String absPath = FileStorageUtils.getAbsolutePath(user.getImage());
             try {
@@ -75,7 +87,6 @@ public class EditProfileController {
             } catch (Exception ignored) {}
         }
 
-        // Afficher le document actuel
         if (user.getDocumentFile() != null)
             documentFileLabel.setText("Document actuel : " + user.getDocumentFile());
     }
@@ -91,11 +102,13 @@ public class EditProfileController {
         File file = chooser.showOpenDialog(saveBtn.getScene().getWindow());
         if (file != null) {
             if (file.length() > 5 * 1024 * 1024) {
-                showInfoError("L'image ne doit pas dépasser 5 Mo."); return;
+                showFieldError(imageMessage, "L'image ne doit pas dépasser 5 Mo.");
+                return;
             }
             selectedImage = file;
             imageFileLabel.setText(file.getName());
             profilePreview.setImage(new Image(file.toURI().toString()));
+            imageMessage.setVisible(false);
         }
     }
 
@@ -111,10 +124,12 @@ public class EditProfileController {
         File file = chooser.showOpenDialog(saveBtn.getScene().getWindow());
         if (file != null) {
             if (file.length() > 5 * 1024 * 1024) {
-                showInfoError("Le document ne doit pas dépasser 5 Mo."); return;
+                showFieldError(documentMessage, "Le document ne doit pas dépasser 5 Mo.");
+                return;
             }
             selectedDocument = file;
             documentFileLabel.setText(file.getName());
+            documentMessage.setVisible(false);
         }
     }
 
@@ -122,14 +137,43 @@ public class EditProfileController {
     @FXML
     public void handleSave() {
         clearMessages();
-        User current = sessionManager.getCurrentUser();
 
+        // ── Validation par champ ──────────────────────────────
+        boolean hasError = false;
+
+        if (firstNameField.getText().trim().isEmpty()) {
+            showFieldError(firstNameError, "Le prénom est obligatoire.");
+            hasError = true;
+        }
+        if (lastNameField.getText().trim().isEmpty()) {
+            showFieldError(lastNameError, "Le nom est obligatoire.");
+            hasError = true;
+        }
+
+        String email = emailField.getText().trim();
+        if (email.isEmpty()) {
+            showFieldError(emailError, "L'adresse e-mail est obligatoire.");
+            hasError = true;
+        } else if (!email.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            showFieldError(emailError, "Format d'e-mail invalide.");
+            hasError = true;
+        }
+
+        String phone = phoneField.getText().trim();
+        if (!phone.isEmpty() && !phone.matches("^[+\\d\\s\\-]{7,15}$")) {
+            showFieldError(phoneError, "Numéro de téléphone invalide.");
+            hasError = true;
+        }
+
+        if (hasError) return;
+
+        // ── Sauvegarde ────────────────────────────────────────
+        User current = sessionManager.getCurrentUser();
         saveBtn.setDisable(true);
         saveBtn.setText("Sauvegarde...");
 
         new Thread(() -> {
             try {
-                // Garder les anciens fichiers si pas de nouveau choix
                 String imagePath    = selectedImage    != null
                         ? FileStorageUtils.save(selectedImage,    "profiles")
                         : current.getImage();
@@ -137,7 +181,6 @@ public class EditProfileController {
                         ? FileStorageUtils.save(selectedDocument, "documents")
                         : current.getDocumentFile();
 
-                // Mettre à jour l'objet user
                 current.setFirstName(firstNameField.getText().trim());
                 current.setLastName(lastNameField.getText().trim());
                 current.setEmail(emailField.getText().trim());
@@ -147,15 +190,12 @@ public class EditProfileController {
                 current.setDocumentFile(documentPath);
 
                 userService.updateProfile(current);
-
-                // Mettre à jour la session
                 sessionManager.setCurrentUser(current);
 
-                Platform.runLater(() ->
-                        showInfoSuccess("✔ Profil mis à jour avec succès !"));
+                Platform.runLater(() -> showGlobalSuccess(infoMessage, "✔ Profil mis à jour avec succès !"));
 
             } catch (Exception e) {
-                Platform.runLater(() -> showInfoError(e.getMessage()));
+                Platform.runLater(() -> showGlobalError(infoMessage, e.getMessage()));
             } finally {
                 Platform.runLater(() -> {
                     saveBtn.setDisable(false);
@@ -174,12 +214,27 @@ public class EditProfileController {
         String newPw   = newPasswordField.getText();
         String confirm = confirmNewPasswordField.getText();
 
-        // Validation locale
-        if (current.isEmpty()) { showPasswordError("Entrez votre mot de passe actuel."); return; }
+        boolean hasError = false;
+
+        if (current.isEmpty()) {
+            showFieldError(currentPasswordError, "Entrez votre mot de passe actuel.");
+            hasError = true;
+        }
+
         String err = Validator.validatePassword(newPw);
-        if (err != null) { showPasswordError(err); return; }
+        if (err != null) {
+            showFieldError(newPasswordError, err);
+            hasError = true;
+        }
+
         String err2 = Validator.validateConfirmPassword(newPw, confirm);
-        if (err2 != null) { showPasswordError(err2); return; }
+        if (err2 != null) {
+            showFieldError(confirmPasswordError, err2);
+
+            hasError = true;
+        }
+
+        if (hasError) return;
 
         changePasswordBtn.setDisable(true);
         changePasswordBtn.setText("Modification...");
@@ -190,13 +245,13 @@ public class EditProfileController {
                         sessionManager.getCurrentUser().getId(), current, newPw);
 
                 Platform.runLater(() -> {
-                    showPasswordSuccess("✔ Mot de passe modifié avec succès !");
+                    showGlobalSuccess(passwordMessage, "✔ Mot de passe modifié avec succès !");
                     currentPasswordField.clear();
                     newPasswordField.clear();
                     confirmNewPasswordField.clear();
                 });
             } catch (Exception e) {
-                Platform.runLater(() -> showPasswordError(e.getMessage()));
+                Platform.runLater(() -> showGlobalError(passwordMessage, e.getMessage()));
             } finally {
                 Platform.runLater(() -> {
                     changePasswordBtn.setDisable(false);
@@ -207,27 +262,37 @@ public class EditProfileController {
     }
 
     // ── Helpers messages ──────────────────────────────────────
-    private void showInfoError(String msg) {
-        infoMessage.setStyle("-fx-text-fill: #e74c3c;");
-        infoMessage.setText("⚠ " + msg);
-        infoMessage.setVisible(true);
+
+    /** Red label directly under a single input field */
+    private void showFieldError(Label label, String msg) {
+        label.setText("⚠ " + msg);
+        label.setVisible(true);
     }
-    private void showInfoSuccess(String msg) {
-        infoMessage.setStyle("-fx-text-fill: #27ae60;");
-        infoMessage.setText(msg);
-        infoMessage.setVisible(true);
+
+    /** Green success banner (section-level) */
+    private void showGlobalSuccess(Label label, String msg) {
+        label.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 12;");
+        label.setText(msg);
+        label.setVisible(true);
     }
-    private void showPasswordError(String msg) {
-        passwordMessage.setStyle("-fx-text-fill: #e74c3c;");
-        passwordMessage.setText("⚠ " + msg);
-        passwordMessage.setVisible(true);
+
+    /** Red error banner (section-level, e.g. server error) */
+    private void showGlobalError(Label label, String msg) {
+        label.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 12;");
+        label.setText("⚠ " + msg);
+        label.setVisible(true);
     }
-    private void showPasswordSuccess(String msg) {
-        passwordMessage.setStyle("-fx-text-fill: #27ae60;");
-        passwordMessage.setText(msg);
-        passwordMessage.setVisible(true);
-    }
+
     private void clearMessages() {
+        // Per-field errors
+        for (Label l : new Label[]{
+                firstNameError, lastNameError, emailError,
+                phoneError, addressError,
+                currentPasswordError, newPasswordError, confirmPasswordError,
+                imageMessage, documentMessage
+        }) l.setVisible(false);
+
+        // Global banners
         infoMessage.setVisible(false);
         passwordMessage.setVisible(false);
     }
