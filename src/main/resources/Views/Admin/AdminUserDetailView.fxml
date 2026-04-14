@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.admin.AdminUserDetailController">
+
+    <!-- Header avec bouton retour -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Button text="← Retour" onAction="#goBack"
+                style="-fx-background-color: #ecf0f1;
+                       -fx-padding: 7 16; -fx-background-radius: 6;
+                       -fx-cursor: hand;"/>
+        <Label text="Détails de l'utilisateur"
+               style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <HBox spacing="20">
+
+        <!-- ── Carte profil ── -->
+        <VBox spacing="16" prefWidth="260" alignment="CENTER"
+              style="-fx-background-color: white; -fx-padding: 24;
+                     -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+
+            <ImageView fx:id="profileImage"
+                       fitWidth="100" fitHeight="100"
+                       preserveRatio="true"
+                       style="-fx-effect: dropshadow(gaussian,#bbb,6,0,0,2);"/>
+
+            <Label fx:id="fullNameLabel"
+                   style="-fx-font-size: 17; -fx-font-weight: bold;
+                          -fx-text-fill: #2c3e50;"/>
+
+            <Label fx:id="roleLabel"
+                   style="-fx-font-size: 12; -fx-text-fill: white;
+                          -fx-padding: 3 14; -fx-background-radius: 10;
+                          -fx-background-color: #3498db;"/>
+
+            <Label fx:id="statusBadge"
+                   style="-fx-font-size: 12; -fx-text-fill: white;
+                          -fx-padding: 3 14; -fx-background-radius: 10;"/>
+
+            <Separator/>
+
+            <!-- Changer statut depuis le détail -->
+            <Label text="Changer le statut :"
+                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+            <HBox spacing="8" alignment="CENTER">
+                <Button text="Activer"    onAction="#setActive"
+                        style="-fx-background-color:#27ae60; -fx-text-fill:white;
+                               -fx-padding:5 10; -fx-background-radius:4;"/>
+                <Button text="Désactiver" onAction="#setInactive"
+                        style="-fx-background-color:#e74c3c; -fx-text-fill:white;
+                               -fx-padding:5 10; -fx-background-radius:4;"/>
+                <Button text="En attente" onAction="#setPending"
+                        style="-fx-background-color:#f39c12; -fx-text-fill:white;
+                               -fx-padding:5 10; -fx-background-radius:4;"/>
+            </HBox>
+
+            <Label fx:id="statusMessage" visible="false"
+                   wrapText="true" style="-fx-font-size: 12;"/>
+        </VBox>
+
+        <!-- ── Informations détaillées ── -->
+        <VBox spacing="14" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: white; -fx-padding: 24;
+                     -fx-background-radius: 10;
+                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+
+            <Label text="Informations personnelles"
+                   style="-fx-font-size: 15; -fx-font-weight: bold;
+                          -fx-text-fill: #2ecc71;"/>
+
+            <HBox spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Prénom" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="firstNameLabel" style="-fx-font-size:14;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Nom" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="lastNameLabel" style="-fx-font-size:14;"/>
+                </VBox>
+            </HBox>
+
+            <VBox spacing="4">
+                <Label text="Email" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                <Label fx:id="emailLabel" style="-fx-font-size:14;"/>
+            </VBox>
+
+            <HBox spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Téléphone" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="phoneLabel" style="-fx-font-size:14;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Adresse" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="addressLabel" style="-fx-font-size:14;"/>
+                </VBox>
+            </HBox>
+
+            <Separator/>
+
+            <Label text="Informations du compte"
+                   style="-fx-font-size: 15; -fx-font-weight: bold;
+                          -fx-text-fill: #2ecc71;"/>
+
+            <HBox spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="ID" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="idLabel" style="-fx-font-size:14;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Inscrit le" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="createdAtLabel" style="-fx-font-size:14;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Mis à jour le" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="updatedAtLabel" style="-fx-font-size:14;"/>
+                </VBox>
+            </HBox>
+
+            <HBox spacing="16">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Connexion Google" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="googleLabel" style="-fx-font-size:14;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Document justificatif" style="-fx-text-fill:#999; -fx-font-size:11;"/>
+                    <Label fx:id="documentLabel"
+                           style="-fx-font-size:13; -fx-text-fill:#3498db;
+                                  -fx-cursor:hand;"/>
+                </VBox>
+            </HBox>
+        </VBox>
+    </HBox>
+</VBox>

@@ -4,9 +4,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
+import utils.SessionManager;
 
 import java.io.IOException;
 
@@ -14,74 +16,119 @@ public class MainController {
 
     @FXML private StackPane contentArea;
     @FXML private TextField globalSearchField;
-    @FXML private Label footerStatusLabel;
-    @FXML private Label currentModuleLabel;
+    @FXML private Label     footerStatusLabel;
+    @FXML private Label     currentModuleLabel;
 
     @FXML
     public void initialize() {
-        openMarketplace();
+        SessionManager session = SessionManager.getInstance();
+        if (session.isAdmin()) {
+            openUsers();
+        } else {
+            openMarketplace();
+        }
     }
 
     @FXML
     public void openMarketplace() {
-        loadView("/Views/MarketplaceView.fxml", "Marketplace loaded", "Marketplace");
+        loadView("/Views/MarketplaceView.fxml", "Marketplace", "Marketplace");
     }
 
     @FXML
     public void openCulture() {
-        loadView("/Views/CultureView.fxml", "Culture module not available yet", "Gestion Culture");
+        loadView("/Views/CultureView.fxml", "Gestion Culture", "Gestion Culture");
     }
 
     @FXML
     public void openTaches() {
-        loadView("/Views/TachesView.fxml", "Tasks module not available yet", "Gestion Taches");
+        loadView("/Views/TachesView.fxml", "Gestion Tâches", "Gestion Taches");
     }
 
     @FXML
     public void openEmployes() {
-        loadView("/Views/Offres/OffreList.fxml", " liste des offres", "Gestion des Offres");}
-    @FXML
-    public void openUsers() {
-        loadView("/Views/UsersView.fxml", "Users module not available yet", "Utilisateurs");
+        // Redirection forcée vers tes offres pour éviter l'erreur "Location is required"
+        loadView("/Views/Offres/OffreList.fxml", "Liste des offres", "Gestion des Offres");
     }
 
     @FXML
-    public void handleGlobalSearch() {
-        String query = globalSearchField.getText() == null ? "" : globalSearchField.getText().trim();
-        if (query.isEmpty()) {
-            footerStatusLabel.setText("Ready");
+    public void openOffres() {
+        loadView("/Views/Offres/OffreList.fxml", "Liste des offres", "Gestion des Offres");
+    }
+
+    @FXML
+    public void openUsers() {
+        if (!SessionManager.getInstance().isAdmin()) {
+            showAccessDenied();
             return;
         }
-        footerStatusLabel.setText("Searching: " + query);
+        loadView("/Views/Admin/AdminUsersView.fxml", "Gestion Utilisateurs", "Utilisateurs");
+    }
+
+    @FXML
+    public void showProfile() {
+        loadView("/Views/EditProfileView.fxml", "Profil", "Profile");
     }
 
     @FXML
     public void showNotifications() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Notifications");
-        alert.setHeaderText("Marketplace notifications");
-        alert.setContentText("No new notifications.");
+        alert.setHeaderText("Notifications");
+        alert.setContentText("Aucune nouvelle notification.");
         alert.showAndWait();
     }
 
     @FXML
-    public void showProfile() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("User Profile");
-        alert.setHeaderText("Current user");
-        alert.setContentText("Logged in as: agrismart.user@example.com");
-        alert.showAndWait();
+    public void handleGlobalSearch() {
+        String query = globalSearchField.getText() == null
+                ? "" : globalSearchField.getText().trim();
+        footerStatusLabel.setText(query.isEmpty() ? "Ready" : "Recherche : " + query);
     }
 
-    private void loadView(String fxmlPath, String statusMessage, String moduleName) {
+    // ── Helpers ───────────────────────────────────────────────
+    private void loadView(String fxmlPath, String status, String moduleName) {
         try {
-            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            // Utilisation d'une vérification de sécurité pour la localisation
+            java.net.URL location = getClass().getResource(fxmlPath);
+            if (location == null) {
+                System.err.println("❌ Fichier introuvable : " + fxmlPath);
+                footerStatusLabel.setText("Erreur : Chemin FXML invalide");
+                return;
+            }
+            Parent view = FXMLLoader.load(location);
             contentArea.getChildren().setAll(view);
-            footerStatusLabel.setText(statusMessage);
+            footerStatusLabel.setText(status);
             currentModuleLabel.setText("Current: " + moduleName);
         } catch (IOException e) {
-            footerStatusLabel.setText(statusMessage);
-            currentModuleLabel.setText("Current: " + moduleName);
+            footerStatusLabel.setText("Erreur chargement : " + e.getMessage());
+            System.err.println("Erreur loadView [" + fxmlPath + "] : " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    private void showAccessDenied() {
+        Label msg = new Label("⛔ Accès refusé — réservé aux administrateurs.");
+        msg.setStyle("-fx-font-size:16; -fx-text-fill:#e74c3c; -fx-padding:40;");
+        contentArea.getChildren().setAll(msg);
+        currentModuleLabel.setText("Current: Accès refusé");
+    }
+
+    @FXML
+    public void handleLogout() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Déconnexion");
+        confirm.setHeaderText("Voulez-vous vous déconnecter ?");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                SessionManager.getInstance().logout();
+                try {
+                    Parent root = FXMLLoader.load(
+                            getClass().getResource("/Views/LoginView.fxml"));
+                    contentArea.getScene().setRoot(root);
+                } catch (Exception e) {
+                    System.err.println("Erreur logout : " + e.getMessage());
+                }
+            }
+        });
     }
 }

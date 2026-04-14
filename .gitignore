@@ -9,6 +9,7 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/workspace.xml
 *.iws
 *.iml
 *.ipr
@@ -31,7 +32,8 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+# Google OAuth secret
+src/main/client_secret.json
 ### VS Code ###
 .vscode/
 
