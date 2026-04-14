@@ -1,4 +1,4 @@
-package controllers;
+﻿package controllers;
 
 import entities.CartItem;
 import entities.Commande;
@@ -83,6 +83,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
 import utils.MarketplaceValidator;
+import utils.SessionManager;
 import javafx.util.Duration;
 
 public class MarketplaceController implements Initializable {
@@ -93,8 +94,8 @@ public class MarketplaceController implements Initializable {
     private static final String TYPE_VENTE = "Vente";
     private static final String TYPE_LOCATION = "Location";
     private static final int PAGE_SIZE = 8;
-    private static final int CURRENT_SESSION_USER_ID = 1;
-    private static final int FALLBACK_SELLER_ID = 2;
+    private static final int DEFAULT_GUEST_USER_ID = 1;
+    private static final int DEFAULT_FALLBACK_SELLER_ID = 2;
     private static final DateTimeFormatter CHAT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
     private static final List<String> CATEGORIES = Arrays.asList(
             "Legumes",
@@ -341,7 +342,7 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void clearCartFromOverlay() {
-        cartSessionService.clear(CURRENT_SESSION_USER_ID);
+        cartSessionService.clear(getCurrentUserId());
         renderCartOverlay();
         updateCartStatus();
         showToast("Panier vide avec succes.", true);
@@ -349,7 +350,7 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void checkoutFromOverlay() {
-        List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        List<CartItem> cartItems = cartSessionService.getItems(getCurrentUserId());
         if (cartItems.isEmpty()) {
             showAlert("Panier", "Votre panier est vide.");
             return;
@@ -445,7 +446,7 @@ public class MarketplaceController implements Initializable {
             toastTitleLabel.setText(title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title);
         }
         if (toastIconLabel != null) {
-            toastIconLabel.setText(success ? "✔" : "!");
+            toastIconLabel.setText(success ? "âœ”" : "!");
         }
         toastLabel.setText(message);
         toastContainer.setManaged(true);
@@ -747,8 +748,8 @@ public class MarketplaceController implements Initializable {
         });
 
         colCmdActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit = new Button("✎");
-            private final Button btnDelete = new Button("🗑");
+            private final Button btnEdit = new Button("âœŽ");
+            private final Button btnDelete = new Button("ðŸ—‘");
             private final HBox box = new HBox(8, btnEdit, btnDelete);
 
             {
@@ -852,9 +853,9 @@ public class MarketplaceController implements Initializable {
         try {
             List<Commande> commandes;
             if (showingBoughtOrders) {
-                commandes = commandeService.getByClient(CURRENT_SESSION_USER_ID);
+                commandes = commandeService.getByClient(getCurrentUserId());
             } else {
-                commandes = commandeService.getBySeller(CURRENT_SESSION_USER_ID);
+                commandes = commandeService.getBySeller(getCurrentUserId());
             }
             commandeTable.setItems(FXCollections.observableArrayList(commandes));
         } catch (SQLException e) {
@@ -868,7 +869,7 @@ public class MarketplaceController implements Initializable {
             return;
         }
         try {
-            List<WishlistItem> items = wishlistService.getByUser(CURRENT_SESSION_USER_ID);
+            List<WishlistItem> items = wishlistService.getByUser(getCurrentUserId());
             wishlistTable.setItems(FXCollections.observableArrayList(items));
         } catch (SQLException e) {
             showSqlAlert(e);
@@ -942,14 +943,14 @@ public class MarketplaceController implements Initializable {
                 }
                 selectedConversation = conversationService.findOrCreateConversation(
                         pendingProductId,
-                        CURRENT_SESSION_USER_ID,
+                        getCurrentUserId(),
                         pendingSellerId
                 );
             }
 
             MarketplaceMessage message = new MarketplaceMessage();
             message.setConversationId(selectedConversation.getId());
-            message.setSenderId(CURRENT_SESSION_USER_ID);
+            message.setSenderId(getCurrentUserId());
             message.setContent(content);
             message.setRead(false);
             messageService.ajouter(message);
@@ -974,7 +975,7 @@ public class MarketplaceController implements Initializable {
             int sellerId = resolveSellerIdForProduct(produit);
             entities.MarketplaceConversation existingConversation = conversationService.findConversation(
                     produit.getId(),
-                    CURRENT_SESSION_USER_ID,
+                    getCurrentUserId(),
                     sellerId
             );
 
@@ -1014,7 +1015,7 @@ public class MarketplaceController implements Initializable {
 
         try {
             if (wishlistProductIds.contains(produit.getId())) {
-                List<WishlistItem> userItems = wishlistService.getByUser(CURRENT_SESSION_USER_ID);
+                List<WishlistItem> userItems = wishlistService.getByUser(getCurrentUserId());
                 for (WishlistItem item : userItems) {
                     if (item.getProduitId() == produit.getId()) {
                         wishlistService.supprimer(item.getId());
@@ -1026,7 +1027,7 @@ public class MarketplaceController implements Initializable {
                 }
                 showToast("Retire de la wishlist.", true);
             } else {
-                wishlistService.ajouter(new WishlistItem(CURRENT_SESSION_USER_ID, produit.getId()));
+                wishlistService.ajouter(new WishlistItem(getCurrentUserId(), produit.getId()));
                 if (statusLabel != null) {
                     statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute a la wishlist");
                 }
@@ -1043,7 +1044,7 @@ public class MarketplaceController implements Initializable {
 
     private void refreshWishlistState() {
         try {
-            List<WishlistItem> userItems = wishlistService.getByUser(CURRENT_SESSION_USER_ID);
+            List<WishlistItem> userItems = wishlistService.getByUser(getCurrentUserId());
             wishlistProductIds.clear();
             for (WishlistItem item : userItems) {
                 wishlistProductIds.add(item.getProduitId());
@@ -1169,7 +1170,7 @@ public class MarketplaceController implements Initializable {
 
         try {
             refreshMessagingDisplayMaps();
-            List<entities.MarketplaceConversation> conversations = conversationService.getByUser(CURRENT_SESSION_USER_ID);
+            List<entities.MarketplaceConversation> conversations = conversationService.getByUser(getCurrentUserId());
             if (conversations.isEmpty()) {
                 Label empty = new Label("Aucune conversation pour le moment. Ouvrez un produit puis cliquez sur Contacter le vendeur.");
                 empty.getStyleClass().add("chat-empty-label");
@@ -1241,7 +1242,7 @@ public class MarketplaceController implements Initializable {
         }
 
         try {
-            messageService.markConversationAsRead(conversation.getId(), CURRENT_SESSION_USER_ID);
+            messageService.markConversationAsRead(conversation.getId(), getCurrentUserId());
             refreshMessagingBadge();
         } catch (SQLException e) {
             showSqlAlert(e);
@@ -1264,7 +1265,7 @@ public class MarketplaceController implements Initializable {
             }
 
             for (MarketplaceMessage message : messages) {
-                boolean mine = message.getSenderId() == CURRENT_SESSION_USER_ID;
+                boolean mine = message.getSenderId() == getCurrentUserId();
                 Label body = new Label(normalizeText(safe(message.getContent())));
                 body.setWrapText(true);
                 body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
@@ -1293,7 +1294,7 @@ public class MarketplaceController implements Initializable {
             return;
         }
         try {
-            int unread = messageService.countUnreadForUser(CURRENT_SESSION_USER_ID);
+            int unread = messageService.countUnreadForUser(getCurrentUserId());
             if (unread <= 0) {
                 btnMessagingCenter.setText("Messagerie");
             } else {
@@ -1305,9 +1306,9 @@ public class MarketplaceController implements Initializable {
     }
 
     private int resolveSellerIdForProduct(Produit produit) {
-        int sellerId = produit.getVendeurId() > 0 ? produit.getVendeurId() : FALLBACK_SELLER_ID;
-        if (sellerId == CURRENT_SESSION_USER_ID) {
-            return FALLBACK_SELLER_ID;
+        int sellerId = produit.getVendeurId() > 0 ? produit.getVendeurId() : getFallbackSellerId();
+        if (sellerId == getCurrentUserId()) {
+            return getFallbackSellerId();
         }
         return sellerId;
     }
@@ -1392,7 +1393,7 @@ public class MarketplaceController implements Initializable {
             return;
         }
 
-        List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        List<CartItem> cartItems = cartSessionService.getItems(getCurrentUserId());
         cartItemsBox.getChildren().clear();
 
         if (cartItems.isEmpty()) {
@@ -1406,10 +1407,10 @@ public class MarketplaceController implements Initializable {
         }
 
         if (cartCountLabel != null) {
-            cartCountLabel.setText("Articles: " + cartSessionService.countItems(CURRENT_SESSION_USER_ID));
+            cartCountLabel.setText("Articles: " + cartSessionService.countItems(getCurrentUserId()));
         }
         if (cartTotalLabel != null) {
-            cartTotalLabel.setText("Total: " + String.format("%.2f", cartSessionService.getTotal(CURRENT_SESSION_USER_ID)) + " TND");
+            cartTotalLabel.setText("Total: " + String.format("%.2f", cartSessionService.getTotal(getCurrentUserId())) + " TND");
         }
     }
 
@@ -1421,7 +1422,7 @@ public class MarketplaceController implements Initializable {
                 return;
             }
 
-            if (cartProduit.getVendeurId() > 0 && cartProduit.getVendeurId() == CURRENT_SESSION_USER_ID) {
+            if (cartProduit.getVendeurId() > 0 && cartProduit.getVendeurId() == getCurrentUserId()) {
                 showAlert("Panier", "Vous ne pouvez pas commander vos propres produits.");
                 return;
             }
@@ -1549,7 +1550,7 @@ public class MarketplaceController implements Initializable {
 
             try {
                 int commandeId = commandeService.createCommandeFromCart(
-                        CURRENT_SESSION_USER_ID,
+                        getCurrentUserId(),
                         modePaiement,
                         adresse,
                         cartItems
@@ -1565,7 +1566,7 @@ public class MarketplaceController implements Initializable {
                     totalAmount += cartItem.getLineTotal();
                 }
 
-                cartSessionService.clear(CURRENT_SESSION_USER_ID);
+                cartSessionService.clear(getCurrentUserId());
                 loadCommandes();
                 loadProduits();
                 refreshStats();
@@ -1663,11 +1664,11 @@ public class MarketplaceController implements Initializable {
                 showAlert("Stock", "Stock maximum atteint pour ce produit (" + availableStock + ").");
                 return;
             }
-            cartSessionService.addProduit(CURRENT_SESSION_USER_ID, produit, 1);
+            cartSessionService.addProduit(getCurrentUserId(), produit, 1);
             showToast("Quantite augmentee.", true);
         } else {
             if (item.getQuantite() <= 1) {
-                cartSessionService.removeProduit(CURRENT_SESSION_USER_ID, produit.getId());
+                cartSessionService.removeProduit(getCurrentUserId(), produit.getId());
                 showToast("Article retire du panier.", true);
             } else {
                 item.increment(-1);
@@ -1710,10 +1711,10 @@ public class MarketplaceController implements Initializable {
         }
 
         builder.append("\nTotal panier: ")
-                .append(String.format("%.2f", cartSessionService.getTotal(CURRENT_SESSION_USER_ID)))
+                .append(String.format("%.2f", cartSessionService.getTotal(getCurrentUserId())))
                 .append(" TND\n")
                 .append("Nombre d'articles: ")
-                .append(cartSessionService.countItems(CURRENT_SESSION_USER_ID));
+                .append(cartSessionService.countItems(getCurrentUserId()));
         return builder.toString();
     }
 
@@ -1721,7 +1722,7 @@ public class MarketplaceController implements Initializable {
         if (produit == null) {
             return;
         }
-        if (produit.getVendeurId() > 0 && produit.getVendeurId() == CURRENT_SESSION_USER_ID) {
+        if (produit.getVendeurId() > 0 && produit.getVendeurId() == getCurrentUserId()) {
             showAlert("Panier", "Vous ne pouvez pas ajouter vos propres produits au panier.");
             return;
         }
@@ -1730,7 +1731,7 @@ public class MarketplaceController implements Initializable {
             return;
         }
 
-        List<CartItem> cartItems = cartSessionService.getItems(CURRENT_SESSION_USER_ID);
+        List<CartItem> cartItems = cartSessionService.getItems(getCurrentUserId());
         int currentQty = 0;
         for (CartItem item : cartItems) {
             if (item.getProduit() != null && item.getProduit().getId() == produit.getId()) {
@@ -1746,7 +1747,7 @@ public class MarketplaceController implements Initializable {
             return;
         }
 
-        cartSessionService.addProduit(CURRENT_SESSION_USER_ID, produit, quantite);
+        cartSessionService.addProduit(getCurrentUserId(), produit, quantite);
         updateCartStatus();
         if (statusLabel != null) {
             statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute au panier");
@@ -1757,7 +1758,7 @@ public class MarketplaceController implements Initializable {
         if (statusLabel == null) {
             return;
         }
-        int count = cartSessionService.countItems(CURRENT_SESSION_USER_ID);
+        int count = cartSessionService.countItems(getCurrentUserId());
         if (count <= 0) {
             statusLabel.setText("Panier vide");
             return;
@@ -2125,7 +2126,7 @@ public class MarketplaceController implements Initializable {
         } else {
             p.setPromotionPrice(0.0);
         }
-        p.setVendeurId(1); // placeholder
+        p.setVendeurId(getCurrentUserId());
         
         try {
             if (currentEditProduit == null) {
@@ -2270,12 +2271,12 @@ public class MarketplaceController implements Initializable {
             detailsOldPrice.setText(String.format("%.2f TND", p.getPrix()));
             detailsOldPrice.setVisible(true);
             detailsOldPrice.setManaged(true);
-            detailsConvertedPrice.setText(String.format("≈ %.2f EUR · %.2f USD", p.getPromotionPrice() * 0.29, p.getPromotionPrice() * 0.32));
+            detailsConvertedPrice.setText(String.format("â‰ˆ %.2f EUR Â· %.2f USD", p.getPromotionPrice() * 0.29, p.getPromotionPrice() * 0.32));
         } else {
             detailsPrice.setText(String.format("%.2f", p.getPrix()));
             detailsOldPrice.setVisible(false);
             detailsOldPrice.setManaged(false);
-            detailsConvertedPrice.setText(String.format("≈ %.2f EUR · %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
+            detailsConvertedPrice.setText(String.format("â‰ˆ %.2f EUR Â· %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
         }
 
         animateOverlayIn(detailsOverlay);
@@ -2365,7 +2366,7 @@ public class MarketplaceController implements Initializable {
         TextField adresseField = new TextField(existing == null ? "" : safe(existing.getAdresseLivraison()));
         TextField montantField = new TextField(existing == null ? "0" : String.valueOf(existing.getMontantTotal()));
         TextField paymentRefField = new TextField(existing == null ? "" : safe(existing.getPaymentRef()));
-        TextField clientIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getClientId()));
+        TextField clientIdField = new TextField(existing == null ? String.valueOf(getCurrentUserId()) : String.valueOf(existing.getClientId()));
 
         statutField.getStyleClass().add("commande-form-field");
         paiementField.getStyleClass().add("commande-form-field");
@@ -2473,7 +2474,7 @@ public class MarketplaceController implements Initializable {
     }
 
     private VBox buildCheckoutSuccessPane(Dialog<ButtonType> checkoutDialog, int commandeId, String modePaiement, String adresse, int itemCount, double totalAmount) {
-        Label icon = new Label("✓");
+        Label icon = new Label("âœ“");
         icon.getStyleClass().add("checkout-success-icon");
 
         Label title = new Label("Felicitations, commande validee");
@@ -2578,7 +2579,7 @@ public class MarketplaceController implements Initializable {
         ButtonType saveBtn = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
-        TextField userIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getUserId()));
+        TextField userIdField = new TextField(existing == null ? String.valueOf(getCurrentUserId()) : String.valueOf(existing.getUserId()));
         TextField produitIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getProduitId()));
 
         GridPane grid = new GridPane();
@@ -2659,7 +2660,7 @@ public class MarketplaceController implements Initializable {
         dialog.getDialogPane().getButtonTypes().addAll(saveBtn, ButtonType.CANCEL);
 
         TextField conversationIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getConversationId()));
-        TextField senderIdField = new TextField(existing == null ? "1" : String.valueOf(existing.getSenderId()));
+        TextField senderIdField = new TextField(existing == null ? String.valueOf(getCurrentUserId()) : String.valueOf(existing.getSenderId()));
         TextArea contentField = new TextArea(existing == null ? "" : safe(existing.getContent()));
         contentField.setPrefRowCount(3);
         CheckBox readCheck = new CheckBox("Lu");
@@ -2755,6 +2756,21 @@ public class MarketplaceController implements Initializable {
         }
     }
 
+    private int getCurrentUserId() {
+        entities.User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.getId() > 0) {
+            return currentUser.getId();
+        }
+        return DEFAULT_GUEST_USER_ID;
+    }
+
+    private int getFallbackSellerId() {
+        int currentUserId = getCurrentUserId();
+        return currentUserId == DEFAULT_FALLBACK_SELLER_ID
+                ? DEFAULT_GUEST_USER_ID
+                : DEFAULT_FALLBACK_SELLER_ID;
+    }
+
     private String safe(String value) {
         return value == null ? "" : value;
     }
@@ -2791,7 +2807,7 @@ public class MarketplaceController implements Initializable {
             return "";
         }
         String trimmed = input.trim();
-        if (trimmed.contains("Ã") || trimmed.contains("Â")) {
+        if (trimmed.contains("Ãƒ") || trimmed.contains("Ã‚")) {
             return new String(trimmed.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         }
         return trimmed;
@@ -3171,4 +3187,6 @@ public class MarketplaceController implements Initializable {
         });
     }
 }
+
+
 
