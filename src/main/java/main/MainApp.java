@@ -12,7 +12,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         MyConnection.getInstance();
-        Parent root = FXMLLoader.load(getClass().getResource("/Views/MainView.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/Views/LoginView.fxml"));
         Scene scene = new Scene(root, 1200, 750);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         primaryStage.setTitle("AgriSmart Desktop");

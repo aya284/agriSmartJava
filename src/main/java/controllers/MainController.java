@@ -9,10 +9,12 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
+import utils.SessionManager;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,7 +36,12 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        openMarketplace();
+        SessionManager session = SessionManager.getInstance();
+        if (session.isAdmin()) {
+            openUsers();
+        } else {
+            openMarketplace();
+        }
     }
 
     @FXML
@@ -59,35 +66,32 @@ public class MainController {
 
     @FXML
     public void openUsers() {
-        loadView("/Views/UsersView.fxml", "Users module loaded", "Utilisateurs", btnUsers);
+        if (!SessionManager.getInstance().isAdmin()) {
+            showAccessDenied();
+            return;
+        }
+        loadView("/Views/Admin/AdminUsersView.fxml", "Users module loaded", "Utilisateurs", btnUsers);
     }
 
     @FXML
-    public void handleGlobalSearch() {
-        String query = globalSearchField.getText() == null ? "" : globalSearchField.getText().trim();
-        if (query.isEmpty()) {
-            footerStatusLabel.setText("Ready");
-            return;
-        }
-        footerStatusLabel.setText("Searching: " + query);
+    public void showProfile() {
+        loadView("/Views/EditProfileView.fxml", "Profil", "Profile", null);
     }
 
     @FXML
     public void showNotifications() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Notifications");
-        alert.setHeaderText("Marketplace notifications");
-        alert.setContentText("No new notifications.");
+        alert.setHeaderText("Notifications");
+        alert.setContentText("Aucune nouvelle notification.");
         alert.showAndWait();
     }
 
     @FXML
-    public void showProfile() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("User Profile");
-        alert.setHeaderText("Current user");
-        alert.setContentText("Logged in as: agrismart.user@example.com");
-        alert.showAndWait();
+    public void handleGlobalSearch() {
+        String query = globalSearchField.getText() == null
+                ? "" : globalSearchField.getText().trim();
+        footerStatusLabel.setText(query.isEmpty() ? "Ready" : "Recherche : " + query);
     }
 
     private void loadView(String fxmlPath, String statusMessage, String moduleName, Button activeButton) {
@@ -178,5 +182,30 @@ public class MainController {
         if (activeButton != null && !activeButton.getStyleClass().contains("active")) {
             activeButton.getStyleClass().add("active");
         }
+    }
+
+    private void showAccessDenied() {
+        Label msg = new Label("⛔ Accès refusé — réservé aux administrateurs.");
+        msg.setStyle("-fx-font-size:16; -fx-text-fill:#e74c3c; -fx-padding:40;");
+        contentArea.getChildren().setAll(msg);
+        currentModuleLabel.setText("Current: Accès refusé");
+    }
+    @FXML
+    public void handleLogout() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Déconnexion");
+        confirm.setHeaderText("Voulez-vous vous déconnecter ?");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                SessionManager.getInstance().logout();
+                try {
+                    Parent root = FXMLLoader.load(
+                            getClass().getResource("/Views/LoginView.fxml"));
+                    contentArea.getScene().setRoot(root);
+                } catch (Exception e) {
+                    System.err.println("Erreur logout : " + e.getMessage());
+                }
+            }
+        });
     }
 }
