@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.FormulaireParcelleController" spacing="25" prefWidth="850" prefHeight="600" styleClass="panel-card">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="5">
+        <Label fx:id="lblTitle" text="Gestion de la Parcelle" styleClass="module-title"/>
+        <Label text="Localisez votre terrain sur la carte pour remplir les coordonnées automatiquement." styleClass="status-label"/>
+    </VBox>
+
+    <HBox spacing="30" VBox.vgrow="ALWAYS">
+        <!-- Section Champs (Gauche) -->
+        <VBox spacing="22" prefWidth="450" minWidth="450" HBox.hgrow="ALWAYS" styleClass="form-section">
+            <Label text="Informations Générales" styleClass="panel-title" style="-fx-font-size: 16px;"/>
+            
+            <GridPane vgap="18" hgap="12">
+                <columnConstraints>
+                    <ColumnConstraints prefWidth="130"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+
+                <Label text="Nom :" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="panel-muted"/>
+                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                    <TextField fx:id="txtNom" promptText="Saisir ou cliquer sur la carte" style="-fx-pref-height: 35px; -fx-background-radius: 6;"/>
+                    <Label fx:id="lblErrorNom" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+                </VBox>
+
+                <Label text="Surface (Ha) :" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="panel-muted"/>
+                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <TextField fx:id="txtSurface" promptText="Ex: 5.2" style="-fx-pref-height: 35px; -fx-background-radius: 6;"/>
+                    <Label fx:id="lblErrorSurface" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+                </VBox>
+
+                <Label text="Type de Sol :" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="panel-muted"/>
+                <VBox spacing="2" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <ComboBox fx:id="cbType" promptText="Sélectionner le type" maxWidth="Infinity" style="-fx-pref-height: 35px; -fx-background-radius: 6;"/>
+                    <Label fx:id="lblErrorType" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+                </VBox>
+
+                <!-- Champ Autre conditionnel qui apparaîtra si "Autre" est séléctionné -->
+                <VBox fx:id="boxTypeAutre" spacing="2" visible="false" managed="false" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                    <TextField fx:id="txtTypeAutre" promptText="Préciser le type..." style="-fx-pref-height: 35px; -fx-background-radius: 6;"/>
+                    <Label fx:id="lblErrorTypeAutre" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+                </VBox>
+            </GridPane>
+
+            <Separator/>
+            
+            <Label text="Coordonnées Géographiques" styleClass="panel-title" style="-fx-font-size: 16px;"/>
+            <Label fx:id="lblErrorLocation" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+            <GridPane vgap="18" hgap="12">
+                 <columnConstraints>
+                    <ColumnConstraints prefWidth="130"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+
+                <Label text="Latitude :" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="panel-muted"/>
+                <TextField fx:id="txtLat" editable="false" style="-fx-background-color: #f8f9fa; -fx-pref-height: 35px; -fx-background-radius: 6;" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Longitude :" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="panel-muted"/>
+                <TextField fx:id="txtLon" editable="false" style="-fx-background-color: #f8f9fa; -fx-pref-height: 35px; -fx-background-radius: 6;" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            </GridPane>
+        </VBox>
+
+        <!-- Section Carte (Droite) -->
+        <VBox spacing="10" HBox.hgrow="SOMETIMES" prefWidth="350">
+            <Label text="Sélecteur d'emplacement" styleClass="panel-title" style="-fx-font-size: 16px;"/>
+            <StackPane VBox.vgrow="ALWAYS" style="-fx-border-color: #dce8df; -fx-border-radius: 12; -fx-background-radius: 12; -fx-overflow-hidden: true; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 8, 0, 0, 3);">
+                <WebView fx:id="webViewFormMap"/>
+            </StackPane>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Abandonner" onAction="#cancel" styleClass="btn-danger" style="-fx-background-color: transparent; -fx-text-fill: #c94f52;"/>
+        <Button text="Enregistrer la Parcelle" onAction="#save" styleClass="btn-primary" prefWidth="180"/>
+    </HBox>
+</VBox>

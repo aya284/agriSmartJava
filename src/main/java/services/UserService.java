@@ -163,6 +163,16 @@ public class UserService {
 
         return u;
     }
+
+    public User findById(int id) throws SQLException {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapUser(rs);
+        }
+        return null;
+    }
     // ── UPDATE PROFILE ────────────────────────────────────────
     public void updateProfile(User user) throws Exception {
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.FormulaireRessourceController" spacing="20" prefWidth="450" styleClass="panel-card">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="5">
+        <Label fx:id="lblTitle" text="Gestion de Ressource" styleClass="module-title" style="-fx-font-size: 20px;"/>
+        <Label text="Remplissez les informations de l'inventaire." styleClass="status-label"/>
+    </VBox>
+
+    <VBox spacing="15">
+        <!-- Nom -->
+        <VBox spacing="5">
+            <Label text="Nom de la ressource" styleClass="panel-muted"/>
+            <TextField fx:id="txtNom" promptText="Ex: Engrais NPK, Tracteur..." style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+            <Label fx:id="lblErrorNom" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+        </VBox>
+
+        <!-- Type -->
+        <VBox spacing="5">
+            <Label text="Type" styleClass="panel-muted"/>
+            <ComboBox fx:id="cbType" maxWidth="Infinity" promptText="Sélectionner le type" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+            <Label fx:id="lblErrorType" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+        </VBox>
+
+        <!-- Type Autre (Caché par défaut) -->
+        <VBox fx:id="boxTypeAutre" spacing="5" visible="false" managed="false">
+            <Label text="Précisez le type" styleClass="panel-muted"/>
+            <TextField fx:id="txtTypeAutre" promptText="Ex: Carburant, Outils..." style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+            <Label fx:id="lblErrorTypeAutre" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+        </VBox>
+
+        <HBox spacing="15">
+            <!-- Stock -->
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Stock Restant" styleClass="panel-muted"/>
+                <TextField fx:id="txtStock" promptText="Ex: 50.5" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+                <Label fx:id="lblErrorStock" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+            </VBox>
+            
+            <!-- Unité -->
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Unité" styleClass="panel-muted"/>
+                <ComboBox fx:id="cbUnite" maxWidth="Infinity" promptText="Unité" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+                <Label fx:id="lblErrorUnite" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Abandonner" onAction="#cancel" styleClass="btn-danger" style="-fx-background-color: transparent; -fx-text-fill: #c94f52;"/>
+        <Button text="Enregistrer" onAction="#save" styleClass="btn-primary" prefWidth="150"/>
+    </HBox>
+</VBox>
