@@ -62,8 +62,8 @@ public class AdminLayoutController {
     }
 
     @FXML public void openEmployes() {
-        loadContent("/Views/EmployesView.fxml",
-                "Employés", "Admin / Employés");
+        loadContent("/Views/Offres/AdminOffreList.fxml",
+                "Gestion des Offres", "Admin / Offres");
     }
 
     @FXML
