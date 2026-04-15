@@ -52,7 +52,7 @@ public class ProduitService implements IService<Produit> {
     @Override
     public void modifier(Produit p) throws SQLException {
         String req = "UPDATE produit SET nom=?, description=?, type=?, prix=?, " +
-                "categorie=?, quantite_stock=?, is_promotion=?, " +
+                "categorie=?, quantite_stock=?, image=?, is_promotion=?, " +
                 "promotion_price=?, location_address=?, location_start=?, location_end=?, updated_at=NOW() WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setString(1, p.getNom());
@@ -61,12 +61,13 @@ public class ProduitService implements IService<Produit> {
             ps.setDouble(4, p.getPrix());
             ps.setString(5, p.getCategorie());
             ps.setInt(6, p.getQuantiteStock());
-            ps.setBoolean(7, p.isPromotion());
-            ps.setDouble(8, p.getPromotionPrice());
-            ps.setString(9, p.getLocationAddress());
-            ps.setTimestamp(10, toTimestamp(p.getLocationStart()));
-            ps.setTimestamp(11, toTimestamp(p.getLocationEnd()));
-            ps.setInt(12, p.getId());
+            ps.setString(7, p.getImage());
+            ps.setBoolean(8, p.isPromotion());
+            ps.setDouble(9, p.getPromotionPrice());
+            ps.setString(10, p.getLocationAddress());
+            ps.setTimestamp(11, toTimestamp(p.getLocationStart()));
+            ps.setTimestamp(12, toTimestamp(p.getLocationEnd()));
+            ps.setInt(13, p.getId());
             ps.executeUpdate();
         }
     }
@@ -108,6 +109,26 @@ public class ProduitService implements IService<Produit> {
             }
         }
         return list;
+    }
+
+    public List<Produit> afficherTous() throws SQLException {
+        List<Produit> list = new ArrayList<>();
+        String req = "SELECT * FROM produit ORDER BY updated_at DESC, created_at DESC";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(req)) {
+            while (rs.next()) {
+                list.add(mapResultSet(rs));
+            }
+        }
+        return list;
+    }
+
+    public void setBanned(int produitId, boolean banned) throws SQLException {
+        String req = "UPDATE produit SET banned=?, updated_at=NOW() WHERE id=?";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setBoolean(1, banned);
+            ps.setInt(2, produitId);
+            ps.executeUpdate();
+        }
     }
 
     public int countAll() throws SQLException {
