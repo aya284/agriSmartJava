@@ -7,6 +7,7 @@ public class Ressource {
     private double stockRestant;
     private String unite;
     private int userId;
+    private String userName; // Display field for admin view
 
     public Ressource() {}
 
@@ -40,4 +41,7 @@ public class Ressource {
     public void setUnite(String unite) { this.unite = unite; }
     public int getUserId() { return userId; }
     public void setUserId(int userId) { this.userId = userId; }
+
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 }

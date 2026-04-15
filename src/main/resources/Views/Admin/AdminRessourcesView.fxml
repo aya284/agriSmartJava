@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.admin.AdminRessourcesController">
+
+    <!-- ── Titre ── -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label text="Gestion des Ressources"
+               style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Label fx:id="totalLabel" text="Total : ..."
+               style="-fx-text-fill: #777; -fx-font-size: 13;"/>
+    </HBox>
+
+    <!-- ── Filtres ── -->
+    <HBox spacing="10" alignment="CENTER_LEFT"
+          style="-fx-background-color: white; -fx-padding: 14;
+                 -fx-background-radius: 8;
+                 -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
+        <TextField fx:id="searchField"
+                   promptText="🔍  Rechercher par nom ou agriculteur..."
+                   HBox.hgrow="ALWAYS"/>
+        <Button text="Réinitialiser" onAction="#resetFilters"
+                style="-fx-background-color: #ecf0f1;
+                       -fx-padding: 6 14; -fx-background-radius: 4;"/>
+    </HBox>
+
+    <!-- ── Tableau ── -->
+    <TableView fx:id="ressourcesTable" VBox.vgrow="ALWAYS" maxHeight="Infinity"
+               style="-fx-background-color: white;
+                      -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
+        <columns>
+            <TableColumn fx:id="colId"
+                         text="ID"
+                         minWidth="50" maxWidth="50"/>
+
+            <TableColumn fx:id="colNom"
+                         text="Nom de la ressource"
+                         minWidth="200" prefWidth="250"/>
+
+            <TableColumn fx:id="colType"
+                         text="Type"
+                         minWidth="120" prefWidth="150" maxWidth="150"/>
+
+            <TableColumn fx:id="colStock"
+                         text="Stock Restant"
+                         minWidth="120" prefWidth="150" maxWidth="150"/>
+
+            <TableColumn fx:id="colAgriculteur"
+                         text="Agriculteur"
+                         minWidth="150" prefWidth="200"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucune ressource trouvée."
+                   style="-fx-text-fill: #aaa; -fx-font-size: 14;"/>
+        </placeholder>
+    </TableView>
+
+    <!-- ── Pagination ── -->
+    <HBox fx:id="paginationBox" alignment="CENTER" spacing="6"
+          style="-fx-background-color: white; -fx-padding: 12;
+                 -fx-background-radius: 8;
+                 -fx-effect: dropshadow(gaussian,#ddd,4,0,0,1);">
+
+        <Label text="Afficher :" style="-fx-text-fill: #777;"/>
+        <ComboBox fx:id="pageSizeCombo" prefWidth="70"/>
+        <Label text="par page"  style="-fx-text-fill: #777;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+        <Button fx:id="btnFirst" text="«" onAction="#goFirst"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+        <Button fx:id="btnPrev"  text="‹" onAction="#goPrev"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+
+        <!-- boutons numérotés insérés dynamiquement -->
+
+        <Button fx:id="btnNext"  text="›" onAction="#goNext"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+        <Button fx:id="btnLast"  text="»" onAction="#goLast"
+                style="-fx-background-color:white; -fx-border-color:#ddd;
+                       -fx-padding:5 10; -fx-background-radius:4;"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+        <Label fx:id="pageInfoLabel" text="— / —"
+               style="-fx-text-fill: #777; -fx-font-size: 12;"/>
+    </HBox>
+
+</VBox>

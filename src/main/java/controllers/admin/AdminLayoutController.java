@@ -66,6 +66,11 @@ public class AdminLayoutController {
                 "Employés", "Admin / Employés");
     }
 
+    @FXML public void openRessources() {
+        loadContent("/Views/admin/AdminRessourcesView.fxml",
+                "Gestion des Ressources", "Admin / Ressources");
+    }
+
     @FXML
     public void handleLogout() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
