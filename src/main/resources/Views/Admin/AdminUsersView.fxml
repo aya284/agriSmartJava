@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16"
+      xmlns:fx="http://javafx.com/fxml"
+       fx:controller="controllers.admin.AdminUsersController"
+       stylesheets="@../../css/style.css"
+       styleClass="admin-page-root">
+
+    <!-- ── Titre ── -->
+       <HBox alignment="CENTER_LEFT" spacing="12" styleClass="admin-page-header">
+              <Label text="Gestion des Utilisateurs" styleClass="admin-page-title"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+              <Label fx:id="totalLabel" text="Total : ..." styleClass="admin-meta-label"/>
+    </HBox>
+
+    <!-- ── Filtres ── -->
+       <HBox spacing="10" alignment="CENTER_LEFT" styleClass="admin-filter-box">
+        <TextField fx:id="searchField"
+                   promptText="🔍  Rechercher par nom ou email..."
+                   HBox.hgrow="ALWAYS"/>
+       <Label text="Rôle :" styleClass="admin-filter-label"/>
+        <ComboBox fx:id="roleFilter"   prefWidth="130"/>
+       <Label text="Statut :" styleClass="admin-filter-label"/>
+        <ComboBox fx:id="statusFilter" prefWidth="120"/>
+       <Button text="Réinitialiser" onAction="#resetFilters" styleClass="admin-btn-secondary"/>
+    </HBox>
+
+    <!-- ── Tableau ── -->
+       <TableView fx:id="usersTable" VBox.vgrow="ALWAYS" maxHeight="Infinity" styleClass="admin-table-view">
+        <columns>
+            <TableColumn fx:id="colId"
+                         text="ID"
+                         minWidth="50" maxWidth="50"/>
+
+            <TableColumn fx:id="colName"
+                         text="Nom complet"
+                         minWidth="140" prefWidth="170"/>
+
+            <TableColumn fx:id="colEmail"
+                         text="Email"
+                         minWidth="170" prefWidth="210"/>
+
+            <TableColumn fx:id="colRole"
+                         text="Rôle"
+                         minWidth="100" prefWidth="130" maxWidth="130"/>
+
+            <TableColumn fx:id="colStatus"
+                         text="Statut"
+                         minWidth="110" prefWidth="120" maxWidth="120"/>
+
+            <TableColumn fx:id="colDate"
+                         text="Inscrit le"
+                         minWidth="100" prefWidth="120" maxWidth="120"/>
+
+            <TableColumn fx:id="colActions"
+                         text="Actions"
+                         minWidth="90" prefWidth="90" maxWidth="90"/>
+        </columns>
+        <placeholder>
+                     <Label text="Aucun utilisateur trouvé." styleClass="admin-empty-label"/>
+        </placeholder>
+    </TableView>
+
+    <!-- ── Pagination ── -->
+       <HBox fx:id="paginationBox" alignment="CENTER" spacing="6" styleClass="admin-panel-card">
+
+              <Label text="Afficher :" styleClass="admin-meta-label"/>
+        <ComboBox fx:id="pageSizeCombo" prefWidth="70"/>
+              <Label text="par page" styleClass="admin-meta-label"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+       <Button fx:id="btnFirst" text="«" onAction="#goFirst" styleClass="admin-btn-secondary"/>
+       <Button fx:id="btnPrev"  text="‹" onAction="#goPrev" styleClass="admin-btn-secondary"/>
+
+        <!-- boutons numérotés insérés dynamiquement avant btnNext -->
+
+       <Button fx:id="btnNext"  text="›" onAction="#goNext" styleClass="admin-btn-secondary"/>
+       <Button fx:id="btnLast"  text="»" onAction="#goLast" styleClass="admin-btn-secondary"/>
+
+        <HBox HBox.hgrow="ALWAYS"/>
+
+       <Label fx:id="pageInfoLabel" text="— / —" styleClass="admin-meta-label"/>
+    </HBox>
+
+</VBox>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" spacing="14" styleClass="feature-page">
+
+    <VBox styleClass="feature-hero" spacing="10">
+        <Label text="Gestion Utilisateurs" styleClass="feature-title"/>
+        <Label text="Administration des comptes, roles et securite d acces" styleClass="feature-subtitle"/>
+        <HBox spacing="10">
+            <Button text="Creer utilisateur" styleClass="action-chip primary"/>
+            <Button text="Roles" styleClass="action-chip"/>
+            <Button text="Permissions" styleClass="action-chip"/>
+            <Button text="Audit" styleClass="action-chip gold"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Comptes actifs" styleClass="stat-title"/>
+            <Label text="214" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Admins" styleClass="stat-title"/>
+            <Label text="7" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Verifications en attente" styleClass="stat-title"/>
+            <Label text="11" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Annuaire utilisateurs" styleClass="panel-title"/>
+        <Label text="Vue centralisee des identites et niveaux d acces" styleClass="panel-muted"/>
+        <TableView VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Email" prefWidth="260"/>
+                <TableColumn text="Nom" prefWidth="180"/>
+                <TableColumn text="Role" prefWidth="140"/>
+                <TableColumn text="Statut" prefWidth="120"/>
+                <TableColumn text="Actions" prefWidth="170"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

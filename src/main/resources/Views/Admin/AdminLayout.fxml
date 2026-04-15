@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.admin.AdminLayoutController"
+            stylesheets="@../../css/style.css"
+            styleClass="admin-shell">
+
+    <!-- ══ SIDEBAR ══ -->
+    <left>
+         <VBox prefWidth="230" styleClass="admin-sidebar">
+
+            <!-- Logo -->
+            <VBox alignment="CENTER" spacing="4" styleClass="admin-sidebar-brand">
+                <Label text="AgriSmart" styleClass="admin-brand-title"/>
+                <Label text="Administration" styleClass="admin-brand-subtitle"/>
+            </VBox>
+
+            <!-- Menu -->
+                     <VBox spacing="4" styleClass="admin-sidebar-menu">
+                            <Label text="MENU PRINCIPAL" styleClass="admin-sidebar-section-label"/>
+
+                <Button fx:id="btnDashboard"
+                        text="📊  Tableau de bord"
+                        onAction="#openDashboard"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+
+                <Button fx:id="btnUsers"
+                        text="👥  Utilisateurs"
+                        onAction="#openUsers"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+
+                <Label text="GESTION" styleClass="admin-sidebar-section-label"/>
+
+                <Button text="🌱  Cultures"
+                        onAction="#openCultures"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+
+                <Button text="🛒  Marketplace"
+                        onAction="#openMarketplace"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+
+                <Button text="✅  Tâches"
+                        onAction="#openTaches"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+
+                <Button text="👷  Employés"
+                        onAction="#openEmployes"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
+            </VBox>
+
+            <!-- Spacer -->
+            <VBox VBox.vgrow="ALWAYS"/>
+
+            <!-- Profil admin en bas -->
+                     <VBox styleClass="admin-profile-box">
+                            <HBox spacing="10" alignment="CENTER_LEFT" styleClass="admin-profile-row">
+                                   <Label text="👤" styleClass="admin-profile-icon"/>
+                    <VBox spacing="2">
+                                          <Label fx:id="adminNameLabel" text="Admin" styleClass="admin-profile-name"/>
+                                          <Label text="Administrateur" styleClass="admin-profile-role"/>
+                    </VBox>
+                </HBox>
+                <Button text="🚪  Déconnexion"
+                        onAction="#handleLogout"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                                          styleClass="admin-logout-btn"/>
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- ══ ZONE PRINCIPALE ══ -->
+    <center>
+       <VBox styleClass="admin-main-bg">
+
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="admin-topbar">
+                <VBox spacing="2">
+                    <Label fx:id="pageTitle" text="Tableau de bord" styleClass="admin-topbar-title"/>
+                    <Label fx:id="pageBreadcrumb" text="Admin / Tableau de bord" styleClass="admin-topbar-breadcrumb"/>
+                </VBox>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="dateLabel" styleClass="admin-topbar-date"/>
+            </HBox>
+
+                        <!-- Contenu dynamique (scrollable) -->
+                        <ScrollPane fitToWidth="true" fitToHeight="false" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="admin-content-scroll">
+                                <content>
+                                        <StackPane fx:id="adminContentArea" styleClass="admin-content-area"/>
+                                </content>
+                        </ScrollPane>
+        </VBox>
+    </center>
+
+</BorderPane>
