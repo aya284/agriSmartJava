@@ -14,35 +14,57 @@
         <Label text="Mon Profil" style="-fx-font-size: 22; -fx-font-weight: bold;"/>
 
         <!-- ── Section : Informations personnelles ── -->
-        <VBox spacing="12" style="-fx-background-color: white;
-                                   -fx-padding: 20;
-                                   -fx-background-radius: 8;
-                                   -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+        <VBox spacing="4" style="-fx-background-color: white;
+                                  -fx-padding: 20;
+                                  -fx-background-radius: 8;
+                                  -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
 
             <Label text="Informations personnelles"
-                   style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2ecc71;"/>
+                   style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2ecc71; -fx-padding: 0 0 8 0;"/>
 
             <HBox spacing="12">
-                <TextField fx:id="firstNameField" promptText="Prénom *" HBox.hgrow="ALWAYS"/>
-                <TextField fx:id="lastNameField"  promptText="Nom *"    HBox.hgrow="ALWAYS"/>
+                <VBox HBox.hgrow="ALWAYS" spacing="2">
+                    <TextField fx:id="firstNameField" promptText="Prénom *" maxWidth="Infinity"/>
+                    <Label fx:id="firstNameError" visible="false" wrapText="true"
+                           style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+                </VBox>
+                <VBox HBox.hgrow="ALWAYS" spacing="2">
+                    <TextField fx:id="lastNameField" promptText="Nom *" maxWidth="Infinity"/>
+                    <Label fx:id="lastNameError" visible="false" wrapText="true"
+                           style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+                </VBox>
             </HBox>
 
-            <TextField fx:id="emailField"   promptText="Adresse e-mail *"/>
-            <TextField fx:id="phoneField"   promptText="Téléphone"/>
-            <TextField fx:id="addressField" promptText="Adresse"/>
+            <VBox spacing="2" style="-fx-padding: 4 0 0 0;">
+                <TextField fx:id="emailField" promptText="Adresse e-mail *"/>
+                <Label fx:id="emailError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
 
-            <HBox spacing="8" alignment="CENTER_LEFT">
+            <VBox spacing="2" style="-fx-padding: 4 0 0 0;">
+                <TextField fx:id="phoneField" promptText="Téléphone"/>
+                <Label fx:id="phoneError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
+
+            <VBox spacing="2" style="-fx-padding: 4 0 0 0;">
+                <TextField fx:id="addressField" promptText="Adresse"/>
+                <Label fx:id="addressError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
+
+            <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding: 4 0 0 0;">
                 <Label text="Rôle : " style="-fx-font-weight: bold;"/>
                 <Label fx:id="roleLabel" style="-fx-text-fill: #555;"/>
             </HBox>
 
             <Label fx:id="infoMessage" visible="false" wrapText="true"
-                   style="-fx-font-size: 12;"/>
+                   style="-fx-font-size: 12; -fx-padding: 4 0 0 0;"/>
 
             <Button fx:id="saveBtn" text="Sauvegarder"
                     onAction="#handleSave"
                     style="-fx-background-color: #2ecc71; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-padding: 8 20;"/>
+                           -fx-font-weight: bold; -fx-padding: 8 20; -fx-margin: 4 0 0 0;"/>
         </VBox>
 
         <!-- ── Section : Photo de profil ── -->
@@ -62,6 +84,8 @@
                     <Button text="📷  Changer la photo" onAction="#handleChooseImage"/>
                     <Label fx:id="imageFileLabel" text="Aucune photo choisie"
                            style="-fx-text-fill: #999; -fx-font-size: 11;"/>
+                    <Label fx:id="imageMessage" visible="false" wrapText="true"
+                           style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
                 </VBox>
             </HBox>
         </VBox>
@@ -75,28 +99,46 @@
             <Label text="Document justificatif"
                    style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2ecc71;"/>
 
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button text="📎  Changer le document" onAction="#handleChooseDocument"/>
-                <Label fx:id="documentFileLabel" text="Aucun document choisi"
-                       style="-fx-text-fill: #999; -fx-font-size: 11;"/>
-            </HBox>
+            <VBox spacing="4">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="📎  Changer le document" onAction="#handleChooseDocument"/>
+                    <Label fx:id="documentFileLabel" text="Aucun document choisi"
+                           style="-fx-text-fill: #999; -fx-font-size: 11;"/>
+                </HBox>
+                <Label fx:id="documentMessage" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
         </VBox>
 
         <!-- ── Section : Changer mot de passe ── -->
-        <VBox spacing="12" style="-fx-background-color: white;
-                                   -fx-padding: 20;
-                                   -fx-background-radius: 8;
-                                   -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+        <VBox spacing="4" style="-fx-background-color: white;
+                                  -fx-padding: 20;
+                                  -fx-background-radius: 8;
+                                  -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
 
             <Label text="Changer le mot de passe"
-                   style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2ecc71;"/>
+                   style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #2ecc71; -fx-padding: 0 0 8 0;"/>
 
-            <PasswordField fx:id="currentPasswordField"    promptText="Mot de passe actuel"/>
-            <PasswordField fx:id="newPasswordField"        promptText="Nouveau mot de passe"/>
-            <PasswordField fx:id="confirmNewPasswordField" promptText="Confirmer le nouveau mot de passe"/>
+            <VBox spacing="2">
+                <PasswordField fx:id="currentPasswordField" promptText="Mot de passe actuel"/>
+                <Label fx:id="currentPasswordError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
+
+            <VBox spacing="2" style="-fx-padding: 4 0 0 0;">
+                <PasswordField fx:id="newPasswordField" promptText="Nouveau mot de passe"/>
+                <Label fx:id="newPasswordError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
+
+            <VBox spacing="2" style="-fx-padding: 4 0 0 0;">
+                <PasswordField fx:id="confirmNewPasswordField" promptText="Confirmer le nouveau mot de passe"/>
+                <Label fx:id="confirmPasswordError" visible="false" wrapText="true"
+                       style="-fx-font-size: 11; -fx-text-fill: #e74c3c;"/>
+            </VBox>
 
             <Label fx:id="passwordMessage" visible="false" wrapText="true"
-                   style="-fx-font-size: 12;"/>
+                   style="-fx-font-size: 12; -fx-padding: 4 0 0 0;"/>
 
             <Button fx:id="changePasswordBtn" text="Modifier le mot de passe"
                     onAction="#handleChangePassword"

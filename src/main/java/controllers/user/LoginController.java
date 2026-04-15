@@ -86,7 +86,10 @@ public class LoginController {
             }
         }).start();
     }
-
+    @FXML
+    public void goToForgotPassword() {
+        loadView("/Views/ForgotPasswordView.fxml");
+    }
     // ── Navigation ────────────────────────────────────────────
     @FXML
     public void goToRegister() {
