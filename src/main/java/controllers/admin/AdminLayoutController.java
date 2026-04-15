@@ -1,4 +1,4 @@
-package controllers.admin;
+﻿package controllers.admin;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -37,18 +37,18 @@ public class AdminLayoutController {
     }
 
     @FXML public void openDashboard() {
-        loadContent("/Views/admin/AdminDashboard.fxml",
+        loadContent("/Views/Admin/AdminDashboard.fxml",
                 "Tableau de bord", "Admin / Dashboard");
     }
 
     @FXML public void openUsers() {
-        loadContent("/Views/admin/AdminUsersView.fxml",
+        loadContent("/Views/Admin/AdminUsersView.fxml",
                 "Gestion des Utilisateurs", "Admin / Utilisateurs");
     }
 
     @FXML public void openCultures() {
-        loadContent("/Views/CultureView.fxml",
-                "Cultures", "Admin / Cultures");
+        loadContent("/Views/AdminCulturesView.fxml",
+                "Gestion des Cultures", "Admin / Cultures");
     }
 
     @FXML public void openMarketplace() {
@@ -62,8 +62,13 @@ public class AdminLayoutController {
     }
 
     @FXML public void openEmployes() {
-        loadContent("/Views/EmployesView.fxml",
-                "Employés", "Admin / Employés");
+        loadContent("/Views/Offres/AdminOffreList.fxml",
+                "Gestion des Offres", "Admin / Offres");
+    }
+
+    @FXML public void openRessources() {
+        loadContent("/Views/admin/AdminRessourcesView.fxml",
+                "Gestion des Ressources", "Admin / Ressources");
     }
 
     @FXML
@@ -88,12 +93,31 @@ public class AdminLayoutController {
     // ── Helper ────────────────────────────────────────────────
     private void loadContent(String fxmlPath, String title, String breadcrumb) {
         try {
-            Node view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            System.out.println("[ADMIN] Requested navigation: " + fxmlPath);
+            java.net.URL url = getClass().getResource(fxmlPath);
+            if (url == null) {
+                System.err.println("!!! FXML FILE NOT FOUND: " + fxmlPath);
+                showError("Ressource manquante", "Le fichier FXML est introuvable : " + fxmlPath);
+                return;
+            }
+
+            Node view = FXMLLoader.load(url);
             adminContentArea.getChildren().setAll(view);
             pageTitle.setText(title);
             pageBreadcrumb.setText(breadcrumb);
+            System.out.println("[ADMIN] Load successful for: " + title);
         } catch (Exception e) {
-            System.err.println("Erreur chargement [" + fxmlPath + "] : " + e.getMessage());
+            String errorMsg = e.getMessage() != null ? e.getMessage() : e.toString();
+            System.err.println("!!! Exception during FXML load: " + errorMsg);
+            e.printStackTrace();
+            showError("Erreur de chargement", "Impossible d'ouvrir la page [" + title + "] :\n" + errorMsg);
         }
+    }
+    private void showError(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

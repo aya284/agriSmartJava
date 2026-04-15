@@ -17,10 +17,16 @@
                     <Label text="Espace Candidat" styleClass="logo-subtext" style="-fx-text-fill: #27ae60;"/>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Déconnexion" styleClass="header-icon-btn" onAction="#handleLogout" style="-fx-text-fill: #e74c3c;"/>
                 <Button text="Mon Profil" styleClass="header-icon-btn" />
             </HBox>
 
             <HBox spacing="15" alignment="CENTER_LEFT" styleClass="module-pill-row">
+                <Button text="Marketplace"
+                        styleClass="module-pill"
+                        onAction="#openMarketplace"
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;"/>
+
                 <Button text="Offres d'emploi"
                         styleClass="module-pill"
                         onAction="#openCandidatures"

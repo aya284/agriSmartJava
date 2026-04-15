@@ -1,4 +1,4 @@
-package main;
+﻿package main;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -13,6 +13,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         MyConnection.getInstance();
+        // On démarre par le layout de Login
         Parent root = FXMLLoader.load(getClass().getResource("/Views/LoginView.fxml"));
         Scene scene = new Scene(root, 1200, 750);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
@@ -30,4 +31,5 @@ public class MainApp extends Application {
         launch(args);
     }
 }
+
 
