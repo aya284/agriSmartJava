@@ -165,7 +165,13 @@ public class MainController {
             applyActiveModuleStyle(activeButton);
         } catch (Exception e) {
             e.printStackTrace();
-            footerStatusLabel.setText("View unavailable");
+            try {
+                java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("scratch/nav_error.log", true));
+                pw.println("Error loading " + fxmlPath);
+                e.printStackTrace(pw);
+                pw.close();
+            } catch(Exception err) {}
+            footerStatusLabel.setText("View unavailable: " + e.getMessage());
             currentModuleLabel.setText("Navigation Error");
             applyActiveModuleStyle(activeButton);
         }
