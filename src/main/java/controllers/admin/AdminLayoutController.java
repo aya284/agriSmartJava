@@ -37,12 +37,12 @@ public class AdminLayoutController {
     }
 
     @FXML public void openDashboard() {
-        loadContent("/Views/admin/AdminDashboard.fxml",
+        loadContent("/Views/Admin/AdminDashboard.fxml",
                 "Tableau de bord", "Admin / Dashboard");
     }
 
     @FXML public void openUsers() {
-        loadContent("/Views/admin/AdminUsersView.fxml",
+        loadContent("/Views/Admin/AdminUsersView.fxml",
                 "Gestion des Utilisateurs", "Admin / Utilisateurs");
     }
 

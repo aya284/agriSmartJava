@@ -111,6 +111,7 @@ public class LoginController {
             Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
             emailField.getScene().setRoot(root);
         } catch (Exception e) {
+            e.printStackTrace();
             showError("Erreur de navigation : " + e.getMessage());
         }
     }
