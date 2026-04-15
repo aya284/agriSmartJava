@@ -400,4 +400,171 @@ public class UserService {
             ps.executeUpdate();
         }
     }
+
+    /**
+     * Supprime définitivement le compte après vérification du mot de passe.
+     */
+    public void deleteAccount(int userId, String password) throws Exception {
+        String pw = password == null ? "" : password;
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT password FROM users WHERE id = ?")) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next())
+                throw new Exception("Compte introuvable.");
+            String hash = rs.getString("password");
+            if (hash != null && !hash.isBlank()) {
+                if (!PasswordUtils.verify(pw, hash))
+                    throw new Exception("Mot de passe incorrect.");
+            }
+            /* Si aucun mot de passe local (ex. Google), la confirmation dans l’UI suffit */
+        }
+
+        boolean prevAutoCommit = conn.getAutoCommit();
+        try {
+            conn.setAutoCommit(false);
+            purgeUserRelatedData(userId);
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE id = ?")) {
+                ps.setInt(1, userId);
+                int n = ps.executeUpdate();
+                if (n == 0)
+                    throw new Exception("Compte introuvable.");
+            }
+            conn.commit();
+        } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (SQLException ignored) {
+                /* annuler la transaction au mieux */
+            }
+            if (e instanceof SQLException sqlEx) {
+                String msg = sqlEx.getMessage() != null ? sqlEx.getMessage() : "";
+                if (msg.toLowerCase().contains("foreign key") || msg.contains("Cannot delete"))
+                    throw new Exception("Impossible de supprimer ce compte : des données y sont encore liées.");
+                throw new Exception("Erreur lors de la suppression : " + msg);
+            }
+            throw e;
+        } finally {
+            conn.setAutoCommit(prevAutoCommit);
+        }
+    }
+
+    /**
+     * Supprime les enregistrements référençant cet utilisateur pour respecter les contraintes FK.
+     */
+    private void purgeUserRelatedData(int userId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM reset_password_request WHERE user_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM wishlist_item WHERE user_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE m FROM marketplace_message m
+                LEFT JOIN marketplace_conversation c ON c.id = m.conversation_id
+                WHERE m.sender_id = ? OR c.buyer_id = ? OR c.seller_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ps.setInt(3, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM marketplace_conversation WHERE buyer_id = ? OR seller_id = ?")) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE m FROM marketplace_message m
+                INNER JOIN marketplace_conversation c ON c.id = m.conversation_id
+                INNER JOIN produit p ON p.id = c.produit_id
+                WHERE p.vendeur_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE c FROM marketplace_conversation c
+                INNER JOIN produit p ON p.id = c.produit_id
+                WHERE p.vendeur_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE co FROM consommation co
+                INNER JOIN culture cu ON cu.id = co.culture_id
+                INNER JOIN parcelle pa ON pa.id = cu.parcelle_id
+                WHERE pa.user_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE co FROM consommation co
+                INNER JOIN ressource r ON r.id = co.ressource_id
+                WHERE r.user_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE cu FROM culture cu
+                INNER JOIN parcelle pa ON pa.id = cu.parcelle_id
+                WHERE pa.user_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM parcelle WHERE user_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM ressource WHERE user_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE ci FROM commande_item ci
+                INNER JOIN commande c ON c.id = ci.commande_id
+                WHERE c.client_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM commande WHERE client_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE wi FROM wishlist_item wi
+                INNER JOIN produit p ON p.id = wi.produit_id
+                WHERE p.vendeur_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement("""
+                DELETE ci FROM commande_item ci
+                INNER JOIN produit p ON p.id = ci.produit_id
+                WHERE p.vendeur_id = ?
+                """)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM produit WHERE vendeur_id = ?")) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        }
+    }
 }

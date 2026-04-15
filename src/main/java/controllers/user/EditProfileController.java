@@ -2,6 +2,8 @@ package controllers.user;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -17,50 +19,38 @@ import java.io.FileInputStream;
 
 public class EditProfileController {
 
-    // ── Infos personnelles ────────────────────────────────────
-    @FXML private TextField     firstNameField;
-    @FXML private TextField     lastNameField;
-    @FXML private TextField     emailField;
-    @FXML private TextField     phoneField;
-    @FXML private TextField     addressField;
-    @FXML private Label         roleLabel;
+    // ── Fields ─────────────────────────────
+    @FXML private TextField firstNameField;
+    @FXML private TextField lastNameField;
+    @FXML private TextField emailField;
+    @FXML private TextField phoneField;
+    @FXML private TextField addressField;
 
-    // ── Erreurs par champ ─────────────────────────────────────
-    @FXML private Label         firstNameError;
-    @FXML private Label         lastNameError;
-    @FXML private Label         emailError;
-    @FXML private Label         phoneError;
-    @FXML private Label         addressError;
+    @FXML private Label roleLabel;
+    @FXML private Label fullNameLabel;
 
-    // ── Photo de profil ───────────────────────────────────────
-    @FXML private ImageView     profilePreview;
-    @FXML private Label         imageFileLabel;
-    @FXML private Label         imageMessage;
+    @FXML private ImageView profilePreview;
+    @FXML private Label documentFileLabel;
 
-    // ── Document justificatif ─────────────────────────────────
-    @FXML private Label         documentFileLabel;
-    @FXML private Label         documentMessage;
-
-    // ── Changement mot de passe ───────────────────────────────
     @FXML private PasswordField currentPasswordField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmNewPasswordField;
 
-    // ── Erreurs mot de passe ──────────────────────────────────
-    @FXML private Label         currentPasswordError;
-    @FXML private Label         newPasswordError;
-    @FXML private Label         confirmPasswordError;
+    @FXML private PasswordField deletePasswordField;
 
-    // ── Feedback global ───────────────────────────────────────
-    @FXML private Label         infoMessage;
-    @FXML private Label         passwordMessage;
-    @FXML private Button        saveBtn;
-    @FXML private Button        changePasswordBtn;
+    @FXML private Label infoMessage;
+    @FXML private Label passwordMessage;
+    @FXML private Label deleteMessage;
 
-    // ── État interne ──────────────────────────────────────────
+    @FXML private Button saveBtn;
+    @FXML private Button changePasswordBtn;
+    @FXML private Button deleteAccountBtn;
+
+    // ── Internal ───────────────────────────
     private File selectedImage;
     private File selectedDocument;
-    private final UserService    userService    = new UserService();
+
+    private final UserService userService = new UserService();
     private final SessionManager sessionManager = SessionManager.getInstance();
 
     @FXML
@@ -72,6 +62,8 @@ public class EditProfileController {
         User user = sessionManager.getCurrentUser();
         if (user == null) return;
 
+        fullNameLabel.setText(user.getFirstName() + " " + user.getLastName());
+
         firstNameField.setText(user.getFirstName());
         lastNameField.setText(user.getLastName());
         emailField.setText(user.getEmail());
@@ -79,221 +71,199 @@ public class EditProfileController {
         addressField.setText(user.getAddress() != null ? user.getAddress() : "");
         roleLabel.setText(user.getRole());
 
-        if (user.getImage() != null) {
-            String absPath = FileStorageUtils.getAbsolutePath(user.getImage());
-            try {
-                profilePreview.setImage(new Image(new FileInputStream(absPath)));
-                imageFileLabel.setText("Photo actuelle : " + user.getImage());
-            } catch (Exception ignored) {}
-        }
+        try {
+            if (user.getImage() != null) {
+                String path = FileStorageUtils.getAbsolutePath(user.getImage());
+                profilePreview.setImage(new Image(new FileInputStream(path)));
+            }
+        } catch (Exception ignored) {}
 
-        if (user.getDocumentFile() != null)
-            documentFileLabel.setText("Document actuel : " + user.getDocumentFile());
+        if (user.getDocumentFile() != null) {
+            documentFileLabel.setText(user.getDocumentFile());
+        }
     }
 
-    // ── Choisir photo de profil ───────────────────────────────
+    // ── IMAGE ─────────────────────────────
     @FXML
     public void handleChooseImage() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Choisir une photo de profil");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Images (JPEG, PNG)", "*.jpg", "*.jpeg", "*.png")
+                new FileChooser.ExtensionFilter("Images", "*.jpg", "*.png", "*.jpeg")
         );
+
         File file = chooser.showOpenDialog(saveBtn.getScene().getWindow());
         if (file != null) {
-            if (file.length() > 5 * 1024 * 1024) {
-                showFieldError(imageMessage, "L'image ne doit pas dépasser 5 Mo.");
-                return;
-            }
             selectedImage = file;
-            imageFileLabel.setText(file.getName());
             profilePreview.setImage(new Image(file.toURI().toString()));
-            imageMessage.setVisible(false);
         }
     }
 
-    // ── Choisir document ──────────────────────────────────────
+    // ── DOCUMENT ──────────────────────────
     @FXML
     public void handleChooseDocument() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Choisir un document justificatif");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Fichiers acceptés (PDF, JPEG, PNG)",
-                        "*.pdf", "*.jpg", "*.jpeg", "*.png")
+                new FileChooser.ExtensionFilter("Files", "*.pdf", "*.jpg", "*.png")
         );
+
         File file = chooser.showOpenDialog(saveBtn.getScene().getWindow());
         if (file != null) {
-            if (file.length() > 5 * 1024 * 1024) {
-                showFieldError(documentMessage, "Le document ne doit pas dépasser 5 Mo.");
-                return;
-            }
             selectedDocument = file;
             documentFileLabel.setText(file.getName());
-            documentMessage.setVisible(false);
         }
     }
 
-    // ── Sauvegarder le profil ─────────────────────────────────
+    // ── SAVE PROFILE ──────────────────────
     @FXML
     public void handleSave() {
-        clearMessages();
+        clearStyles();
 
-        // ── Validation par champ ──────────────────────────────
-        boolean hasError = false;
-
-        if (firstNameField.getText().trim().isEmpty()) {
-            showFieldError(firstNameError, "Le prénom est obligatoire.");
-            hasError = true;
-        }
-        if (lastNameField.getText().trim().isEmpty()) {
-            showFieldError(lastNameError, "Le nom est obligatoire.");
-            hasError = true;
+        if (firstNameField.getText().isEmpty()) {
+            showError("Le prénom est obligatoire", firstNameField);
+            return;
         }
 
-        String email = emailField.getText().trim();
-        if (email.isEmpty()) {
-            showFieldError(emailError, "L'adresse e-mail est obligatoire.");
-            hasError = true;
-        } else if (!email.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
-            showFieldError(emailError, "Format d'e-mail invalide.");
-            hasError = true;
+        if (lastNameField.getText().isEmpty()) {
+            showError("Le nom est obligatoire", lastNameField);
+            return;
         }
 
-        String phone = phoneField.getText().trim();
-        if (!phone.isEmpty() && !phone.matches("^[+\\d\\s\\-]{7,15}$")) {
-            showFieldError(phoneError, "Numéro de téléphone invalide.");
-            hasError = true;
+        String email = emailField.getText();
+        if (!email.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            showError("Email invalide", emailField);
+            return;
         }
 
-        if (hasError) return;
-
-        // ── Sauvegarde ────────────────────────────────────────
         User current = sessionManager.getCurrentUser();
+
         saveBtn.setDisable(true);
-        saveBtn.setText("Sauvegarde...");
 
         new Thread(() -> {
             try {
-                String imagePath    = selectedImage    != null
-                        ? FileStorageUtils.save(selectedImage,    "profiles")
-                        : current.getImage();
-                String documentPath = selectedDocument != null
-                        ? FileStorageUtils.save(selectedDocument, "documents")
-                        : current.getDocumentFile();
+                if (selectedImage != null) {
+                    current.setImage(FileStorageUtils.save(selectedImage, "profiles"));
+                }
 
-                current.setFirstName(firstNameField.getText().trim());
-                current.setLastName(lastNameField.getText().trim());
-                current.setEmail(emailField.getText().trim());
-                current.setPhone(phoneField.getText().trim());
-                current.setAddress(addressField.getText().trim());
-                current.setImage(imagePath);
-                current.setDocumentFile(documentPath);
+                if (selectedDocument != null) {
+                    current.setDocumentFile(FileStorageUtils.save(selectedDocument, "documents"));
+                }
+
+                current.setFirstName(firstNameField.getText());
+                current.setLastName(lastNameField.getText());
+                current.setEmail(email);
+                current.setPhone(phoneField.getText());
+                current.setAddress(addressField.getText());
 
                 userService.updateProfile(current);
-                sessionManager.setCurrentUser(current);
 
-                Platform.runLater(() -> showGlobalSuccess(infoMessage, "✔ Profil mis à jour avec succès !"));
+                Platform.runLater(() ->
+                        showSuccess(infoMessage, "Profil mis à jour ✔"));
 
             } catch (Exception e) {
-                Platform.runLater(() -> showGlobalError(infoMessage, e.getMessage()));
+                Platform.runLater(() ->
+                        showError(e.getMessage(), null));
             } finally {
-                Platform.runLater(() -> {
-                    saveBtn.setDisable(false);
-                    saveBtn.setText("Sauvegarder");
-                });
+                Platform.runLater(() -> saveBtn.setDisable(false));
             }
         }).start();
     }
 
-    // ── Changer le mot de passe ───────────────────────────────
+    // ── PASSWORD ──────────────────────────
     @FXML
     public void handleChangePassword() {
-        clearMessages();
+        clearStyles();
 
-        String current = currentPasswordField.getText();
-        String newPw   = newPasswordField.getText();
-        String confirm = confirmNewPasswordField.getText();
-
-        boolean hasError = false;
-
-        if (current.isEmpty()) {
-            showFieldError(currentPasswordError, "Entrez votre mot de passe actuel.");
-            hasError = true;
-        }
-
-        String err = Validator.validatePassword(newPw);
+        String err = Validator.validatePassword(newPasswordField.getText());
         if (err != null) {
-            showFieldError(newPasswordError, err);
-            hasError = true;
+            showError(err, newPasswordField);
+            return;
         }
 
-        String err2 = Validator.validateConfirmPassword(newPw, confirm);
-        if (err2 != null) {
-            showFieldError(confirmPasswordError, err2);
-
-            hasError = true;
+        if (!newPasswordField.getText().equals(confirmNewPasswordField.getText())) {
+            showError("Confirmation incorrecte", confirmNewPasswordField);
+            return;
         }
-
-        if (hasError) return;
 
         changePasswordBtn.setDisable(true);
-        changePasswordBtn.setText("Modification...");
 
         new Thread(() -> {
             try {
                 userService.changePassword(
-                        sessionManager.getCurrentUser().getId(), current, newPw);
+                        sessionManager.getCurrentUser().getId(),
+                        currentPasswordField.getText(),
+                        newPasswordField.getText()
+                );
 
-                Platform.runLater(() -> {
-                    showGlobalSuccess(passwordMessage, "✔ Mot de passe modifié avec succès !");
-                    currentPasswordField.clear();
-                    newPasswordField.clear();
-                    confirmNewPasswordField.clear();
-                });
+                Platform.runLater(() ->
+                        showSuccess(passwordMessage, "Mot de passe changé ✔"));
+
             } catch (Exception e) {
-                Platform.runLater(() -> showGlobalError(passwordMessage, e.getMessage()));
+                Platform.runLater(() ->
+                        showError(e.getMessage(), null));
             } finally {
-                Platform.runLater(() -> {
-                    changePasswordBtn.setDisable(false);
-                    changePasswordBtn.setText("Modifier le mot de passe");
-                });
+                Platform.runLater(() -> changePasswordBtn.setDisable(false));
             }
         }).start();
     }
 
-    // ── Helpers messages ──────────────────────────────────────
+    // ── DELETE ────────────────────────────
+    @FXML
+    public void handleDeleteAccount() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setContentText("Supprimer votre compte ?");
 
-    /** Red label directly under a single input field */
-    private void showFieldError(Label label, String msg) {
-        label.setText("⚠ " + msg);
-        label.setVisible(true);
+        alert.showAndWait().ifPresent(r -> {
+            if (r != ButtonType.OK) return;
+
+            new Thread(() -> {
+                try {
+                    userService.deleteAccount(
+                            sessionManager.getCurrentUser().getId(),
+                            deletePasswordField.getText()
+                    );
+
+                    Platform.runLater(() -> {
+                        try {
+                            Parent root = FXMLLoader.load(
+                                    getClass().getResource("/Views/LoginView.fxml"));
+                            deleteAccountBtn.getScene().setRoot(root);
+                        } catch (Exception ignored) {}
+                    });
+
+                } catch (Exception e) {
+                    Platform.runLater(() ->
+                            showError(e.getMessage(), null));
+                }
+            }).start();
+        });
     }
 
-    /** Green success banner (section-level) */
-    private void showGlobalSuccess(Label label, String msg) {
-        label.setStyle("-fx-text-fill: #27ae60; -fx-font-size: 12;");
+    // ── UI HELPERS ────────────────────────
+    private void showError(String msg, Control field) {
+        infoMessage.setText("⚠ " + msg);
+        infoMessage.setStyle("-fx-text-fill: red;");
+        infoMessage.setVisible(true);
+
+        if (field != null)
+            field.setStyle("-fx-border-color: red;");
+    }
+
+    private void showSuccess(Label label, String msg) {
         label.setText(msg);
+        label.setStyle("-fx-text-fill: green;");
         label.setVisible(true);
     }
 
-    /** Red error banner (section-level, e.g. server error) */
-    private void showGlobalError(Label label, String msg) {
-        label.setStyle("-fx-text-fill: #e74c3c; -fx-font-size: 12;");
-        label.setText("⚠ " + msg);
-        label.setVisible(true);
-    }
-
-    private void clearMessages() {
-        // Per-field errors
-        for (Label l : new Label[]{
-                firstNameError, lastNameError, emailError,
-                phoneError, addressError,
-                currentPasswordError, newPasswordError, confirmPasswordError,
-                imageMessage, documentMessage
-        }) l.setVisible(false);
-
-        // Global banners
+    private void clearStyles() {
         infoMessage.setVisible(false);
         passwordMessage.setVisible(false);
+
+        for (Control c : new Control[]{
+                firstNameField, lastNameField, emailField,
+                phoneField, addressField,
+                currentPasswordField, newPasswordField, confirmNewPasswordField
+        }) {
+            c.setStyle("");
+        }
     }
 }

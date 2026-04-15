@@ -1,0 +1,101 @@
+/* ROOT */
+.edit-profile-root {
+    -fx-background-color: #f8fafc;
+    -fx-padding: 20;
+}
+
+/* CARDS */
+.card {
+    -fx-background-color: #fffdfc;
+    -fx-padding: 16;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10,0,0,4);
+}
+
+.profile-header-card {
+    -fx-background-color: white;
+    -fx-padding: 20;
+    -fx-background-radius: 14;
+}
+
+/* TEXT */
+.section-title {
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2a5438;
+}
+
+.profile-name {
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+}
+
+.profile-role {
+    -fx-text-fill: #E6BF4A;
+    -fx-font-weight: bold;
+}
+
+.hint {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 12;
+}
+
+/* INPUT */
+.field {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 10;
+    -fx-padding: 8;
+    -fx-border-color: transparent;
+}
+
+.field:focused {
+    -fx-border-color: #2a5438;
+    -fx-border-width: 1.5;
+}
+
+/* BUTTONS */
+.btn-primary {
+    -fx-background-color: #2a5438;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #1f3f2b;
+}
+
+.btn-outline {
+    -fx-background-color: transparent;
+    -fx-border-color: #2a5438;
+    -fx-text-fill: #2a5438;
+    -fx-border-radius: 10;
+}
+
+.btn-outline:hover {
+    -fx-background-color: #2a5438;
+    -fx-text-fill: white;
+}
+
+.btn-danger {
+    -fx-background-color: #dc2626;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+}
+
+/* DANGER */
+.danger-card {
+    -fx-background-color: #fff5f5;
+    -fx-padding: 16;
+    -fx-background-radius: 12;
+}
+
+.danger-title {
+    -fx-text-fill: #dc2626;
+    -fx-font-weight: bold;
+}
+
+/* AVATAR */
+.profile-avatar {
+    -fx-background-radius: 50%;
+}

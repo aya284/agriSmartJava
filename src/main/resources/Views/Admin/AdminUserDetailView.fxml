@@ -4,118 +4,158 @@
 <?import javafx.scene.image.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="20"
+<VBox spacing="0"
       xmlns:fx="http://javafx.com/fxml"
-    fx:controller="controllers.admin.AdminUserDetailController"
-    stylesheets="@../../css/style.css"
-    styleClass="admin-page-root">
+      fx:controller="controllers.admin.AdminUserDetailController"
+      stylesheets="@../../css/style1.css"
+      styleClass="admin-page-root">
 
-    <!-- Header avec bouton retour -->
-    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="admin-page-header">
-        <Button text="← Retour" onAction="#goBack" styleClass="admin-btn-secondary"/>
-        <Label text="Détails de l'utilisateur" styleClass="admin-page-title"/>
+    <!-- ── Header ── -->
+    <HBox alignment="CENTER_LEFT" spacing="14" styleClass="admin-topbar">
+        <Button text="← Retour" onAction="#goBack" styleClass="admin-btn-ghost"/>
+        <Label text="Détail utilisateur" styleClass="admin-page-title"/>
     </HBox>
 
-    <HBox spacing="20">
+    <!-- ── Body ── -->
+    <HBox spacing="20" VBox.vgrow="ALWAYS" style="-fx-padding: 24 28 24 28;">
 
-        <!-- ── Carte profil ── -->
-          <VBox spacing="16" prefWidth="260" alignment="CENTER" styleClass="admin-panel-card">
+        <!-- ════════════════════════════════
+             LEFT  — Profile card
+        ════════════════════════════════ -->
+        <VBox spacing="14" prefWidth="250" minWidth="230"
+              alignment="CENTER" styleClass="admin-panel-card">
 
-            <ImageView fx:id="profileImage"
-                       fitWidth="100" fitHeight="100"
-                       preserveRatio="true"
-                       style="-fx-effect: dropshadow(gaussian,#bbb,6,0,0,2);"/>
+            <!-- Avatar -->
+            <StackPane alignment="CENTER"
+                       style="-fx-background-color:#f1f5f9;
+                              -fx-background-radius:50;
+                              -fx-min-width:96; -fx-min-height:96;
+                              -fx-max-width:96; -fx-max-height:96;">
+                <ImageView fx:id="profileImage"
+                           fitWidth="96" fitHeight="96"
+                           preserveRatio="true"
+                           style="-fx-background-radius:50;"/>
+            </StackPane>
 
+            <!-- Name -->
             <Label fx:id="fullNameLabel"
-                   style="-fx-font-size: 17; -fx-font-weight: bold;
-                          -fx-text-fill: #2c3e50;"/>
+                   wrapText="true"
+                   style="-fx-font-size:16; -fx-font-weight:bold;
+                          -fx-text-fill:#0f172a; -fx-alignment:CENTER;
+                          -fx-text-alignment:CENTER;"/>
 
+            <!-- Role pill -->
             <Label fx:id="roleLabel"
-                   style="-fx-font-size: 12; -fx-text-fill: white;
-                          -fx-padding: 3 14; -fx-background-radius: 10;
-                          -fx-background-color: #3498db;"/>
+                   style="-fx-font-size:11; -fx-font-weight:bold;
+                          -fx-text-fill:white; -fx-padding:3 14;
+                          -fx-background-radius:20;
+                          -fx-background-color:#6366f1;"/>
 
+            <!-- Status badge (colour set by refreshStatusBadge()) -->
             <Label fx:id="statusBadge"
-                   style="-fx-font-size: 12; -fx-text-fill: white;
-                          -fx-padding: 3 14; -fx-background-radius: 10;"/>
+                   style="-fx-font-size:11; -fx-padding:3 14;
+                          -fx-background-radius:20;"/>
 
-            <Separator/>
+            <Region style="-fx-background-color:#f1f5f9;
+                           -fx-min-height:1; -fx-max-height:1;
+                           -fx-pref-width: 9999;"/>
 
-            <!-- Changer statut depuis le détail -->
-                 <Label text="Changer le statut :" styleClass="admin-filter-label"/>
+            <!-- Status controls -->
+            <Label text="Changer le statut"
+                   style="-fx-font-size:11; -fx-font-weight:bold;
+                          -fx-text-fill:#94a3b8;"/>
+
             <HBox spacing="8" alignment="CENTER">
-                  <Button text="Activer" onAction="#setActive" styleClass="admin-btn-positive"/>
-                  <Button text="Désactiver" onAction="#setInactive" styleClass="admin-btn-danger"/>
-                  <Button text="En attente" onAction="#setPending" styleClass="admin-btn-warning"/>
+                <Button text="✓ Activer"     onAction="#setActive"   styleClass="admin-btn-positive"/>
+                <Button text="✗ Désactiver"  onAction="#setInactive" styleClass="admin-btn-danger"/>
+                <Button text="⏳ Attente"    onAction="#setPending"  styleClass="admin-btn-warning"/>
             </HBox>
 
-            <Label fx:id="statusMessage" visible="false"
-                   wrapText="true" style="-fx-font-size: 12;"/>
+            <Label fx:id="statusMessage"
+                   visible="false" wrapText="true"
+                   style="-fx-font-size:12; -fx-alignment:CENTER;"/>
         </VBox>
 
-        <!-- ── Informations détaillées ── -->
-         <VBox spacing="14" HBox.hgrow="ALWAYS" styleClass="admin-panel-card">
+        <!-- ════════════════════════════════
+             RIGHT — Info panels
+        ════════════════════════════════ -->
+        <VBox spacing="16" HBox.hgrow="ALWAYS">
 
-             <Label text="Informations personnelles" styleClass="admin-section-title"/>
+            <!-- Personal info card -->
+            <VBox spacing="16" styleClass="admin-panel-card">
 
-            <HBox spacing="16">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Prénom" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="firstNameLabel" style="-fx-font-size:14;"/>
+                <Label text="INFORMATIONS PERSONNELLES"
+                       styleClass="admin-section-title"/>
+
+                <!-- Row 1: Prénom / Nom -->
+                <HBox spacing="24">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Prénom" styleClass="admin-field-label"/>
+                        <Label fx:id="firstNameLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Nom" styleClass="admin-field-label"/>
+                        <Label fx:id="lastNameLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Row 2: Email -->
+                <VBox spacing="4">
+                    <Label text="Adresse email" styleClass="admin-field-label"/>
+                    <Label fx:id="emailLabel" styleClass="admin-field-value"/>
                 </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Nom" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="lastNameLabel" style="-fx-font-size:14;"/>
-                </VBox>
-            </HBox>
 
-            <VBox spacing="4">
-                <Label text="Email" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                <Label fx:id="emailLabel" style="-fx-font-size:14;"/>
+                <!-- Row 3: Phone / Address -->
+                <HBox spacing="24">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Téléphone" styleClass="admin-field-label"/>
+                        <Label fx:id="phoneLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Adresse" styleClass="admin-field-label"/>
+                        <Label fx:id="addressLabel" styleClass="admin-field-value"
+                               wrapText="true"/>
+                    </VBox>
+                </HBox>
             </VBox>
 
-            <HBox spacing="16">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Téléphone" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="phoneLabel" style="-fx-font-size:14;"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Adresse" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="addressLabel" style="-fx-font-size:14;"/>
-                </VBox>
-            </HBox>
+            <!-- Account info card -->
+            <VBox spacing="16" styleClass="admin-panel-card">
 
-            <Separator/>
+                <Label text="INFORMATIONS DU COMPTE"
+                       styleClass="admin-section-title"/>
 
-                 <Label text="Informations du compte" styleClass="admin-section-title"/>
+                <!-- Row 1: ID / Created / Updated -->
+                <HBox spacing="24">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="ID" styleClass="admin-field-label"/>
+                        <Label fx:id="idLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Inscrit le" styleClass="admin-field-label"/>
+                        <Label fx:id="createdAtLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Mis à jour le" styleClass="admin-field-label"/>
+                        <Label fx:id="updatedAtLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                </HBox>
 
-            <HBox spacing="16">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="ID" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="idLabel" style="-fx-font-size:14;"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Inscrit le" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="createdAtLabel" style="-fx-font-size:14;"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Mis à jour le" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="updatedAtLabel" style="-fx-font-size:14;"/>
-                </VBox>
-            </HBox>
+                <!-- Row 2: Google / Document -->
+                <HBox spacing="24">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Connexion Google" styleClass="admin-field-label"/>
+                        <Label fx:id="googleLabel" styleClass="admin-field-value"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Document justificatif" styleClass="admin-field-label"/>
+                        <Label fx:id="documentLabel"
+                               styleClass="admin-field-value"
+                               style="-fx-text-fill:#6366f1; -fx-cursor:hand;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
 
-            <HBox spacing="16">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Connexion Google" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="googleLabel" style="-fx-font-size:14;"/>
-                </VBox>
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="Document justificatif" style="-fx-text-fill:#999; -fx-font-size:11;"/>
-                    <Label fx:id="documentLabel"
-                           style="-fx-font-size:13; -fx-text-fill:#3498db;
-                                  -fx-cursor:hand;"/>
-                </VBox>
-            </HBox>
         </VBox>
     </HBox>
 </VBox>

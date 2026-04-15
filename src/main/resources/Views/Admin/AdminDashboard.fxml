@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
@@ -7,83 +8,127 @@
       xmlns:fx="http://javafx.com/fxml"
        fx:controller="controllers.admin.AdminDashboardController"
        stylesheets="@../../css/style.css"
-       styleClass="admin-page-root">
+       styleClass="admin-page-root admin-dashboard"
+      style="-fx-padding:20;">
 
-    <!-- ── Cartes de statistiques ── -->
-       <HBox spacing="16" styleClass="admin-stats-row">
-
-        <!-- Total utilisateurs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
-            <Label text="👥" styleClass="admin-stat-icon"/>
-            <Label fx:id="totalUsersLabel" text="—" styleClass="admin-stat-value"/>
-            <Label text="Utilisateurs" styleClass="admin-stat-title"/>
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="admin-dashboard-hero">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Tableau de bord admin" styleClass="admin-dashboard-hero-title"/>
+            <Label text="Suivi des utilisateurs, activite et tendances" styleClass="admin-dashboard-hero-subtitle"/>
         </VBox>
-
-        <!-- Actifs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
-            <Label text="✅" styleClass="admin-stat-icon"/>
-            <Label fx:id="activeUsersLabel" text="—" styleClass="admin-stat-value admin-positive"/>
-            <Label text="Actifs" styleClass="admin-stat-title"/>
-        </VBox>
-
-        <!-- Inactifs -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
-            <Label text="🚫" styleClass="admin-stat-icon"/>
-            <Label fx:id="inactiveUsersLabel" text="—" styleClass="admin-stat-value admin-negative"/>
-            <Label text="Inactifs" styleClass="admin-stat-title"/>
-        </VBox>
-
-        <!-- En attente -->
-        <VBox HBox.hgrow="ALWAYS" spacing="8" alignment="CENTER" styleClass="admin-stat-card">
-            <Label text="⏳" styleClass="admin-stat-icon"/>
-            <Label fx:id="pendingUsersLabel" text="—" styleClass="admin-stat-value"/>
-            <Label text="En attente" styleClass="admin-stat-title"/>
-        </VBox>
-
+        <Label text="📊" styleClass="admin-dashboard-hero-icon"/>
     </HBox>
 
-    <!-- ── Répartition par rôle ── -->
-       <HBox spacing="16">
-
-              <VBox HBox.hgrow="ALWAYS" spacing="14" styleClass="admin-panel-card">
-
-                     <Label text="Répartition par rôle" styleClass="admin-section-title"/>
-
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🌱 Agriculteurs"
-                       style="-fx-font-size: 13; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
-                <Label fx:id="countAgriculteur"  text="—"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;"/>
+    <!-- ── KPI cards ── -->
+    <HBox spacing="14" styleClass="admin-stats-row">
+        <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="admin-stat-card kpi-total"
+              style="-fx-padding:16; -fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="👥" styleClass="admin-dashboard-kpi-icon"/>
+                <Label text="Total utilisateurs" styleClass="admin-stat-title"/>
             </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🏭 Fournisseurs"
-                       style="-fx-font-size: 13; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
-                <Label fx:id="countFournisseur" text="—"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;"/>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="💼 Employés"
-                       style="-fx-font-size: 13; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
-                <Label fx:id="countEmployee" text="—"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;"/>
-            </HBox>
-            <HBox alignment="CENTER_LEFT" spacing="10">
-                <Label text="🔑 Admins"
-                       style="-fx-font-size: 13; -fx-text-fill: #555;" HBox.hgrow="ALWAYS"/>
-                <Label fx:id="countAdmin" text="—"
-                       style="-fx-font-weight: bold; -fx-font-size: 14;"/>
-            </HBox>
+            <Label fx:id="totalUsersLabel" text="—" styleClass="admin-stat-value"/>
+            <Label text="Mise a jour en temps reel" styleClass="admin-dashboard-muted"/>
         </VBox>
 
-        <!-- Derniers inscrits -->
-        <VBox HBox.hgrow="ALWAYS" spacing="10" styleClass="admin-panel-card">
-
-            <Label text="Derniers inscrits" styleClass="admin-section-title"/>
-
-            <ListView fx:id="recentUsersList" VBox.vgrow="ALWAYS"
-                      prefHeight="180" styleClass="admin-list-view"/>
+        <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="admin-stat-card kpi-active"
+              style="-fx-padding:16; -fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="✅" styleClass="admin-dashboard-kpi-icon"/>
+                <Label text="Comptes actifs" styleClass="admin-stat-title"/>
+            </HBox>
+            <Label fx:id="activeUsersLabel" text="—" styleClass="admin-stat-value admin-positive"/>
+            <Label text="Utilisateurs autorises" styleClass="admin-dashboard-muted"/>
         </VBox>
 
+        <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="admin-stat-card kpi-banned"
+              style="-fx-padding:16; -fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="🚫" styleClass="admin-dashboard-kpi-icon"/>
+                <Label text="Comptes inactifs" styleClass="admin-stat-title"/>
+            </HBox>
+            <Label fx:id="inactiveUsersLabel" text="—" styleClass="admin-stat-value admin-negative"/>
+            <Label text="A verifier" styleClass="admin-dashboard-muted"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" spacing="6" styleClass="admin-stat-card kpi-location"
+              style="-fx-padding:16; -fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="⏳" styleClass="admin-dashboard-kpi-icon"/>
+                <Label text="En attente" styleClass="admin-stat-title"/>
+            </HBox>
+            <Label fx:id="pendingUsersLabel" text="—" styleClass="admin-stat-value"/>
+            <Label text="Demandes a traiter" styleClass="admin-dashboard-muted"/>
+        </VBox>
+    </HBox>
+
+    <!-- ── Charts + role stats ── -->
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+        <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="admin-chart-card"
+              style="-fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="📈 Repartition des statuts" styleClass="admin-section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Vue globale" styleClass="admin-dashboard-muted"/>
+            </HBox>
+            <PieChart fx:id="statusPieChart" legendVisible="true" labelsVisible="true" prefHeight="220"/>
+        </VBox>
+
+        <VBox spacing="12" prefWidth="340" styleClass="admin-panel-card"
+              style="-fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="🧩" styleClass="admin-dashboard-mini-icon"/>
+                <Label text="Repartition par role" styleClass="admin-section-title"/>
+            </HBox>
+
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="🌱 Agriculteurs" styleClass="admin-dashboard-role-label" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="countAgriculteur" text="—" styleClass="admin-dashboard-role-value"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="🏭 Fournisseurs" styleClass="admin-dashboard-role-label" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="countFournisseur" text="—" styleClass="admin-dashboard-role-value"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="💼 Employes" styleClass="admin-dashboard-role-label" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="countEmployee" text="—" styleClass="admin-dashboard-role-value"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="🔑 Admins" styleClass="admin-dashboard-role-label" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="countAdmin" text="—" styleClass="admin-dashboard-role-value"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="14">
+        <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="admin-chart-card"
+              style="-fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="📉 Activite hebdomadaire" styleClass="admin-section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Derniers 7 jours" styleClass="admin-dashboard-muted"/>
+            </HBox>
+            <BarChart fx:id="weeklyBarChart" prefHeight="220" categoryGap="18" barGap="4" legendVisible="false">
+                <xAxis>
+                    <CategoryAxis label="Jour"/>
+                </xAxis>
+                <yAxis>
+                    <NumberAxis label="Nouveaux comptes"/>
+                </yAxis>
+            </BarChart>
+        </VBox>
+
+        <VBox spacing="10" prefWidth="340" styleClass="admin-panel-card"
+              style="-fx-background-radius:14;">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Label text="🕒" styleClass="admin-dashboard-mini-icon"/>
+                <Label text="Derniers inscrits" styleClass="admin-section-title"/>
+            </HBox>
+            <ListView fx:id="recentUsersList"
+                      prefHeight="220"
+                      VBox.vgrow="ALWAYS"
+                      styleClass="admin-list-view"/>
+        </VBox>
     </HBox>
 
 </VBox>

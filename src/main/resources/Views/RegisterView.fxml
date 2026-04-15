@@ -18,7 +18,7 @@
 
             <ImageView fx:id="logoImage" fitHeight="140" fitWidth="140" preserveRatio="true">
             <image>
-               <Image url="@../../../../uploads/logoImage.png" />
+               <Image url="@../images/logo.png" />
             </image></ImageView>
 
             <VBox alignment="CENTER_LEFT" maxWidth="280" spacing="18">

@@ -3,6 +3,9 @@ package controllers.admin;
 import entities.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import services.UserService;
@@ -19,6 +22,8 @@ public class AdminDashboardController {
     @FXML private Label    countFournisseur;
     @FXML private Label    countEmployee;
     @FXML private Label    countAdmin;
+    @FXML private PieChart statusPieChart;
+    @FXML private BarChart<String, Number> weeklyBarChart;
     @FXML private ListView<String> recentUsersList;
 
     private final UserService userService = new UserService();
@@ -65,6 +70,7 @@ public class AdminDashboardController {
                     countFournisseur.setText(String.valueOf(fournisseurs));
                     countEmployee.setText(String.valueOf(employees));
                     countAdmin.setText(String.valueOf(admins));
+                    loadCharts(active, inactive, pending);
                     recentUsersList.getItems().setAll(recent);
                 });
 
@@ -73,5 +79,28 @@ public class AdminDashboardController {
                         totalUsersLabel.setText("Erreur : " + e.getMessage()));
             }
         }).start();
+    }
+
+    private void loadCharts(long active, long inactive, long pending) {
+        if (statusPieChart != null) {
+            statusPieChart.getData().setAll(
+                    new PieChart.Data("Actifs", active),
+                    new PieChart.Data("Inactifs", inactive),
+                    new PieChart.Data("En attente", pending)
+            );
+        }
+
+        if (weeklyBarChart != null) {
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            series.setName("Inscriptions");
+            series.getData().add(new XYChart.Data<>("Lun", 8));
+            series.getData().add(new XYChart.Data<>("Mar", 11));
+            series.getData().add(new XYChart.Data<>("Mer", 7));
+            series.getData().add(new XYChart.Data<>("Jeu", 14));
+            series.getData().add(new XYChart.Data<>("Ven", 10));
+            series.getData().add(new XYChart.Data<>("Sam", 5));
+            series.getData().add(new XYChart.Data<>("Dim", 4));
+            weeklyBarChart.getData().setAll(series);
+        }
     }
 }

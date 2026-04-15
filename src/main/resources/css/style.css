@@ -402,6 +402,148 @@
     -fx-spacing: 16;
 }
 
+/* Admin dashboard — palette #2a5438 (vert) + #E6BF4A (or) */
+.admin-dashboard {
+    -fx-background-color: #f2f5f3;
+}
+
+.admin-dashboard-hero {
+    -fx-background-color: linear-gradient(to right, #1e3f2d, #2a5438 52%, #356348);
+    -fx-background-radius: 16;
+    -fx-padding: 18 22;
+    -fx-border-color: #E6BF4A;
+    -fx-border-width: 0 0 0 5;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(42, 84, 56, 0.22), 14, 0.2, 0, 3);
+}
+
+.admin-dashboard-hero-title {
+    -fx-font-size: 24;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
+}
+
+.admin-dashboard-hero-subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #f5e9b8;
+}
+
+.admin-dashboard-hero-icon {
+    -fx-font-size: 30;
+    -fx-background-color: rgba(230, 191, 74, 0.28);
+    -fx-padding: 8 12;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(230, 191, 74, 0.55);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+.admin-dashboard-kpi-icon {
+    -fx-font-size: 16;
+    -fx-padding: 4 8;
+    -fx-background-color: rgba(42, 84, 56, 0.10);
+    -fx-border-color: rgba(42, 84, 56, 0.22);
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.admin-dashboard-mini-icon {
+    -fx-font-size: 14;
+    -fx-padding: 3 7;
+    -fx-background-color: rgba(230, 191, 74, 0.24);
+    -fx-border-color: rgba(230, 191, 74, 0.50);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.admin-dashboard-muted {
+    -fx-font-size: 11;
+    -fx-text-fill: #6d7f72;
+}
+
+.admin-dashboard .admin-section-title {
+    -fx-text-fill: #2a5438;
+}
+
+.admin-dashboard-role-label {
+    -fx-font-size: 13;
+    -fx-text-fill: #4a5c52;
+}
+
+.admin-dashboard-role-value {
+    -fx-font-size: 15;
+    -fx-font-weight: 800;
+    -fx-text-fill: #2a5438;
+}
+
+.admin-dashboard .admin-stat-value {
+    -fx-text-fill: #2a5438;
+}
+
+.admin-dashboard .admin-positive {
+    -fx-text-fill: #1f6b45;
+}
+
+.admin-dashboard .admin-stat-card.kpi-total {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #f6faf7);
+    -fx-border-color: rgba(42, 84, 56, 0.18);
+}
+
+.admin-dashboard .admin-stat-card.kpi-active {
+    -fx-background-color: linear-gradient(to bottom right, #f4faf6, #e8f2ec);
+    -fx-border-color: rgba(42, 84, 56, 0.22);
+}
+
+.admin-dashboard .admin-stat-card.kpi-banned {
+    -fx-background-color: linear-gradient(to bottom right, #fff8f8, #fdeeee);
+    -fx-border-color: rgba(200, 90, 90, 0.2);
+}
+
+.admin-dashboard .admin-stat-card.kpi-location {
+    -fx-background-color: linear-gradient(to bottom right, #fffdf6, #fdf6e0);
+    -fx-border-color: rgba(230, 191, 74, 0.45);
+}
+
+.admin-dashboard .admin-stat-title {
+    -fx-text-fill: #3d5c4a;
+}
+
+.admin-dashboard .admin-panel-card,
+.admin-dashboard .admin-chart-card {
+    -fx-border-color: rgba(42, 84, 56, 0.18);
+}
+
+.admin-dashboard .default-color0.chart-pie {
+    -fx-pie-color: #2a5438;
+}
+.admin-dashboard .default-color1.chart-pie {
+    -fx-pie-color: #E6BF4A;
+}
+.admin-dashboard .default-color2.chart-pie {
+    -fx-pie-color: #4a7a5c;
+}
+
+.admin-dashboard .default-color0.chart-bar {
+    -fx-bar-fill: #2a5438;
+}
+
+.admin-dashboard .chart-plot-background {
+    -fx-background-color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-dashboard .chart-vertical-grid-lines,
+.admin-dashboard .chart-horizontal-grid-lines {
+    -fx-stroke: rgba(42, 84, 56, 0.12);
+}
+
+.admin-dashboard .axis {
+    -fx-tick-label-fill: #4a5c52;
+}
+
+.admin-dashboard .axis-label {
+    -fx-text-fill: #2a5438;
+}
+
 .admin-page-header {
     -fx-padding: 0 0 2 0;
 }

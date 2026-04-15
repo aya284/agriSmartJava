@@ -5,67 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/ProductDetailsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminMarketplaceController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ForgotPasswordController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ResetPasswordController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/entities/CartItem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/entities/PasswordResetRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/CartSessionService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/EmailService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceCartViewFeature.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceCheckoutFeature.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceConversationService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceImageService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceInvoicePdfService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/PasswordResetService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/utils/MarketplaceValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminMarketplaceView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/CultureView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/EmployesView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/ForgotPasswordView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Marketplace/MarketplaceView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/Marketplace/ProductDetailsView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/ResetPasswordView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/TachesView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Views/UsersView.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/images/logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/images/placeholder_agrismart.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uploads/documents/9fc17c74-fc46-4572-8c1d-0a2fba993928.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uploads/logoImage.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uploads/produits/80938e4a-f57b-44e3-be70-c6e22cc254e2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uploads/produits/a88b4268-d478-4ea6-9057-8a842c03df5d.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/uploads/profiles/4d25cd95-cdf6-4192-b5d6-7c71edf5941b.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/css/style1.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MainController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminRessourcesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminRessourcesController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminDashboardController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminDashboardController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUserDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUserDetailController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUsersController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/EditProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/EditProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/entities/WishlistItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/WishlistItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/main/MainApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/MainApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/CommandeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/CommandeService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ConsommationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/ConsommationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/MarketplaceMessageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/MarketplaceMessageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ProduitService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/ProduitService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/WishlistService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/WishlistService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminDashboard.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminDashboard.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUserDetailView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUserDetailView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUsersView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUsersView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/AdminCulturesView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/AdminCulturesView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/EditProfileView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/EditProfileView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MarketplaceView.fxml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/css/style.css" afterDir="false" />
     </list>
@@ -131,7 +81,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "Merging parcelle",
+    "git-widget-placeholder": "user",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",

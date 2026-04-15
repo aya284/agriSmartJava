@@ -11,7 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import services.UserService;
-
 import java.util.List;
 
 public class AdminUsersController {
@@ -60,15 +59,14 @@ public class AdminUsersController {
 
     // ── Filtres ───────────────────────────────────────────────
     private void setupFilters() {
-        roleFilter.getItems().addAll("Tous", "admin", "agriculteur",
-                "fournisseur", "employee");
+        roleFilter.getItems().addAll("Tous", "admin", "agriculteur", "fournisseur", "employee");
         roleFilter.setValue("Tous");
 
         statusFilter.getItems().addAll("Tous", "active", "inactive", "pending");
         statusFilter.setValue("Tous");
 
         searchField.textProperty().addListener((o, old, n) -> resetAndLoad());
-        roleFilter.valueProperty().addListener((o, old, n)  -> resetAndLoad());
+        roleFilter.valueProperty().addListener((o, old, n) -> resetAndLoad());
         statusFilter.valueProperty().addListener((o, old, n) -> resetAndLoad());
     }
 
@@ -84,48 +82,54 @@ public class AdminUsersController {
 
     // ── Colonnes ──────────────────────────────────────────────
     private void setupColumns() {
-        // Responsive — distribue l'espace restant sur Nom et Email
+        usersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        // Responsive column widths tuned for readability
         usersTable.widthProperty().addListener((obs, oldW, newW) -> {
-            double total     = newW.doubleValue() - 18; // 18px scrollbar
-            double fixed     = 50 + 130 + 120 + 120 + 90; // id+role+statut+date+actions
-            double remaining = total - fixed;
-            colName.setPrefWidth(remaining * 0.38);
-            colEmail.setPrefWidth(remaining * 0.62);
+            double total = newW.doubleValue() - 20; // small padding
+
+            colId.setPrefWidth(total * 0.10);
+            colName.setPrefWidth(total * 0.18);
+            colEmail.setPrefWidth(total * 0.16);
+            colRole.setPrefWidth(total * 0.16);
+            colStatus.setPrefWidth(total * 0.12);
+            colDate.setPrefWidth(total * 0.14);
+            colActions.setPrefWidth(total * 0.14);
         });
 
-        colId.setCellValueFactory(c ->
-                new SimpleStringProperty(String.valueOf(c.getValue().getId())));
-        colName.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getFullName()));
-        colEmail.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getEmail()));
-        colRole.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getRole()));
-        colDate.setCellValueFactory(c ->
-                new SimpleStringProperty(
-                        c.getValue().getCreatedAt() != null
-                                ? c.getValue().getCreatedAt().toLocalDate().toString() : "-"));
+        colId.setCellValueFactory(c -> new SimpleStringProperty(String.valueOf(c.getValue().getId())));
+        colName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFullName()));
+        colEmail.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmail()));
+        colRole.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getRole()));
+        
+        colDate.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getCreatedAt() != null 
+                    ? c.getValue().getCreatedAt().toLocalDate().toString() 
+                    : "-"));
 
         setupStatusColumn();
         setupActionsColumn();
     }
 
-    // ── Colonne Statut — badge cliquable avec dropdown ────────
+    // ── Colonne Statut — Updated Pastel Design ─────────────────────
     private void setupStatusColumn() {
-        colStatus.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getStatus()));
-
+        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatus()));
+        
         colStatus.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                if (empty || status == null) { setGraphic(null); return; }
+                if (empty || status == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
 
                 User user = getTableView().getItems().get(getIndex());
-
                 Label badge = new Label(status.toUpperCase());
                 badge.getStyleClass().setAll("admin-status-badge", "status-" + status.toLowerCase());
 
+                // Context Menu
                 ContextMenu menu = new ContextMenu();
                 MenuItem itemActive   = makeMenuItem("✅  Activer",    "active",   user);
                 MenuItem itemInactive = makeMenuItem("🚫  Désactiver", "inactive", user);
@@ -136,8 +140,8 @@ public class AdminUsersController {
                 itemPending.setDisable(status.equals("pending"));
 
                 menu.getItems().addAll(itemActive, itemInactive, itemPending);
-                badge.setOnMouseClicked(e ->
-                        menu.show(badge, e.getScreenX(), e.getScreenY()));
+
+                badge.setOnMouseClicked(e -> menu.show(badge, e.getScreenX(), e.getScreenY()));
 
                 setGraphic(badge);
                 setText(null);
@@ -151,17 +155,18 @@ public class AdminUsersController {
         });
     }
 
-    // ── Colonne Actions — bouton View uniquement ──────────────
+    // ── Colonne Actions ───────────────────────────────────────
     private void setupActionsColumn() {
         colActions.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) { setGraphic(null); return; }
-
+                if (empty) {
+                    setGraphic(null);
+                    return;
+                }
                 User user = getTableView().getItems().get(getIndex());
-
-                Button btnView = new Button("👁  Voir");
+                Button btnView = new Button("Voir profil");
                 btnView.getStyleClass().add("admin-btn-secondary");
                 btnView.setOnAction(e -> openUserDetail(user));
                 setGraphic(btnView);
@@ -169,20 +174,18 @@ public class AdminUsersController {
         });
     }
 
-    // ── Ouvrir la page détail ─────────────────────────────────
+    // ── Ouvrir détail ─────────────────────────────────────────
     private void openUserDetail(User user) {
         try {
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/Views/admin/AdminUserDetailView.fxml"));
             Node view = loader.load();
-
             AdminUserDetailController ctrl = loader.getController();
             ctrl.setUser(user, this::loadPage);
 
             StackPane contentArea = (StackPane) usersTable
                     .getScene().lookup("#adminContentArea");
             contentArea.getChildren().setAll(view);
-
         } catch (Exception e) {
             System.err.println("Erreur ouverture détail : " + e.getMessage());
         }
@@ -190,7 +193,7 @@ public class AdminUsersController {
 
     // ── Charger la page ───────────────────────────────────────
     private void loadPage() {
-        String keyword = searchField.getText();
+        String keyword = searchField.getText().trim();
         String role    = roleFilter.getValue();
         String status  = statusFilter.getValue();
 
@@ -201,27 +204,24 @@ public class AdminUsersController {
                 if (totalPages == 0) totalPages = 1;
                 if (currentPage > totalPages) currentPage = totalPages;
 
-                List<User> users = userService.searchUsersPaged(
-                        keyword, role, status, currentPage, pageSize);
+                List<User> users = userService.searchUsersPaged(keyword, role, status, currentPage, pageSize);
 
                 Platform.runLater(() -> {
                     usersTable.setItems(FXCollections.observableArrayList(users));
                     updatePaginationUI();
                 });
             } catch (Exception e) {
-                Platform.runLater(() ->
-                        totalLabel.setText("Erreur : " + e.getMessage()));
+                Platform.runLater(() -> totalLabel.setText("Erreur : " + e.getMessage()));
             }
         }).start();
     }
 
-    // ── Pagination UI ─────────────────────────────────────────
     private void updatePaginationUI() {
         int from = totalCount == 0 ? 0 : (currentPage - 1) * pageSize + 1;
         int to   = Math.min(currentPage * pageSize, totalCount);
 
         totalLabel.setText("Total : " + totalCount + " utilisateurs");
-        pageInfoLabel.setText(from + " – " + to + " sur " + totalCount
+        pageInfoLabel.setText(from + " – " + to + " sur " + totalCount 
                 + "   |   Page " + currentPage + " / " + totalPages);
 
         btnFirst.setDisable(currentPage == 1);
@@ -243,21 +243,26 @@ public class AdminUsersController {
         for (int i = start; i <= end; i++) {
             final int page = i;
             Button btn = new Button(String.valueOf(i));
-            btn.getStyleClass().add("page-number-btn");
-                        btn.getStyleClass().add("admin-btn-secondary");
-                        if (i == currentPage) {
-                                btn.getStyleClass().add("active");
-                        }
-            btn.setOnAction(e -> { currentPage = page; loadPage(); });
+            btn.getStyleClass().addAll("page-number-btn", "admin-btn-secondary");
+
+            if (i == currentPage) {
+                btn.getStyleClass().add("active");
+            }
+
+            btn.setOnAction(e -> {
+                currentPage = page;
+                loadPage();
+            });
+
             paginationBox.getChildren().add(
                     paginationBox.getChildren().indexOf(btnNext), btn);
         }
     }
 
-    @FXML public void goFirst() { currentPage = 1;                              loadPage(); }
-    @FXML public void goPrev()  { if (currentPage > 1)          { currentPage--; loadPage(); } }
+    @FXML public void goFirst() { currentPage = 1; loadPage(); }
+    @FXML public void goPrev()  { if (currentPage > 1) { currentPage--; loadPage(); } }
     @FXML public void goNext()  { if (currentPage < totalPages) { currentPage++; loadPage(); } }
-    @FXML public void goLast()  { currentPage = totalPages;                     loadPage(); }
+    @FXML public void goLast()  { currentPage = totalPages; loadPage(); }
 
     @FXML
     public void resetFilters() {
@@ -266,7 +271,10 @@ public class AdminUsersController {
         statusFilter.setValue("Tous");
     }
 
-    private void resetAndLoad() { currentPage = 1; loadPage(); }
+    private void resetAndLoad() {
+        currentPage = 1;
+        loadPage();
+    }
 
     // ── Changement statut ─────────────────────────────────────
     private void handleStatusChange(User user, String newStatus) {
@@ -285,12 +293,14 @@ public class AdminUsersController {
                         Platform.runLater(this::loadPage);
                     } catch (Exception e) {
                         Platform.runLater(() ->
-                                new Alert(Alert.AlertType.ERROR,
-                                        "Erreur : " + e.getMessage()).show());
+                                new Alert(Alert.AlertType.ERROR, "Erreur : " + e.getMessage()).show());
                     }
                 }).start();
             }
         });
     }
 
+    public void refreshList() {
+        loadPage();
+    }
 }
