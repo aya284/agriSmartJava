@@ -1,4 +1,4 @@
-﻿package controllers;
+package controllers;
 
 import entities.CartItem;
 import entities.Commande;
@@ -49,7 +49,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
 import services.CommandeService;
 import services.CartSessionService;
+import services.MarketplaceCartViewFeature;
+import services.MarketplaceCheckoutFeature;
 import services.MarketplaceConversationService;
+import services.MarketplaceImageService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
 import services.UserService;
@@ -75,7 +78,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -180,7 +182,10 @@ public class MarketplaceController implements Initializable {
     private final ProduitService produitService = new ProduitService();
     private final CommandeService commandeService = new CommandeService();
     private final CartSessionService cartSessionService = CartSessionService.getInstance();
+    private final MarketplaceCartViewFeature cartViewFeature = new MarketplaceCartViewFeature();
+    private final MarketplaceCheckoutFeature checkoutFeature = new MarketplaceCheckoutFeature(commandeService, cartSessionService);
     private final MarketplaceConversationService conversationService = new MarketplaceConversationService();
+    private final MarketplaceImageService imageService = new MarketplaceImageService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
     private final UserService userService = new UserService();
@@ -188,7 +193,9 @@ public class MarketplaceController implements Initializable {
     private final Set<Integer> wishlistProductIds = new HashSet<>();
     private final Map<Integer, String> productNameById = new HashMap<>();
     private final Map<Integer, String> userNameById = new HashMap<>();
+    private final Set<Integer> purchasedProductIds = new HashSet<>();
     private boolean showingBoughtOrders = false;
+    private boolean openSellerOnBoughtOrders = false;
     private int currentPage = 0;
 
     // Dynamic Modal Fields
@@ -260,8 +267,15 @@ public class MarketplaceController implements Initializable {
     @FXML
     public void openSellerSpace() {
         loadProduits();
+        if (openSellerOnBoughtOrders) {
+            showingBoughtOrders = true;
+            setSellerSectionVisibility(false);
+            applyOrderToggleSelection();
+            openSellerOnBoughtOrders = false;
+        } else {
+            showManageProducts();
+        }
         loadCommandes();
-        showManageProducts();
         animateOverlayIn(sellerOverlay);
     }
 
@@ -352,7 +366,7 @@ public class MarketplaceController implements Initializable {
     public void checkoutFromOverlay() {
         List<CartItem> cartItems = cartSessionService.getItems(getCurrentUserId());
         if (cartItems.isEmpty()) {
-            showAlert("Panier", "Votre panier est vide.");
+            showToast("Panier", "Votre panier est vide.", false);
             return;
         }
         processCheckout(cartItems);
@@ -367,15 +381,30 @@ public class MarketplaceController implements Initializable {
         setupMessageTable();
         setupFilters();
         initializeOrderToggleState();
+        configureToastUi();
 
         loadProduits();
         loadCommandes();
+        refreshPurchasedState();
         loadWishlist();
         loadMessages();
         refreshStats();
         updateCartStatus();
         refreshMessagingBadge();
         refreshWishlistState();
+    }
+
+    private void configureToastUi() {
+        if (toastContainer != null) {
+            toastContainer.setMaxWidth(320);
+            toastContainer.setMinWidth(Region.USE_PREF_SIZE);
+            toastContainer.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        }
+        if (toastLabel != null) {
+            toastLabel.setWrapText(false);
+            toastLabel.setTextOverrun(OverrunStyle.ELLIPSIS);
+            toastLabel.setMaxWidth(292);
+        }
     }
 
     private void animateOverlayIn(StackPane overlay) {
@@ -436,78 +465,17 @@ public class MarketplaceController implements Initializable {
     }
 
     private void showToast(String title, String message, boolean success) {
-        if (toastContainer == null || toastLabel == null) {
-            return;
-        }
-
-        toastContainer.getStyleClass().removeAll("toast-success", "toast-error", "toast-note");
-        toastContainer.getStyleClass().add(success ? "toast-success" : "toast-error");
-        if (toastTitleLabel != null) {
-            toastTitleLabel.setText(title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title);
-        }
-        if (toastIconLabel != null) {
-            toastIconLabel.setText(success ? "âœ”" : "!");
-        }
-        toastLabel.setText(message);
-        toastContainer.setManaged(true);
-        toastContainer.setVisible(true);
-        toastContainer.setOpacity(0);
-
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(150), toastContainer);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
-
-        PauseTransition hold = new PauseTransition(Duration.seconds(success ? 2.2 : 3.2));
-        hold.setOnFinished(e -> {
-            FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toastContainer);
-            fadeOut.setFromValue(1);
-            fadeOut.setToValue(0);
-            fadeOut.setOnFinished(evt -> {
-                toastContainer.setVisible(false);
-                toastContainer.setManaged(false);
-            });
-            fadeOut.play();
-        });
-        hold.play();
+        String safeTitle = title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title.trim();
+        String safeMessage = message == null ? "" : message.trim();
+        String payload = safeMessage.isEmpty() ? safeTitle : safeTitle + " - " + safeMessage;
+        MainController.publishHeaderAlert(payload, success);
     }
 
     private void showNotice(String title, String message) {
-        if (toastContainer == null || toastLabel == null) {
-            return;
-        }
-
-        toastContainer.getStyleClass().removeAll("toast-success", "toast-error", "toast-note");
-        toastContainer.getStyleClass().add("toast-note");
-
-        if (toastTitleLabel != null) {
-            toastTitleLabel.setText(title == null || title.isBlank() ? "Information" : title);
-        }
-        if (toastIconLabel != null) {
-            toastIconLabel.setText("i");
-        }
-        toastLabel.setText(message);
-        toastContainer.setManaged(true);
-        toastContainer.setVisible(true);
-        toastContainer.setOpacity(0);
-
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(140), toastContainer);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
-
-        PauseTransition hold = new PauseTransition(Duration.seconds(2.8));
-        hold.setOnFinished(e -> {
-            FadeTransition fadeOut = new FadeTransition(Duration.millis(180), toastContainer);
-            fadeOut.setFromValue(1);
-            fadeOut.setToValue(0);
-            fadeOut.setOnFinished(evt -> {
-                toastContainer.setVisible(false);
-                toastContainer.setManaged(false);
-            });
-            fadeOut.play();
-        });
-        hold.play();
+        String safeTitle = title == null || title.isBlank() ? "Information" : title.trim();
+        String safeMessage = message == null ? "" : message.trim();
+        String payload = safeMessage.isEmpty() ? safeTitle : safeTitle + " - " + safeMessage;
+        MainController.publishHeaderNotice(payload);
     }
 
     private void setupFilters() {
@@ -594,7 +562,7 @@ public class MarketplaceController implements Initializable {
                 }
 
                 Produit p = getTableView().getItems().get(getIndex());
-                Image img = resolveProductImage(p.getImage());
+                Image img = imageService.resolveProductImage(p.getImage(), getClass());
                 thumb.setImage(img);
                 nameLabel.setText(normalizeText(safe(p.getNom())));
                 descLabel.setText(normalizeText(safe(p.getDescription())));
@@ -748,22 +716,43 @@ public class MarketplaceController implements Initializable {
         });
 
         colCmdActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit = new Button("âœŽ");
-            private final Button btnDelete = new Button("ðŸ—‘");
-            private final HBox box = new HBox(8, btnEdit, btnDelete);
+            private final Button btnEdit = new Button("Modifier");
+            private final Button btnDelete = new Button("Supprimer");
+            private final Button btnFacture = new Button("Facture");
+            private final HBox box = new HBox(8, btnEdit, btnDelete, btnFacture);
 
             {
                 box.setAlignment(Pos.CENTER_LEFT);
                 btnEdit.getStyleClass().addAll("cmd-action-btn", "edit");
                 btnDelete.getStyleClass().addAll("cmd-action-btn", "delete");
-                btnEdit.setOnAction(e -> openModifierCommande(getTableView().getItems().get(getIndex())));
-                btnDelete.setOnAction(e -> handleDeleteCommande(getTableView().getItems().get(getIndex())));
+                btnFacture.getStyleClass().addAll("cmd-action-btn", "facture");
+                btnEdit.setOnAction(e -> {
+                    Commande cmd = getTableView().getItems().get(getIndex());
+                    if(cmd != null) openModifierCommande(cmd);
+                });
+                btnDelete.setOnAction(e -> {
+                    Commande cmd = getTableView().getItems().get(getIndex());
+                    if(cmd != null) handleDeleteCommande(cmd);
+                });
+                btnFacture.setOnAction(e -> {
+                    Commande cmd = getTableView().getItems().get(getIndex());
+                    if(cmd != null) downloadFacture(cmd);
+                });
             }
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Commande cmd = getTableView().getItems().get(getIndex());
+                    if (cmd != null) {
+                        btnFacture.setVisible(cmd.getClientId() == getCurrentUserId());
+                        btnFacture.setManaged(cmd.getClientId() == getCurrentUserId());
+                    }
+                    setGraphic(box);
+                }
             }
         });
     }
@@ -850,14 +839,25 @@ public class MarketplaceController implements Initializable {
         if (commandeTable == null) {
             return;
         }
+        int userId = getCurrentUserId();
         try {
             List<Commande> commandes;
             if (showingBoughtOrders) {
-                commandes = commandeService.getByClient(getCurrentUserId());
+                commandes = commandeService.getByClient(userId);
             } else {
-                commandes = commandeService.getBySeller(getCurrentUserId());
+                commandes = commandeService.getBySeller(userId);
             }
             commandeTable.setItems(FXCollections.observableArrayList(commandes));
+            refreshPurchasedState();
+        } catch (SQLException e) {
+            showSqlAlert(e);
+        }
+    }
+
+    private void refreshPurchasedState() {
+        purchasedProductIds.clear();
+        try {
+            purchasedProductIds.addAll(commandeService.getPurchasedProductIdsByClient(getCurrentUserId()));
         } catch (SQLException e) {
             showSqlAlert(e);
         }
@@ -868,8 +868,14 @@ public class MarketplaceController implements Initializable {
             refreshWishlistState();
             return;
         }
+        Integer sessionUserId = getSessionUserId();
+        if (sessionUserId == null) {
+            wishlistTable.setItems(FXCollections.observableArrayList());
+            refreshWishlistState();
+            return;
+        }
         try {
-            List<WishlistItem> items = wishlistService.getByUser(getCurrentUserId());
+            List<WishlistItem> items = wishlistService.getByUser(sessionUserId);
             wishlistTable.setItems(FXCollections.observableArrayList(items));
         } catch (SQLException e) {
             showSqlAlert(e);
@@ -1013,21 +1019,21 @@ public class MarketplaceController implements Initializable {
             return;
         }
 
+        Integer sessionUserId = getSessionUserId();
+        if (sessionUserId == null) {
+            showToast("Session", "Connectez-vous pour utiliser la wishlist.", false);
+            return;
+        }
+
         try {
             if (wishlistProductIds.contains(produit.getId())) {
-                List<WishlistItem> userItems = wishlistService.getByUser(getCurrentUserId());
-                for (WishlistItem item : userItems) {
-                    if (item.getProduitId() == produit.getId()) {
-                        wishlistService.supprimer(item.getId());
-                        break;
-                    }
-                }
+                wishlistService.supprimerByUserAndProduit(sessionUserId, produit.getId());
                 if (statusLabel != null) {
                     statusLabel.setText(normalizeText(safe(produit.getNom())) + " retire de la wishlist");
                 }
                 showToast("Retire de la wishlist.", true);
             } else {
-                wishlistService.ajouter(new WishlistItem(getCurrentUserId(), produit.getId()));
+                wishlistService.ajouter(new WishlistItem(sessionUserId, produit.getId()));
                 if (statusLabel != null) {
                     statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute a la wishlist");
                 }
@@ -1043,11 +1049,26 @@ public class MarketplaceController implements Initializable {
     }
 
     private void refreshWishlistState() {
+        Integer sessionUserId = getSessionUserId();
+        wishlistProductIds.clear();
+        if (sessionUserId == null) {
+            refreshWishlistBadge();
+            renderWishlistGrid();
+            return;
+        }
         try {
-            List<WishlistItem> userItems = wishlistService.getByUser(getCurrentUserId());
-            wishlistProductIds.clear();
+            Set<Integer> availableProductIds = new HashSet<>();
+            for (Produit produit : produitService.afficher()) {
+                if (produit != null) {
+                    availableProductIds.add(produit.getId());
+                }
+            }
+
+            List<WishlistItem> userItems = wishlistService.getByUser(sessionUserId);
             for (WishlistItem item : userItems) {
-                wishlistProductIds.add(item.getProduitId());
+                if (availableProductIds.contains(item.getProduitId())) {
+                    wishlistProductIds.add(item.getProduitId());
+                }
             }
             refreshWishlistBadge();
             renderWishlistGrid();
@@ -1104,7 +1125,7 @@ public class MarketplaceController implements Initializable {
                 card.setMinWidth(280);
                 card.setMaxWidth(280);
 
-                ImageView imageView = new ImageView(resolveProductImage(produit.getImage()));
+                ImageView imageView = new ImageView(imageService.resolveProductImage(produit.getImage(), getClass()));
                 imageView.setFitWidth(260);
                 imageView.setFitHeight(140);
                 imageView.setPreserveRatio(false);
@@ -1402,7 +1423,27 @@ public class MarketplaceController implements Initializable {
             cartItemsBox.getChildren().add(empty);
         } else {
             for (CartItem item : cartItems) {
-                cartItemsBox.getChildren().add(buildCartRow(item));
+                cartItemsBox.getChildren().add(cartViewFeature.buildCartRow(item, new MarketplaceCartViewFeature.Host() {
+                    @Override
+                    public Image resolveProductImage(String imagePath) {
+                        return imageService.resolveProductImage(imagePath, getClass());
+                    }
+
+                    @Override
+                    public String normalizeText(String input) {
+                        return MarketplaceController.this.normalizeText(input);
+                    }
+
+                    @Override
+                    public String normalizeTypeForDisplay(String rawType) {
+                        return MarketplaceController.this.normalizeTypeForDisplay(rawType);
+                    }
+
+                    @Override
+                    public void onQuantityDelta(CartItem item, int delta) {
+                        MarketplaceController.this.adjustCartQuantity(item, delta);
+                    }
+                }));
             }
         }
 
@@ -1415,239 +1456,51 @@ public class MarketplaceController implements Initializable {
     }
 
     private void processCheckout(List<CartItem> cartItems) {
-        for (CartItem item : cartItems) {
-            Produit cartProduit = item == null ? null : item.getProduit();
-            if (cartProduit == null) {
-                showAlert("Panier", "Un article du panier est invalide.");
-                return;
+        checkoutFeature.openCheckoutDialog(cartItems, new MarketplaceCheckoutFeature.Host() {
+            @Override
+            public int getCurrentUserId() {
+                return MarketplaceController.this.getCurrentUserId();
             }
 
-            if (cartProduit.getVendeurId() > 0 && cartProduit.getVendeurId() == getCurrentUserId()) {
-                showAlert("Panier", "Vous ne pouvez pas commander vos propres produits.");
-                return;
+            @Override
+            public Produit findLatestProduitById(int produitId) {
+                return MarketplaceController.this.findLatestProduitById(produitId);
             }
 
-            Produit latest = findLatestProduitById(cartProduit.getId());
-            if (latest == null) {
-                showAlert("Stock", "Le produit '" + normalizeText(safe(cartProduit.getNom())) + "' n'existe plus.");
-                return;
+            @Override
+            public String normalizeText(String input) {
+                return MarketplaceController.this.normalizeText(input);
             }
 
-            if (item.getQuantite() > latest.getQuantiteStock()) {
-                showAlert("Stock", "Stock insuffisant pour '" + normalizeText(safe(latest.getNom()))
-                        + "' (stock: " + latest.getQuantiteStock() + ", demande: " + item.getQuantite() + ").");
-                return;
-            }
-        }
-
-        Dialog<ButtonType> checkoutDialog = new Dialog<>();
-        checkoutDialog.setTitle("Passer commande");
-        checkoutDialog.getDialogPane().getStyleClass().add("checkout-dialog-pane");
-        applyDialogStylesheet(checkoutDialog.getDialogPane());
-        checkoutDialog.getDialogPane().setPrefWidth(520);
-        checkoutDialog.getDialogPane().setPrefHeight(340);
-        checkoutDialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
-
-        ComboBox<String> modePaiementBox = new ComboBox<>();
-        modePaiementBox.getItems().setAll("domicile", "carte");
-        modePaiementBox.setValue("domicile");
-
-        ComboBox<String> modeLivraisonBox = new ComboBox<>();
-        modeLivraisonBox.getItems().setAll("Retrait sur place", "Livraison a domicile");
-        modeLivraisonBox.setValue("Retrait sur place");
-
-        TextField adresseField = new TextField();
-        adresseField.setPromptText("Adresse de livraison");
-        adresseField.setDisable(true);
-        modeLivraisonBox.getStyleClass().add("checkout-field");
-        modePaiementBox.getStyleClass().add("checkout-field");
-        adresseField.getStyleClass().add("checkout-field");
-
-        Label policyLabel = new Label("Modes de paiement disponibles: domicile ou carte.");
-        policyLabel.getStyleClass().add("checkout-policy-label");
-
-        Label sectionTitle = new Label("Finalisez votre commande");
-        sectionTitle.getStyleClass().add("checkout-title");
-
-        Label sectionSubtitle = new Label("Choisissez le mode de paiement, puis confirmez.");
-        sectionSubtitle.getStyleClass().add("checkout-subtitle");
-
-        GridPane grid = new GridPane();
-        grid.getStyleClass().add("checkout-grid");
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(18));
-        grid.add(new Label("Mode livraison"), 0, 0);
-        grid.add(modeLivraisonBox, 1, 0);
-        grid.add(new Label("Mode paiement"), 0, 1);
-        grid.add(modePaiementBox, 1, 1);
-        grid.add(new Label("Adresse"), 0, 2);
-        grid.add(adresseField, 1, 2);
-        grid.add(policyLabel, 0, 3, 2, 1);
-
-        Button validateInlineButton = new Button("Valider");
-        validateInlineButton.getStyleClass().add("checkout-save-btn");
-
-        Button closeInlineButton = new Button("Fermer");
-        closeInlineButton.getStyleClass().add("checkout-cancel-btn");
-        closeInlineButton.setOnAction(e -> {
-            checkoutDialog.setResult(ButtonType.CANCEL);
-            checkoutDialog.close();
-        });
-
-        HBox inlineActions = new HBox(10, validateInlineButton, closeInlineButton);
-        inlineActions.setAlignment(Pos.CENTER_RIGHT);
-        inlineActions.getStyleClass().add("checkout-inline-actions");
-
-        VBox content = new VBox(10, sectionTitle, sectionSubtitle, grid, inlineActions);
-        content.getStyleClass().add("checkout-content-shell");
-        checkoutDialog.getDialogPane().setContent(content);
-
-        Node hiddenCancelNode = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-        if (hiddenCancelNode != null) {
-            hiddenCancelNode.setVisible(false);
-            hiddenCancelNode.setManaged(false);
-        }
-        checkoutDialog.setOnShown(e -> {
-            Node cancelNodeOnShow = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-            if (cancelNodeOnShow != null) {
-                cancelNodeOnShow.setVisible(false);
-                cancelNodeOnShow.setManaged(false);
-            }
-        });
-
-        Runnable updateCheckoutValidation = () -> {
-            boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
-            adresseField.setDisable(!homeDelivery);
-            if (!homeDelivery) {
-                adresseField.clear();
+            @Override
+            public void applyDialogStylesheet(DialogPane pane) {
+                MarketplaceController.this.applyDialogStylesheet(pane);
             }
 
-            String modePaiement = safe(modePaiementBox.getValue()).trim();
-            String adresse = safe(adresseField.getText()).trim();
-            validateInlineButton.setDisable(!homeDelivery || modePaiement.isEmpty() || adresse.isEmpty());
-        };
-
-        modeLivraisonBox.valueProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
-        modePaiementBox.valueProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
-        adresseField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
-        updateCheckoutValidation.run();
-
-        validateInlineButton.setOnAction(event -> {
-            boolean homeDelivery = "Livraison a domicile".equals(modeLivraisonBox.getValue());
-            String modePaiement = safe(modePaiementBox.getValue()).trim();
-            String adresse = safe(adresseField.getText()).trim();
-
-            String checkoutError = MarketplaceValidator.validateCheckout(
-                    modeLivraisonBox.getValue(),
-                    modePaiement,
-                    adresse
-            );
-            if (checkoutError != null) {
-                showAlert("Validation", checkoutError);
-                return;
+            @Override
+            public void showToast(String title, String message, boolean success) {
+                MarketplaceController.this.showToast(title, message, success);
             }
 
-            try {
-                int commandeId = commandeService.createCommandeFromCart(
-                        getCurrentUserId(),
-                        modePaiement,
-                        adresse,
-                        cartItems
-                );
+            @Override
+            public void showSqlAlert(SQLException exception) {
+                MarketplaceController.this.showSqlAlert(exception);
+            }
 
-                int itemCount = 0;
-                double totalAmount = 0.0;
-                for (CartItem cartItem : cartItems) {
-                    if (cartItem == null) {
-                        continue;
-                    }
-                    itemCount += Math.max(0, cartItem.getQuantite());
-                    totalAmount += cartItem.getLineTotal();
-                }
-
-                cartSessionService.clear(getCurrentUserId());
+            @Override
+            public void onCheckoutSuccess(int commandeId, int itemCount, double totalAmount) {
+                openSellerOnBoughtOrders = true;
+                showingBoughtOrders = true;
                 loadCommandes();
                 loadProduits();
                 refreshStats();
                 renderCartOverlay();
                 closeCartOverlay();
-
                 if (statusLabel != null) {
                     statusLabel.setText("Commande #" + commandeId + " creee avec succes");
                 }
-
-                checkoutDialog.setTitle("Commande validee");
-                checkoutDialog.getDialogPane().setContent(
-                        buildCheckoutSuccessPane(checkoutDialog, commandeId, modePaiement, adresse, itemCount, totalAmount)
-                );
-            } catch (SQLException e) {
-                showSqlAlert(e);
             }
         });
-
-        checkoutDialog.showAndWait();
-    }
-
-    private HBox buildCartRow(CartItem item) {
-        Produit produit = item.getProduit();
-        StackPane thumbWrap = new StackPane();
-        thumbWrap.getStyleClass().add("cart-thumb-wrap");
-        ImageView thumb = new ImageView(resolveProductImage(produit == null ? "" : produit.getImage()));
-        thumb.setFitWidth(74);
-        thumb.setFitHeight(58);
-        thumb.setPreserveRatio(false);
-        thumb.setSmooth(true);
-        thumbWrap.getChildren().add(thumb);
-
-        Label nameLabel = new Label(normalizeText(safe(produit == null ? "" : produit.getNom())));
-        nameLabel.getStyleClass().add("cart-item-name");
-
-        Label detailLabel = new Label(
-                "Qte: " + item.getQuantite()
-                        + "   |   PU: " + String.format("%.2f", item.getUnitPrice()) + " TND"
-                        + "   |   Ligne: " + String.format("%.2f", item.getLineTotal()) + " TND"
-        );
-        detailLabel.getStyleClass().add("cart-item-meta");
-
-        Label typeLabel = new Label(normalizeTypeForDisplay(produit == null ? "" : produit.getType()));
-        typeLabel.getStyleClass().add("cart-type-pill");
-
-        VBox left = new VBox(4, nameLabel, detailLabel, typeLabel);
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        Button minusBtn = new Button("-");
-        minusBtn.getStyleClass().add("cart-qty-btn");
-
-        Label qtyLabel = new Label(String.valueOf(item.getQuantite()));
-        qtyLabel.getStyleClass().add("cart-qty-value");
-
-        Button plusBtn = new Button("+");
-        plusBtn.getStyleClass().add("cart-qty-btn");
-
-        minusBtn.setOnAction(e -> {
-            adjustCartQuantity(item, -1);
-            e.consume();
-        });
-
-        plusBtn.setOnAction(e -> {
-            adjustCartQuantity(item, 1);
-            e.consume();
-        });
-
-        HBox qtyBox = new HBox(8, minusBtn, qtyLabel, plusBtn);
-        qtyBox.setAlignment(Pos.CENTER_LEFT);
-        qtyBox.getStyleClass().add("cart-qty-box");
-
-        Label totalBadge = new Label(String.format("%.2f TND", item.getLineTotal()));
-        totalBadge.getStyleClass().add("cart-line-total");
-
-        HBox row = new HBox(12, thumbWrap, left, spacer, qtyBox, totalBadge);
-        row.getStyleClass().add("cart-line-row");
-        row.setAlignment(Pos.CENTER_LEFT);
-        row.setPadding(new Insets(10, 12, 10, 12));
-        return row;
     }
 
     private void adjustCartQuantity(CartItem item, int delta) {
@@ -1906,7 +1759,7 @@ public class MarketplaceController implements Initializable {
         List<Produit> pageSlice = fromIndex < source.size() ? source.subList(fromIndex, toIndex) : new ArrayList<>();
 
         if (produitTable != null) {
-            produitTable.setItems(FXCollections.observableArrayList(source));
+            produitTable.setItems(FXCollections.observableArrayList(filterSellerProducts(source)));
         }
         if (productGrid != null) {
             populateProductGrid(pageSlice);
@@ -1924,6 +1777,21 @@ public class MarketplaceController implements Initializable {
         if (statusLabel != null) {
             statusLabel.setText(source.size() + " resultat(s)");
         }
+    }
+
+    private List<Produit> filterSellerProducts(List<Produit> produits) {
+        Integer sessionUserId = getSessionUserId();
+        if (sessionUserId == null || produits == null || produits.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Produit> sellerProducts = new ArrayList<>();
+        for (Produit produit : produits) {
+            if (produit != null && produit.getVendeurId() == sessionUserId) {
+                sellerProducts.add(produit);
+            }
+        }
+        return sellerProducts;
     }
 
     @FXML
@@ -2005,7 +1873,7 @@ public class MarketplaceController implements Initializable {
         }
 
         if (publishPreviewImage != null) {
-            publishPreviewImage.setImage(resolveProductImage(fldImage == null ? "" : fldImage.getText()));
+            publishPreviewImage.setImage(imageService.resolveProductImage(fldImage == null ? "" : fldImage.getText(), getClass()));
         }
     }
 
@@ -2053,20 +1921,12 @@ public class MarketplaceController implements Initializable {
         }
 
         String generatedName = UUID.randomUUID() + extension;
-        Path uploadsDir = getSharedUploadsDir().resolve("produits");
+        Path uploadsDir = imageService.getSharedUploadsDir().resolve("produits");
         Files.createDirectories(uploadsDir);
 
         Path target = uploadsDir.resolve(generatedName);
         Files.copy(sourceFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
         return "uploads/produits/" + generatedName;
-    }
-
-    private Path getSharedUploadsDir() {
-        String configured = System.getenv("AGRI_UPLOADS_DIR");
-        if (configured != null && !configured.isBlank()) {
-            return Paths.get(configured);
-        }
-        return Paths.get(System.getProperty("user.dir"), "uploads");
     }
 
     private void openModifierProduit(Produit produit) {
@@ -2261,7 +2121,7 @@ public class MarketplaceController implements Initializable {
             detailsTypePill.setText(displayType);
         }
 
-        detailsImageView.setImage(resolveProductImage(p.getImage()));
+        detailsImageView.setImage(imageService.resolveProductImage(p.getImage(), getClass()));
 
         int max = Math.max(1, p.getQuantiteStock());
         detailsQuantitySpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, max, 1));
@@ -2271,12 +2131,12 @@ public class MarketplaceController implements Initializable {
             detailsOldPrice.setText(String.format("%.2f TND", p.getPrix()));
             detailsOldPrice.setVisible(true);
             detailsOldPrice.setManaged(true);
-            detailsConvertedPrice.setText(String.format("â‰ˆ %.2f EUR Â· %.2f USD", p.getPromotionPrice() * 0.29, p.getPromotionPrice() * 0.32));
+            detailsConvertedPrice.setText(String.format("~ %.2f EUR | %.2f USD", p.getPromotionPrice() * 0.29, p.getPromotionPrice() * 0.32));
         } else {
             detailsPrice.setText(String.format("%.2f", p.getPrix()));
             detailsOldPrice.setVisible(false);
             detailsOldPrice.setManaged(false);
-            detailsConvertedPrice.setText(String.format("â‰ˆ %.2f EUR Â· %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
+            detailsConvertedPrice.setText(String.format("~ %.2f EUR | %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
         }
 
         animateOverlayIn(detailsOverlay);
@@ -2517,49 +2377,6 @@ public class MarketplaceController implements Initializable {
         return "carte".equals(value) ? "card" : "home";
     }
 
-    private VBox buildCheckoutSuccessPane(Dialog<ButtonType> checkoutDialog, int commandeId, String modePaiement, String adresse, int itemCount, double totalAmount) {
-        Label icon = new Label("âœ“");
-        icon.getStyleClass().add("checkout-success-icon");
-
-        Label title = new Label("Felicitations, commande validee");
-        title.getStyleClass().add("checkout-success-title");
-
-        Label subtitle = new Label("Votre commande a ete enregistree avec succes.");
-        subtitle.getStyleClass().add("checkout-success-subtitle");
-
-        GridPane summary = new GridPane();
-        summary.getStyleClass().add("checkout-success-grid");
-        summary.setHgap(10);
-        summary.setVgap(8);
-        summary.add(new Label("Commande"), 0, 0);
-        summary.add(new Label("#" + commandeId), 1, 0);
-        summary.add(new Label("Paiement"), 0, 1);
-        summary.add(new Label(resolvePaymentLabel(modePaiement)), 1, 1);
-        summary.add(new Label("Adresse"), 0, 2);
-        summary.add(new Label(adresse), 1, 2);
-        summary.add(new Label("Articles"), 0, 3);
-        summary.add(new Label(String.valueOf(itemCount)), 1, 3);
-        summary.add(new Label("Montant total"), 0, 4);
-        summary.add(new Label(String.format("%.2f TND", totalAmount)), 1, 4);
-
-        Button closeSuccessButton = new Button("Fermer");
-        closeSuccessButton.getStyleClass().add("checkout-save-btn");
-        closeSuccessButton.setOnAction(e -> {
-            if (checkoutDialog != null) {
-                checkoutDialog.setResult(ButtonType.CANCEL);
-                checkoutDialog.close();
-            }
-        });
-
-        HBox actions = new HBox(closeSuccessButton);
-        actions.setAlignment(Pos.CENTER_RIGHT);
-        actions.getStyleClass().add("checkout-inline-actions");
-
-        VBox shell = new VBox(10, icon, title, subtitle, summary, actions);
-        shell.getStyleClass().add("checkout-success-shell");
-        return shell;
-    }
-
     private void applyDialogStylesheet(DialogPane pane) {
         if (pane == null) {
             return;
@@ -2585,6 +2402,36 @@ public class MarketplaceController implements Initializable {
             showToast("Commande supprimee.", true);
         } catch (SQLException e) {
             showSqlAlert(e);
+        }
+    }
+
+    private void downloadFacture(Commande commande) {
+        try {
+            javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
+            chooser.setTitle("Enregistrer la facture");
+            chooser.setInitialFileName("facture_commande_" + commande.getId() + ".pdf");
+            chooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF", "*.pdf"));
+
+            java.io.File selected = chooser.showSaveDialog(mainContent.getScene().getWindow());
+            if (selected == null) {
+                return;
+            }
+
+            services.MarketplaceInvoicePdfService.InvoiceData invoice = new services.MarketplaceInvoicePdfService.InvoiceData();
+            invoice.commandeId = commande.getId();
+            entities.User currentUser = utils.SessionManager.getInstance().getCurrentUser();
+            invoice.clientName = currentUser != null ? currentUser.getFirstName() + " " + currentUser.getLastName() : "Client " + commande.getClientId();
+            invoice.paymentMode = resolvePaymentLabel(commande.getModePaiement());
+            invoice.deliveryAddress = commande.getAdresseLivraison();
+            invoice.itemCount = 1; // Defaulting to 1 as count isn't stored in Commande directly
+            invoice.totalAmount = commande.getMontantTotal();
+            invoice.issuedAt = commande.getCreatedAt();
+
+            services.MarketplaceInvoicePdfService invoicePdfService = new services.MarketplaceInvoicePdfService();
+            invoicePdfService.generateInvoice(selected.toPath(), invoice);
+            showToast("Facture PDF enregistree.", true);
+        } catch (Exception ex) {
+            showToast("Echec generation PDF: " + ex.getMessage(), false);
         }
     }
 
@@ -2808,6 +2655,14 @@ public class MarketplaceController implements Initializable {
         return DEFAULT_GUEST_USER_ID;
     }
 
+    private Integer getSessionUserId() {
+        entities.User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser != null && currentUser.getId() > 0) {
+            return currentUser.getId();
+        }
+        return null;
+    }
+
     private int getFallbackSellerId() {
         int currentUserId = getCurrentUserId();
         return currentUserId == DEFAULT_FALLBACK_SELLER_ID
@@ -2857,177 +2712,6 @@ public class MarketplaceController implements Initializable {
         return trimmed;
     }
 
-    private Image resolveProductImage(String rawImagePath) {
-        String raw = safe(rawImagePath).trim();
-        raw = raw.replace("\"", "");
-        if (raw.isEmpty()) {
-            return loadPlaceholderImage();
-        }
-
-        try {
-            String normalizedRaw = raw.replace('\\', '/');
-
-            if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("file:")) {
-                Image direct = new Image(raw, false);
-                return direct.isError() ? loadPlaceholderImage() : direct;
-            }
-
-            // DB should ideally store relative paths like uploads/produits/<file>.
-            // Resolve them against shared directories used by both Symfony and Java.
-            if (normalizedRaw.startsWith("/uploads/") || normalizedRaw.startsWith("uploads/")) {
-                String relative = normalizedRaw.startsWith("/") ? normalizedRaw.substring(1) : normalizedRaw;
-
-                Path sharedUploads = getSharedUploadsDir();
-                if (relative.startsWith("uploads/")) {
-                    String subPath = relative.substring("uploads/".length());
-                    Path sharedPath = sharedUploads.resolve(subPath).toAbsolutePath();
-                    Image sharedImage = loadImageIfExists(sharedPath);
-                    if (sharedImage != null) {
-                        return sharedImage;
-                    }
-                }
-
-                for (Path symfonyPublic : getSymfonyPublicCandidates()) {
-                    Path symfonyPath = symfonyPublic.resolve(relative).toAbsolutePath();
-                    Image symfonyImage = loadImageIfExists(symfonyPath);
-                    if (symfonyImage != null) {
-                        return symfonyImage;
-                    }
-                }
-
-                Image remote = loadFromRemoteMedia(relative);
-                if (remote != null) {
-                    return remote;
-                }
-            }
-
-            Path absolutePath = Paths.get(raw).toAbsolutePath();
-            Image localAbsolute = loadImageIfExists(absolutePath);
-            if (localAbsolute != null) {
-                return localAbsolute;
-            }
-
-            Path projectRelative = Paths.get(System.getProperty("user.dir"), raw).toAbsolutePath();
-            Image localRelative = loadImageIfExists(projectRelative);
-            if (localRelative != null) {
-                return localRelative;
-            }
-
-            Path rawPath = Paths.get(raw);
-            if (rawPath.getFileName() != null) {
-                String fileName = rawPath.getFileName().toString();
-                Image byName = findByFilenameFallback(fileName);
-                if (byName != null) {
-                    return byName;
-                }
-            }
-        } catch (Exception ignored) {
-            return loadPlaceholderImage();
-        }
-
-        return loadPlaceholderImage();
-    }
-
-    private Image loadImageIfExists(Path path) {
-        if (path == null || !Files.exists(path)) {
-            return null;
-        }
-        Image image = new Image(path.toUri().toString(), false);
-        return image.isError() ? null : image;
-    }
-
-    private List<Path> getSymfonyPublicCandidates() {
-        LinkedHashSet<Path> candidates = new LinkedHashSet<>();
-
-        String envPath = System.getenv("SYMFONY_PUBLIC_DIR");
-        if (envPath != null && !envPath.isBlank()) {
-            candidates.add(Paths.get(envPath).toAbsolutePath());
-        }
-
-        // Local known Symfony setup: C:/Users/<user>/agrismart/public
-        Path homeSymfonyPublic = Paths.get(System.getProperty("user.home"), "agrismart", "public").toAbsolutePath();
-        candidates.add(homeSymfonyPublic);
-
-        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
-        Path parent = current.getParent();
-        if (parent != null) {
-            candidates.add(parent.resolve("agriSmartSymfony").resolve("public").toAbsolutePath());
-            candidates.add(parent.resolve("agrismart-symfony").resolve("public").toAbsolutePath());
-            candidates.add(parent.resolve("symfony").resolve("public").toAbsolutePath());
-            candidates.add(parent.resolve("project-symfony").resolve("public").toAbsolutePath());
-        }
-
-        return new ArrayList<>(candidates);
-    }
-
-    private Image loadFromRemoteMedia(String relative) {
-        LinkedHashSet<String> bases = new LinkedHashSet<>();
-
-        String envBase = System.getenv("MEDIA_BASE_URL");
-        if (envBase != null && !envBase.isBlank()) {
-            bases.add(envBase);
-        }
-
-        bases.add("http://localhost:8000");
-        bases.add("http://127.0.0.1:8000");
-
-        for (String base : bases) {
-            String normalizedBase = base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
-            Image image = new Image(normalizedBase + "/" + relative, false);
-            if (!image.isError()) {
-                return image;
-            }
-        }
-
-        return null;
-    }
-
-    private Image findByFilenameFallback(String fileName) {
-        if (fileName == null || fileName.isBlank()) {
-            return null;
-        }
-
-        Path sharedCandidate = getSharedUploadsDir().resolve("produits").resolve(fileName).toAbsolutePath();
-        Image shared = loadImageIfExists(sharedCandidate);
-        if (shared != null) {
-            return shared;
-        }
-
-        for (Path symfonyPublic : getSymfonyPublicCandidates()) {
-            Path candidate = symfonyPublic.resolve("uploads").resolve("produits").resolve(fileName).toAbsolutePath();
-            Image found = loadImageIfExists(candidate);
-            if (found != null) {
-                return found;
-            }
-        }
-
-        return null;
-    }
-
-    private Image loadPlaceholderImage() {
-        try {
-            String[] candidates = {
-                    "/images/placeholder_agrismart.png",
-                    "/images/product_placeholder.png",
-                    "/images/logo.png"
-            };
-
-            for (String candidate : candidates) {
-                URL resource = getClass().getResource(candidate);
-                if (resource == null) {
-                    continue;
-                }
-                Image placeholder = new Image(resource.toExternalForm(), true);
-                if (!placeholder.isError()) {
-                    return placeholder;
-                }
-            }
-        } catch (Exception ignored) {
-            return null;
-        }
-        return null;
-    }
-
     private void populateProductGrid(java.util.List<Produit> produits) {
         if (productGrid == null) return;
         productGrid.getChildren().clear();
@@ -3061,7 +2745,7 @@ public class MarketplaceController implements Initializable {
             imageContainer.setMaxHeight(150);
             
             try {
-                Image loadedImage = resolveProductImage(p.getImage());
+                Image loadedImage = imageService.resolveProductImage(p.getImage(), getClass());
                 if (loadedImage != null) {
                     ImageView imgView = new ImageView(loadedImage);
                     imgView.setFitHeight(150);
@@ -3102,6 +2786,14 @@ public class MarketplaceController implements Initializable {
                 imageContainer.getChildren().add(promoBadge);
             }
 
+            if (purchasedProductIds.contains(p.getId())) {
+                Label boughtBadge = new Label("ACHETE");
+                boughtBadge.getStyleClass().add("promo-badge");
+                StackPane.setAlignment(boughtBadge, javafx.geometry.Pos.BOTTOM_RIGHT);
+                StackPane.setMargin(boughtBadge, new javafx.geometry.Insets(0, 8, 8, 0));
+                imageContainer.getChildren().add(boughtBadge);
+            }
+
             VBox infoBox = new VBox(6);
             infoBox.setPadding(new javafx.geometry.Insets(12));
             VBox.setVgrow(infoBox, Priority.ALWAYS);
@@ -3139,10 +2831,22 @@ public class MarketplaceController implements Initializable {
 
             Button btnAddCart = new Button("Ajouter au panier");
             btnAddCart.getStyleClass().add("btn-cart-small");
-            btnAddCart.setOnAction(e -> {
-                addToCart(p, 1);
-                e.consume();
-            });
+            boolean isOwnOffer = p.getVendeurId() > 0 && p.getVendeurId() == getCurrentUserId();
+            boolean isAlreadyBought = purchasedProductIds.contains(p.getId());
+            if (isOwnOffer) {
+                btnAddCart.setText("C ton offre");
+                btnAddCart.setDisable(true);
+                btnAddCart.getStyleClass().add("own-offer");
+            } else if (isAlreadyBought) {
+                btnAddCart.setText("Deja achete");
+                btnAddCart.setDisable(true);
+                btnAddCart.getStyleClass().add("own-offer");
+            } else {
+                btnAddCart.setOnAction(e -> {
+                    addToCart(p, 1);
+                    e.consume();
+                });
+            }
 
             Button btnView = new Button("Voir");
             btnView.getStyleClass().add("btn-primary-small");
