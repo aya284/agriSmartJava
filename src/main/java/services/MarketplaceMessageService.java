@@ -79,6 +79,48 @@ public class MarketplaceMessageService implements IService<MarketplaceMessage> {
         }
     }
 
+    public List<MarketplaceMessage> getByConversation(int conversationId) throws SQLException {
+        List<MarketplaceMessage> messages = new ArrayList<>();
+        String req = "SELECT * FROM marketplace_message WHERE conversation_id=? ORDER BY created_at ASC";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, conversationId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    messages.add(mapResultSet(rs));
+                }
+            }
+        }
+        return messages;
+    }
+
+    public int countUnreadForUser(int userId) throws SQLException {
+        String req = "SELECT COUNT(*) " +
+                "FROM marketplace_message m " +
+                "JOIN marketplace_conversation c ON c.id = m.conversation_id " +
+                "WHERE m.is_read = false AND m.sender_id <> ? AND (c.buyer_id = ? OR c.seller_id = ?)";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ps.setInt(3, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public void markConversationAsRead(int conversationId, int readerId) throws SQLException {
+        String req = "UPDATE marketplace_message SET is_read=true, read_at=NOW() " +
+                "WHERE conversation_id=? AND sender_id<>? AND is_read=false";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, conversationId);
+            ps.setInt(2, readerId);
+            ps.executeUpdate();
+        }
+    }
+
     private MarketplaceMessage mapResultSet(ResultSet rs) throws SQLException {
         MarketplaceMessage message = new MarketplaceMessage();
         message.setId(rs.getInt("id"));

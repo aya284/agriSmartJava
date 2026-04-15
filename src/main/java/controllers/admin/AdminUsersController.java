@@ -124,7 +124,7 @@ public class AdminUsersController {
                 User user = getTableView().getItems().get(getIndex());
 
                 Label badge = new Label(status.toUpperCase());
-                badge.setStyle(getBadgeStyle(status) + " -fx-cursor: hand;");
+                badge.getStyleClass().setAll("admin-status-badge", "status-" + status.toLowerCase());
 
                 ContextMenu menu = new ContextMenu();
                 MenuItem itemActive   = makeMenuItem("✅  Activer",    "active",   user);
@@ -162,13 +162,7 @@ public class AdminUsersController {
                 User user = getTableView().getItems().get(getIndex());
 
                 Button btnView = new Button("👁  Voir");
-                btnView.setStyle(
-                        "-fx-background-color: #3498db;" +
-                                "-fx-text-fill: white;" +
-                                "-fx-font-size: 11;" +
-                                "-fx-padding: 4 10;" +
-                                "-fx-background-radius: 4;" +
-                                "-fx-cursor: hand;");
+                btnView.getStyleClass().add("admin-btn-secondary");
                 btnView.setOnAction(e -> openUserDetail(user));
                 setGraphic(btnView);
             }
@@ -250,12 +244,10 @@ public class AdminUsersController {
             final int page = i;
             Button btn = new Button(String.valueOf(i));
             btn.getStyleClass().add("page-number-btn");
-            btn.setStyle(i == currentPage
-                    ? "-fx-background-color:#2ecc71; -fx-text-fill:white;" +
-                      "-fx-font-weight:bold; -fx-padding:5 10; -fx-background-radius:4;"
-                    : "-fx-background-color:white; -fx-text-fill:#333;" +
-                      "-fx-padding:5 10; -fx-background-radius:4;" +
-                      "-fx-border-color:#ddd; -fx-border-radius:4;");
+                        btn.getStyleClass().add("admin-btn-secondary");
+                        if (i == currentPage) {
+                                btn.getStyleClass().add("active");
+                        }
             btn.setOnAction(e -> { currentPage = page; loadPage(); });
             paginationBox.getChildren().add(
                     paginationBox.getChildren().indexOf(btnNext), btn);
@@ -301,15 +293,4 @@ public class AdminUsersController {
         });
     }
 
-    // ── Badge style ───────────────────────────────────────────
-    private String getBadgeStyle(String status) {
-        String color = switch (status.toLowerCase()) {
-            case "active"   -> "#27ae60";
-            case "inactive" -> "#e74c3c";
-            case "pending"  -> "#f39c12";
-            default         -> "#95a5a6";
-        };
-        return "-fx-background-color:" + color + "; -fx-text-fill:white;" +
-                "-fx-font-size:10; -fx-padding:3 10; -fx-background-radius:10;";
-    }
 }

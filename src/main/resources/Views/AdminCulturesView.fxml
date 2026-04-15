@@ -42,7 +42,9 @@
                         <ComboBox fx:id="sortCombo" prefWidth="180" onAction="#handleSort" styleClass="combo-box"/>
                     </VBox>
                     <VBox spacing="4" alignment="BOTTOM_RIGHT">
-                        <Button onAction="#handleExport" text="📥" minWidth="45" maxWidth="45" minHeight="45" maxHeight="45" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-background-radius: 50; -fx-font-weight: bold; -fx-font-size: 20; -fx-cursor: hand;"/>
+                        <Button onAction="#handleExport" text="📥" 
+                                minWidth="50" maxWidth="50" minHeight="50" maxHeight="50" 
+                                style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-background-radius: 25; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand; -fx-padding: 0;"/>
                     </VBox>
                 </HBox>
             </HBox>
