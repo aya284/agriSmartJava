@@ -97,11 +97,12 @@ public class LoginController {
     }
 
     private void navigateByRole(String role) {
-        String view = switch (role.toLowerCase()) {
-            case "admin"       -> "/Views/admin/AdminLayout.fxml";
-            case "employee"    -> "/Views/MainView.fxml";
-            case "fournisseur" -> "/Views/MainView.fxml";
-            default            -> "/Views/MainView.fxml";
+        String normalizedRole = role == null ? "" : role.trim().toLowerCase();
+        String view = switch (normalizedRole) {
+            case "admin" -> "/Views/Admin/AdminLayout.fxml";
+            case "employee", "employe", "employé", "candidate", "candidat", "candidature" -> "/Views/FrontLayout.fxml";
+            case "agriculteur", "fournisseur" -> "/Views/MainView.fxml";
+            default -> "/Views/MainView.fxml";
         };
         loadView(view);
     }

@@ -55,18 +55,12 @@ public class CandidatOffreController implements Initializable {
             List<Offre> list = service.afficher();
             cardsContainer.getChildren().clear();
 
-            // 1. Filter the list to only include 'approuvée' status
-            List<Offre> approvedOffres = list.stream()
-                    .filter(o -> "approuvée".equalsIgnoreCase(o.getStatut_validation()))
-                    .toList();
-
-            // 2. Add only these filtered offers to the UI
-            for (Offre o : approvedOffres) {
+            // Show all offers fetched from DB for the candidate view.
+            for (Offre o : list) {
                 cardsContainer.getChildren().add(createCandidateCard(o));
             }
 
-            // 3. Update the count label to reflect only what the candidate sees
-            countLabel.setText(approvedOffres.size() + " offre(s) disponible(s) actuellement");
+            countLabel.setText(list.size() + " offre(s) disponible(s) actuellement");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -211,7 +205,7 @@ public class CandidatOffreController implements Initializable {
 
     @FXML
     public void handleSearch() {
-        String query = searchField.getText().toLowerCase().trim();
+        String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase().trim();
         String selectedStatut = (statutFilter != null) ? statutFilter.getValue() : "Toutes les offres";
 
         try {
@@ -219,14 +213,14 @@ public class CandidatOffreController implements Initializable {
             cardsContainer.getChildren().clear();
 
             List<Offre> filteredList = allOffres.stream()
-                    // Rule 1: Always only show 'approuvée' offers to candidates
-                    .filter(o -> "approuvée".equalsIgnoreCase(o.getStatut_validation()))
+                    // Rule 1: Filter by Search Text (Title or Lieu)
+                    .filter(o -> {
+                    String title = o.getTitle() == null ? "" : o.getTitle().toLowerCase();
+                    String lieu = o.getLieu() == null ? "" : o.getLieu().toLowerCase();
+                    return title.contains(query) || lieu.contains(query);
+                    })
 
-                    // Rule 2: Filter by Search Text (Title or Lieu)
-                    .filter(o -> o.getTitle().toLowerCase().contains(query) ||
-                            o.getLieu().toLowerCase().contains(query))
-
-                    // Rule 3: Filter by ComboBox Statut (Ouvert vs Clôturée)
+                    // Rule 2: Filter by ComboBox Statut (Ouvert vs Clôturée)
                     .filter(o -> {
                         if ("Toutes les offres".equals(selectedStatut)) return true;
 
