@@ -2,6 +2,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controllers.MainController"
@@ -12,10 +13,19 @@
             <padding><Insets top="14" right="18" bottom="14" left="18"/></padding>
 
             <HBox spacing="14" alignment="CENTER_LEFT" styleClass="app-header-top">
-                <VBox spacing="2">
-                    <Label text="AgriSmart" styleClass="logo-text"/>
-                    <Label text="Smart agriculture operations workspace" styleClass="logo-subtext"/>
-                </VBox>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <StackPane styleClass="logo-mark">
+                        <ImageView fitHeight="36" fitWidth="36" preserveRatio="true">
+                            <image>
+                                <Image url="@../images/logo.png" />
+                            </image>
+                        </ImageView>
+                    </StackPane>
+                    <VBox spacing="2">
+                        <Label text="AgriSmart" styleClass="logo-text"/>
+                        <Label text="Smart agriculture operations workspace" styleClass="logo-subtext"/>
+                    </VBox>
+                </HBox>
 
                 <HBox HBox.hgrow="ALWAYS"/>
 
@@ -27,33 +37,27 @@
 
             <HBox spacing="10" alignment="CENTER_LEFT" styleClass="module-pill-row">
                 <Label text="Modules" styleClass="module-label"/>
-                <Button text="Marketplace" styleClass="module-pill" onAction="#openMarketplace"/>
-                <Button text="Gestion Culture" styleClass="module-pill" onAction="#openCulture"/>
-                <Button text="Gestion Taches" styleClass="module-pill" onAction="#openTaches"/>
-                <Button text="Candidature" styleClass="module-pill" onAction="#openEmployes"/>
-                <Button text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
+                <Button fx:id="btnMarketplace" text="Marketplace" styleClass="module-pill" onAction="#openMarketplace"/>
+                <Button fx:id="btnCulture" text="Gestion Culture" styleClass="module-pill" onAction="#openCulture"/>
+                <Button fx:id="btnTaches" text="Gestion Taches" styleClass="module-pill" onAction="#openTaches"/>
+                <Button fx:id="btnEmployes" text="Gestion Employes" styleClass="module-pill" onAction="#openEmployes"/>
+                <Button fx:id="btnUsers" text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
                 <HBox HBox.hgrow="ALWAYS"/>
-                <Label fx:id="currentModuleLabel" text="Current: Marketplace" styleClass="current-module-label"/>
+                <StackPane alignment="CENTER_RIGHT">
+                    <Label fx:id="currentModuleLabel" text="Current: Marketplace" styleClass="current-module-label"/>
+                    <HBox fx:id="headerAlertBox" alignment="CENTER_LEFT" spacing="6" managed="false" visible="false"
+                          styleClass="header-alert-box,header-alert-success">
+                        <Label fx:id="headerAlertLabel" text="Operation terminee" styleClass="header-alert-label"/>
+                    </HBox>
+                </StackPane>
             </HBox>
         </VBox>
     </top>
 
-    <left>
-        <VBox spacing="8" styleClass="sidebar">
-            <padding><Insets top="20" right="12" bottom="20" left="12"/></padding>
-            <Label text="Quick Access" styleClass="sidebar-title"/>
-            <Button text="Marketplace Hub" styleClass="nav-btn" maxWidth="Infinity" onAction="#openMarketplace"/>
-            <Button text="Culture Control" styleClass="nav-btn" maxWidth="Infinity" onAction="#openCulture"/>
-            <Button text="Task Studio" styleClass="nav-btn" maxWidth="Infinity" onAction="#openTaches"/>
-            <Button text="Employee Desk" styleClass="nav-btn" maxWidth="Infinity" onAction="#openEmployes"/>
-            <Button text="User Center" styleClass="nav-btn" maxWidth="Infinity" onAction="#openUsers"/>
-            <VBox VBox.vgrow="ALWAYS"/>
-            <Label text="Flow: Plan, Track, Grow" styleClass="sidebar-note"/>
-        </VBox>
-    </left>
-
     <center>
-        <StackPane fx:id="contentArea" styleClass="content-area" BorderPane.alignment="CENTER"/>
+        <StackPane styleClass="content-stage">
+            <StackPane fx:id="contentArea" styleClass="content-area" BorderPane.alignment="CENTER"/>
+        </StackPane>
     </center>
 
     <bottom>
