@@ -1,46 +1,174 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" spacing="14" styleClass="feature-page">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.TaskController" stylesheets="@../css/style.css" style="-fx-background-color: #F8F9FA;">
 
-    <VBox styleClass="feature-hero" spacing="10">
-        <Label text="Gestion Taches" styleClass="feature-title"/>
-        <Label text="Orchestration des operations quotidiennes et priorites equipe" styleClass="feature-subtitle"/>
-        <HBox spacing="10">
-            <Button text="Nouvelle tache" styleClass="action-chip primary"/>
-            <Button text="Kanban" styleClass="action-chip"/>
-            <Button text="Sprint agricole" styleClass="action-chip"/>
-            <Button text="Historique" styleClass="action-chip gold"/>
-        </HBox>
-    </VBox>
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #F8F9FA; -fx-border-color: transparent;">
+            <VBox spacing="14" style="-fx-padding: 18 24 30 24;">
 
-    <HBox spacing="12">
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="Taches ouvertes" styleClass="stat-title"/>
-            <Label text="34" styleClass="stat-value"/>
-        </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="Urgentes" styleClass="stat-title"/>
-            <Label text="5" styleClass="stat-value"/>
-        </VBox>
-        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-            <Label text="Terminees" styleClass="stat-title"/>
-            <Label text="112" styleClass="stat-value"/>
-        </VBox>
-    </HBox>
 
-    <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
-        <Label text="Backlog prioritaire" styleClass="panel-title"/>
-        <Label text="Vision consolidatee pour les operations terrain" styleClass="panel-muted"/>
-        <TableView VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn text="Tache" prefWidth="260"/>
-                <TableColumn text="Responsable" prefWidth="180"/>
-                <TableColumn text="Priorite" prefWidth="120"/>
-                <TableColumn text="Etat" prefWidth="140"/>
-                <TableColumn text="Echeance" prefWidth="140"/>
-            </columns>
-        </TableView>
-    </VBox>
-</VBox>
+                <VBox styleClass="feature-hero" spacing="14">
+                    <Label text="Gestion des Taches" styleClass="feature-title"/>
+                    <Label text="Orchestration et suivi de vos operations quotidiennes" styleClass="feature-subtitle"/>
+
+                    <HBox spacing="10">
+                        <Button text="Nouvelle tache" styleClass="action-chip,primary" onAction="#handleAdd"/>
+
+                    </HBox>
+                </VBox>
+
+
+                <HBox spacing="12">
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                        <Label text="Taches a faire" styleClass="stat-title"/>
+                        <Label text="0" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                        <Label text="En cours" styleClass="stat-title"/>
+                        <Label text="0" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                        <Label text="Terminees" styleClass="stat-title"/>
+                        <Label text="0" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                        <Label text="Urgentes" styleClass="stat-title"/>
+                        <Label text="0" styleClass="stat-value"/>
+                    </VBox>
+                </HBox>
+
+
+                <HBox spacing="14">
+
+                    <VBox spacing="10" styleClass="panel-card" prefWidth="280" minWidth="280" maxWidth="280">
+                        <Label text="Filtres" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                        <VBox spacing="6">
+                            <Label text="RECHERCHE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                            <TextField fx:id="searchField" promptText="Par mot cle..." />
+                        </VBox>
+
+                        <VBox spacing="6">
+                            <Label text="STATUT" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                            <ComboBox promptText="Tous les statuts" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <VBox spacing="6">
+                            <Label text="PRIORITE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                            <ComboBox promptText="Toutes les priorites" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <VBox spacing="6">
+                            <Label text="TYPE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                            <ComboBox promptText="Tous les types" maxWidth="Infinity"/>
+                        </VBox>
+
+                        <VBox spacing="6">
+                            <Label text="TRIER" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                            <ComboBox fx:id="sortComboBox" promptText="Tri par..." maxWidth="Infinity"/>
+                        </VBox>
+
+                        <VBox spacing="8">
+                            <HBox spacing="8">
+                                <Button text="Asc" styleClass="action-chip" onAction="#handleSortAscending" HBox.hgrow="ALWAYS"/>
+                                <Button text="Desc" styleClass="action-chip" onAction="#handleSortDescending" HBox.hgrow="ALWAYS"/>
+                            </HBox>
+                            <Button text="Reset" styleClass="action-chip" onAction="#handleResetSearch" maxWidth="Infinity"/>
+                        </VBox>
+                    </VBox>
+
+
+                    <VBox spacing="10" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" style="-fx-padding: 6 6 6 6;">
+                            <Label text="Mes Taches" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                            <HBox HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+
+                        <VBox styleClass="panel-card" spacing="12">
+                            <Label text="Nouvelle Tache" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+                            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-border-color: transparent;">
+                                <GridPane hgap="14" vgap="12">
+                                    <padding><Insets top="4" right="4" bottom="4" left="4" /></padding>
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="120" prefWidth="140" />
+                                        <ColumnConstraints prefWidth="240" />
+                                        <ColumnConstraints minWidth="120" prefWidth="140" />
+                                        <ColumnConstraints prefWidth="240" />
+                                    </columnConstraints>
+
+                                    <Label text="Titre *" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                                    <TextField fx:id="titreField" promptText="Titre de la tache" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                                    <Label text="Priorite *" GridPane.rowIndex="0" GridPane.columnIndex="2" />
+                                    <ComboBox fx:id="prioriteComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="3" />
+
+                                    <Label text="Description" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                                    <TextArea fx:id="descriptionArea" prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                                    <Label text="Resume" GridPane.rowIndex="1" GridPane.columnIndex="2" />
+                                    <TextArea fx:id="resumeArea" prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="3" />
+
+                                    <Label text="Date debut *" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                                    <DatePicker fx:id="dateDebutPicker" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                                    <Label text="Date fin" GridPane.rowIndex="2" GridPane.columnIndex="2" />
+                                    <DatePicker fx:id="dateFinPicker" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="3" />
+
+                                    <Label text="Statut *" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                                    <ComboBox fx:id="statutComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                                    <Label text="Type *" GridPane.rowIndex="3" GridPane.columnIndex="2" />
+                                    <ComboBox fx:id="typeComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="3" />
+
+                                    <Label text="Localisation" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                                    <TextField fx:id="localisationField" promptText="Localisation" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+                                    <Label text="Parcelle ID" GridPane.rowIndex="4" GridPane.columnIndex="2" />
+                                    <ComboBox fx:id="parcelleIdComboBox" promptText="Choisir une parcelle" maxWidth="Infinity" GridPane.rowIndex="4" GridPane.columnIndex="3" />
+
+                                    <Label text="Culture ID" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                                    <ComboBox fx:id="cultureIdComboBox" promptText="Choisir une culture" maxWidth="Infinity" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
+                                    <Label text="Created By" GridPane.rowIndex="5" GridPane.columnIndex="2" />
+                                    <ComboBox fx:id="createdByComboBox" promptText="Choisir un utilisateur" maxWidth="Infinity" GridPane.rowIndex="5" GridPane.columnIndex="3" />
+                                </GridPane>
+                            </ScrollPane>
+
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button text="Ajouter" styleClass="action-chip,primary" onAction="#handleAdd"/>
+                                <Button text="Modifier" styleClass="action-chip" onAction="#handleUpdate"/>
+                                <Button text="Supprimer" styleClass="action-chip,danger" onAction="#handleDelete"/>
+                                <Button text="Annuler" styleClass="action-chip" onAction="#handleClear"/>
+                            </HBox>
+                        </VBox>
+
+
+                        <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+                            <Label text="Backlog Prioritaire" styleClass="panel-title"/>
+                            <Label text="Vision consolidatee pour vos operations" styleClass="panel-muted"/>
+
+                            <TableView fx:id="taskTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="idTaskColumn" text="ID" prefWidth="70" />
+                                    <TableColumn fx:id="titreColumn" text="Titre" prefWidth="160" />
+                                    <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="220" />
+                                    <TableColumn fx:id="prioriteColumn" text="Priorite" prefWidth="100" />
+                                    <TableColumn fx:id="statutColumn" text="Statut" prefWidth="120" />
+                                    <TableColumn fx:id="typeColumn" text="Type" prefWidth="120" />
+                                    <TableColumn fx:id="dateDebutColumn" text="Date debut" prefWidth="110" />
+                                    <TableColumn fx:id="dateFinColumn" text="Date fin" prefWidth="110" />
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>

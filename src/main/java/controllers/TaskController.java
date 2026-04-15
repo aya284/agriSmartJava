@@ -1,6 +1,9 @@
 package controllers;
 
+import entities.Culture;
+import entities.Parcelle;
 import entities.Task;
+import entities.User;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,17 +14,23 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.StringConverter;
+import services.CultureService;
+import services.ParcelleService;
 import services.TaskService;
+import services.UserService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 public class TaskController {
@@ -35,9 +44,9 @@ public class TaskController {
     @FXML private DatePicker dateDebutPicker;
     @FXML private DatePicker dateFinPicker;
     @FXML private TextField localisationField;
-    @FXML private TextField parcelleIdField;
-    @FXML private TextField cultureIdField;
-    @FXML private TextField createdByField;
+    @FXML private ComboBox<SelectionOption> parcelleIdComboBox;
+    @FXML private ComboBox<SelectionOption> cultureIdComboBox;
+    @FXML private ComboBox<SelectionOption> createdByComboBox;
 
     @FXML private TableView<Task> taskTable;
     @FXML private TableColumn<Task, Integer> idTaskColumn;
@@ -53,7 +62,13 @@ public class TaskController {
     @FXML private ComboBox<String> sortComboBox;
 
     private final TaskService taskService = new TaskService();
+    private final ParcelleService parcelleService = new ParcelleService();
+    private final CultureService cultureService = new CultureService();
+    private final UserService userService = new UserService();
     private final ObservableList<Task> taskList = FXCollections.observableArrayList();
+    private final ObservableList<SelectionOption> parcelleOptions = FXCollections.observableArrayList();
+    private final ObservableList<SelectionOption> cultureOptions = FXCollections.observableArrayList();
+    private final ObservableList<SelectionOption> userOptions = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -146,24 +161,22 @@ public class TaskController {
         prioriteComboBox.setItems(FXCollections.observableArrayList("low", "medium", "high"));
         statutComboBox.setItems(FXCollections.observableArrayList("todo", "en_cours", "a_valider", "termine"));
         typeComboBox.setItems(FXCollections.observableArrayList("arrosage", "recolte", "fertilisation", "inspection", "autre"));
+
+        configureSelectionComboBox(parcelleIdComboBox, parcelleOptions, "Choisir une parcelle");
+        configureSelectionComboBox(cultureIdComboBox, cultureOptions, "Choisir une culture");
+        configureSelectionComboBox(createdByComboBox, userOptions, "Choisir un utilisateur");
+        loadReferenceData();
+
+        parcelleIdComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
+                loadCulturesForParcelle(newValue == null ? null : newValue.id()));
     }
 
     private void initializeInputValidation() {
-        // Titre: max 255 caractères avec coloration en temps réel
-        titreField.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().length() > 255) {
-                return null;
-            }
-            return change;
-        }));
+        titreField.setTextFormatter(new TextFormatter<>(change ->
+                change.getControlNewText().length() > 255 ? null : change));
 
-        // Description: max 1000 caractères (ne peut pas taper plus)
-        descriptionArea.setTextFormatter(new TextFormatter<>(change -> {
-            if (change.getControlNewText().length() > 1000) {
-                return null;
-            }
-            return change;
-        }));
+        descriptionArea.setTextFormatter(new TextFormatter<>(change ->
+                change.getControlNewText().length() > 1000 ? null : change));
     }
 
     private void initializeTable() {
@@ -181,26 +194,18 @@ public class TaskController {
     }
 
     private void initializeSearchAndSort() {
-        // Populate sort options
         sortComboBox.setItems(FXCollections.observableArrayList(
                 "ID", "Titre", "Description", "Priorite", "Statut", "Type", "Date Debut", "Date Fin"
         ));
         sortComboBox.setValue("ID");
 
-        // Create FilteredList wrapping the taskList
         FilteredList<Task> filteredList = new FilteredList<>(taskList, p -> true);
-
-        // Create SortedList wrapping FilteredList
         SortedList<Task> sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(taskTable.comparatorProperty());
-
-        // Bind the SortedList to TableView
         taskTable.setItems(sortedList);
 
-        // Add listener to search field for real-time filtering
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            updateFilter(filteredList, newValue);
-        });
+        searchField.textProperty().addListener((observable, oldValue, newValue) ->
+                updateFilter(filteredList, newValue));
     }
 
     private void updateFilter(FilteredList<Task> filteredList, String searchText) {
@@ -254,6 +259,8 @@ public class TaskController {
             case "Date Fin":
                 comparator = Comparator.comparing(Task::getDateFin, Comparator.nullsLast(Comparator.naturalOrder()));
                 break;
+            default:
+                break;
         }
 
         if (!ascending && comparator != null) {
@@ -292,16 +299,15 @@ public class TaskController {
                 statutComboBox.getValue(),
                 typeComboBox.getValue(),
                 emptyToNull(localisationField.getText()),
-                parseInteger(parcelleIdField.getText()),
-                parseInteger(cultureIdField.getText()),
-                parseInteger(createdByField.getText())
+                getSelectedOptionId(parcelleIdComboBox),
+                getSelectedOptionId(cultureIdComboBox),
+                getSelectedOptionId(createdByComboBox)
         );
     }
 
     private boolean validateForm() {
         String titre = titreField.getText().trim();
-        
-        // Titre: requis et minimum 3 caractères
+
         if (isBlank(titre)) {
             showWarning("Validation Error - Titre", "Titre is required. Please enter a title.");
             return false;
@@ -310,14 +316,12 @@ public class TaskController {
             showWarning("Validation Error - Titre", "Titre must be at least 3 characters long. Currently: " + titre.length() + " characters.");
             return false;
         }
-        
-        // Date debut: obligatoire
+
         if (dateDebutPicker.getValue() == null) {
             showWarning("Validation Error - Date Debut", "Date debut is required. Please select a start date.");
             return false;
         }
-        
-        // Priorite, statut and type: obligatoires
+
         if (isBlank(prioriteComboBox.getValue())) {
             showWarning("Validation Error - Priorite", "Priorite is required. Please select a priority level.");
             return false;
@@ -330,30 +334,23 @@ public class TaskController {
             showWarning("Validation Error - Type", "Type is required. Please select a type.");
             return false;
         }
-        
-        // Date fin doit être après date début
+
         if (dateFinPicker.getValue() != null && dateFinPicker.getValue().isBefore(dateDebutPicker.getValue())) {
-            showWarning("Validation Error - Dates", 
-                "Date fin must be after or equal to Date debut.\n\n" +
-                "Date debut: " + dateDebutPicker.getValue() + "\n" +
-                "Date fin: " + dateFinPicker.getValue());
+            showWarning("Validation Error - Dates",
+                    "Date fin must be after or equal to Date debut.\n\n" +
+                            "Date debut: " + dateDebutPicker.getValue() + "\n" +
+                            "Date fin: " + dateFinPicker.getValue());
             return false;
         }
-        
-        // Champs numériques doivent être valides
-        if (!isIntegerOrBlank(parcelleIdField.getText())) {
-            showWarning("Validation Error - Parcelle ID", "Parcelle ID must be a valid number or empty. Currently: " + parcelleIdField.getText());
+
+        SelectionOption selectedCulture = cultureIdComboBox.getValue();
+        SelectionOption selectedParcelle = parcelleIdComboBox.getValue();
+        if (selectedCulture != null && selectedParcelle != null && selectedCulture.parentId() != null
+                && !selectedCulture.parentId().equals(selectedParcelle.id())) {
+            showWarning("Validation Error - Culture", "The selected culture does not belong to the selected parcelle.");
             return false;
         }
-        if (!isIntegerOrBlank(cultureIdField.getText())) {
-            showWarning("Validation Error - Culture ID", "Culture ID must be a valid number or empty. Currently: " + cultureIdField.getText());
-            return false;
-        }
-        if (!isIntegerOrBlank(createdByField.getText())) {
-            showWarning("Validation Error - Created By", "Created By must be a valid number or empty. Currently: " + createdByField.getText());
-            return false;
-        }
-        
+
         return true;
     }
 
@@ -367,9 +364,10 @@ public class TaskController {
         dateDebutPicker.setValue(toLocalDate(task.getDateDebut()));
         dateFinPicker.setValue(toLocalDate(task.getDateFin()));
         localisationField.setText(task.getLocalisation() == null ? "" : task.getLocalisation());
-        parcelleIdField.setText(task.getParcelleId() == null ? "" : String.valueOf(task.getParcelleId()));
-        cultureIdField.setText(task.getCultureId() == null ? "" : String.valueOf(task.getCultureId()));
-        createdByField.setText(task.getCreatedBy() == null ? "" : String.valueOf(task.getCreatedBy()));
+        selectOptionById(parcelleIdComboBox, task.getParcelleId());
+        loadCulturesForParcelle(task.getParcelleId());
+        selectOptionById(cultureIdComboBox, task.getCultureId());
+        selectOptionById(createdByComboBox, task.getCreatedBy());
     }
 
     private void clearForm() {
@@ -382,9 +380,10 @@ public class TaskController {
         dateDebutPicker.setValue(null);
         dateFinPicker.setValue(null);
         localisationField.clear();
-        parcelleIdField.clear();
-        cultureIdField.clear();
-        createdByField.clear();
+        parcelleIdComboBox.getSelectionModel().clearSelection();
+        loadCulturesForParcelle(null);
+        cultureIdComboBox.getSelectionModel().clearSelection();
+        createdByComboBox.getSelectionModel().clearSelection();
         taskTable.getSelectionModel().clearSelection();
     }
 
@@ -426,12 +425,97 @@ public class TaskController {
         alert.showAndWait();
     }
 
-    private Integer parseInteger(String value) {
-        return isBlank(value) ? null : Integer.valueOf(value.trim());
+    private void loadReferenceData() {
+        try {
+            parcelleOptions.setAll(toParcelleOptions(parcelleService.afficher()));
+            userOptions.setAll(toUserOptions(userService.getAllUsers()));
+            loadCulturesForParcelle(null);
+        } catch (SQLException exception) {
+            showSqlError(exception);
+        }
     }
 
-    private boolean isIntegerOrBlank(String value) {
-        return isBlank(value) || value.trim().matches("-?\\d+");
+    private void loadCulturesForParcelle(Integer parcelleId) {
+        try {
+            List<Culture> cultures = parcelleId == null ? cultureService.afficher() : cultureService.getByParcelle(parcelleId);
+            Integer currentCultureId = getSelectedOptionId(cultureIdComboBox);
+            cultureOptions.setAll(toCultureOptions(cultures));
+            selectOptionById(cultureIdComboBox, currentCultureId);
+        } catch (SQLException exception) {
+            showSqlError(exception);
+        }
+    }
+
+    private void configureSelectionComboBox(ComboBox<SelectionOption> comboBox,
+                                            ObservableList<SelectionOption> items,
+                                            String promptText) {
+        comboBox.setItems(items);
+        comboBox.setPromptText(promptText);
+        comboBox.setMaxWidth(Double.MAX_VALUE);
+        comboBox.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(SelectionOption item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.label());
+            }
+        });
+        comboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(SelectionOption option) {
+                return option == null ? "" : option.label();
+            }
+
+            @Override
+            public SelectionOption fromString(String string) {
+                return null;
+            }
+        });
+    }
+
+    private List<SelectionOption> toParcelleOptions(List<Parcelle> parcelles) {
+        return parcelles.stream()
+                .map(parcelle -> new SelectionOption(
+                        parcelle.getId(),
+                        parcelle.getId() + " - " + parcelle.getNom(),
+                        null))
+                .toList();
+    }
+
+    private List<SelectionOption> toCultureOptions(List<Culture> cultures) {
+        return cultures.stream()
+                .map(culture -> new SelectionOption(
+                        culture.getId(),
+                        culture.getId() + " - " + culture.getTypeCulture() + " (" + culture.getVariete() + ")",
+                        culture.getParcelleId()))
+                .toList();
+    }
+
+    private List<SelectionOption> toUserOptions(List<User> users) {
+        return users.stream()
+                .map(user -> new SelectionOption(
+                        user.getId(),
+                        user.getId() + " - " + user.getFullName(),
+                        null))
+                .toList();
+    }
+
+    private void selectOptionById(ComboBox<SelectionOption> comboBox, Integer id) {
+        if (id == null) {
+            comboBox.getSelectionModel().clearSelection();
+            return;
+        }
+        comboBox.getItems().stream()
+                .filter(option -> option.id().equals(id))
+                .findFirst()
+                .ifPresentOrElse(
+                        comboBox.getSelectionModel()::select,
+                        () -> comboBox.getSelectionModel().clearSelection()
+                );
+    }
+
+    private Integer getSelectedOptionId(ComboBox<SelectionOption> comboBox) {
+        SelectionOption selected = comboBox.getValue();
+        return selected == null ? null : selected.id();
     }
 
     private boolean isBlank(String value) {
@@ -444,5 +528,8 @@ public class TaskController {
 
     private LocalDate toLocalDate(java.time.LocalDateTime value) {
         return value == null ? null : value.toLocalDate();
+    }
+
+    private record SelectionOption(Integer id, String label, Integer parentId) {
     }
 }
