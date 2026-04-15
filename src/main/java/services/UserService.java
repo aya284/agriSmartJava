@@ -44,7 +44,7 @@ public class UserService {
             ps.setString(7,  user.getAddress().isEmpty() ? null : user.getAddress());
             ps.setString(8,  user.getDocumentFile());  // ← document_file
             ps.setString(9,  user.getImage());          // ← image
-            ps.setString(10, "active");
+            ps.setString(10, "pending");
             ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
             ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
             ps.executeUpdate();
@@ -105,7 +105,7 @@ public class UserService {
             ps.setString(3, email);
             ps.setString(4, "agriculteur");
             ps.setString(5, "");
-            ps.setString(6, "active");
+            ps.setString(6, "pending");
             ps.setString(7, googleId);
             ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
             ps.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
@@ -117,7 +117,7 @@ public class UserService {
             user.setEmail(email);
             user.setRole("agriculteur");
             user.setGoogleId(googleId);
-            user.setStatus("active");
+            user.setStatus("pending");
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) user.setId(keys.getInt(1));
             return Optional.of(user);
@@ -365,6 +365,29 @@ public class UserService {
             List<User> users = new ArrayList<>();
             while (rs.next()) users.add(mapUser(rs));
             return users;
+        }
+    }
+    // ── FIND BY EMAIL ─────────────────────────────────────────
+    public Optional<User> findByEmail(String email) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM users WHERE email = ? LIMIT 1")) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapUser(rs)) : Optional.empty();
+        }
+    }
+
+    // ── RESET PASSWORD (no current password needed) ───────────
+    public void resetPassword(int userId, String newPassword) throws Exception {
+        String error = Validator.validatePassword(newPassword);
+        if (error != null) throw new Exception(error);
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE users SET password = ?, updated_at = ? WHERE id = ?")) {
+            ps.setString(1, PasswordUtils.hash(newPassword));
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            ps.executeUpdate();
         }
     }
 }
