@@ -39,3 +39,4 @@ src/main/client_secret.json
 
 ### Mac OS ###
 .DS_Store
+.idea/workspace.xml

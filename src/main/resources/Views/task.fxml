@@ -24,7 +24,6 @@
     <top>
         <VBox spacing="6">
             <Label text="Task Management" style="-fx-font-size: 22px; -fx-font-weight: bold;" />
-            <Label text="CRUD aligned with the existing Symfony task schema." />
         </VBox>
     </top>
 
@@ -91,6 +90,19 @@
                 <Button text="Update" onAction="#handleUpdate" />
                 <Button text="Delete" onAction="#handleDelete" />
                 <Button text="Clear" onAction="#handleClear" />
+            </HBox>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="🔍 Recherche:" />
+                <TextField fx:id="searchField" promptText="Search by titre, description, type, statut..." HBox.hgrow="ALWAYS" />
+                <Button text="Reset" onAction="#handleResetSearch" />
+            </HBox>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="📊 Tri (Sort):" />
+                <ComboBox fx:id="sortComboBox" promptText="Select sorting..." prefWidth="180" />
+                <Button text="↑ Ascending" onAction="#handleSortAscending" />
+                <Button text="↓ Descending" onAction="#handleSortDescending" />
             </HBox>
 
             <TableView fx:id="taskTable" VBox.vgrow="ALWAYS">

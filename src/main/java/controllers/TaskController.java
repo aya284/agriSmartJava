@@ -4,6 +4,8 @@ import entities.Task;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -12,12 +14,14 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import services.TaskService;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Optional;
 
 public class TaskController {
@@ -45,6 +49,9 @@ public class TaskController {
     @FXML private TableColumn<Task, LocalDate> dateDebutColumn;
     @FXML private TableColumn<Task, LocalDate> dateFinColumn;
 
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> sortComboBox;
+
     private final TaskService taskService = new TaskService();
     private final ObservableList<Task> taskList = FXCollections.observableArrayList();
 
@@ -53,6 +60,8 @@ public class TaskController {
         initializeCombos();
         initializeTable();
         initializeSelectionHandling();
+        initializeInputValidation();
+        initializeSearchAndSort();
         loadTasks();
     }
 
@@ -118,10 +127,43 @@ public class TaskController {
         clearForm();
     }
 
+    @FXML
+    public void handleResetSearch() {
+        searchField.clear();
+    }
+
+    @FXML
+    public void handleSortAscending() {
+        applySorting(true);
+    }
+
+    @FXML
+    public void handleSortDescending() {
+        applySorting(false);
+    }
+
     private void initializeCombos() {
         prioriteComboBox.setItems(FXCollections.observableArrayList("low", "medium", "high"));
         statutComboBox.setItems(FXCollections.observableArrayList("todo", "en_cours", "a_valider", "termine"));
         typeComboBox.setItems(FXCollections.observableArrayList("arrosage", "recolte", "fertilisation", "inspection", "autre"));
+    }
+
+    private void initializeInputValidation() {
+        // Titre: max 255 caractères avec coloration en temps réel
+        titreField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().length() > 255) {
+                return null;
+            }
+            return change;
+        }));
+
+        // Description: max 1000 caractères (ne peut pas taper plus)
+        descriptionArea.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().length() > 1000) {
+                return null;
+            }
+            return change;
+        }));
     }
 
     private void initializeTable() {
@@ -135,8 +177,92 @@ public class TaskController {
                 new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateDebut())));
         dateFinColumn.setCellValueFactory(cellData ->
                 new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateFin())));
-        taskTable.setItems(taskList);
         taskTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    private void initializeSearchAndSort() {
+        // Populate sort options
+        sortComboBox.setItems(FXCollections.observableArrayList(
+                "ID", "Titre", "Description", "Priorite", "Statut", "Type", "Date Debut", "Date Fin"
+        ));
+        sortComboBox.setValue("ID");
+
+        // Create FilteredList wrapping the taskList
+        FilteredList<Task> filteredList = new FilteredList<>(taskList, p -> true);
+
+        // Create SortedList wrapping FilteredList
+        SortedList<Task> sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(taskTable.comparatorProperty());
+
+        // Bind the SortedList to TableView
+        taskTable.setItems(sortedList);
+
+        // Add listener to search field for real-time filtering
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            updateFilter(filteredList, newValue);
+        });
+    }
+
+    private void updateFilter(FilteredList<Task> filteredList, String searchText) {
+        if (searchText == null || searchText.isEmpty()) {
+            filteredList.setPredicate(task -> true);
+        } else {
+            String lowerCaseFilter = searchText.toLowerCase();
+            filteredList.setPredicate(task ->
+                    (task.getTitre() != null && task.getTitre().toLowerCase().contains(lowerCaseFilter)) ||
+                    (task.getDescription() != null && task.getDescription().toLowerCase().contains(lowerCaseFilter)) ||
+                    (task.getType() != null && task.getType().toLowerCase().contains(lowerCaseFilter)) ||
+                    (task.getStatut() != null && task.getStatut().toLowerCase().contains(lowerCaseFilter)) ||
+                    (task.getPriorite() != null && task.getPriorite().toLowerCase().contains(lowerCaseFilter)) ||
+                    (task.getLocalisation() != null && task.getLocalisation().toLowerCase().contains(lowerCaseFilter)) ||
+                    String.valueOf(task.getIdTask()).contains(lowerCaseFilter)
+            );
+        }
+    }
+
+    private void applySorting(boolean ascending) {
+        String selectedSort = sortComboBox.getValue();
+        if (selectedSort == null) {
+            showWarning("Selection Required", "Please select a sorting option.");
+            return;
+        }
+
+        Comparator<Task> comparator = null;
+
+        switch (selectedSort) {
+            case "ID":
+                comparator = Comparator.comparingInt(Task::getIdTask);
+                break;
+            case "Titre":
+                comparator = Comparator.comparing(Task::getTitre, Comparator.nullsLast(String::compareTo));
+                break;
+            case "Description":
+                comparator = Comparator.comparing(Task::getDescription, Comparator.nullsLast(String::compareTo));
+                break;
+            case "Priorite":
+                comparator = Comparator.comparing(Task::getPriorite, Comparator.nullsLast(String::compareTo));
+                break;
+            case "Statut":
+                comparator = Comparator.comparing(Task::getStatut, Comparator.nullsLast(String::compareTo));
+                break;
+            case "Type":
+                comparator = Comparator.comparing(Task::getType, Comparator.nullsLast(String::compareTo));
+                break;
+            case "Date Debut":
+                comparator = Comparator.comparing(Task::getDateDebut, Comparator.nullsLast(Comparator.naturalOrder()));
+                break;
+            case "Date Fin":
+                comparator = Comparator.comparing(Task::getDateFin, Comparator.nullsLast(Comparator.naturalOrder()));
+                break;
+        }
+
+        if (!ascending && comparator != null) {
+            comparator = comparator.reversed();
+        }
+
+        if (comparator != null) {
+            FXCollections.sort(taskList, comparator);
+        }
     }
 
     private void initializeSelectionHandling() {
@@ -173,26 +299,61 @@ public class TaskController {
     }
 
     private boolean validateForm() {
-        if (isBlank(titreField.getText())) {
-            showWarning("Validation Error", "Titre is required.");
+        String titre = titreField.getText().trim();
+        
+        // Titre: requis et minimum 3 caractères
+        if (isBlank(titre)) {
+            showWarning("Validation Error - Titre", "Titre is required. Please enter a title.");
             return false;
         }
+        if (titre.length() < 3) {
+            showWarning("Validation Error - Titre", "Titre must be at least 3 characters long. Currently: " + titre.length() + " characters.");
+            return false;
+        }
+        
+        // Date debut: obligatoire
         if (dateDebutPicker.getValue() == null) {
-            showWarning("Validation Error", "Date debut is required.");
+            showWarning("Validation Error - Date Debut", "Date debut is required. Please select a start date.");
             return false;
         }
-        if (isBlank(prioriteComboBox.getValue()) || isBlank(statutComboBox.getValue()) || isBlank(typeComboBox.getValue())) {
-            showWarning("Validation Error", "Priorite, statut and type are required.");
+        
+        // Priorite, statut and type: obligatoires
+        if (isBlank(prioriteComboBox.getValue())) {
+            showWarning("Validation Error - Priorite", "Priorite is required. Please select a priority level.");
             return false;
         }
+        if (isBlank(statutComboBox.getValue())) {
+            showWarning("Validation Error - Statut", "Statut is required. Please select a status.");
+            return false;
+        }
+        if (isBlank(typeComboBox.getValue())) {
+            showWarning("Validation Error - Type", "Type is required. Please select a type.");
+            return false;
+        }
+        
+        // Date fin doit être après date début
         if (dateFinPicker.getValue() != null && dateFinPicker.getValue().isBefore(dateDebutPicker.getValue())) {
-            showWarning("Validation Error", "Date fin cannot be before date debut.");
+            showWarning("Validation Error - Dates", 
+                "Date fin must be after or equal to Date debut.\n\n" +
+                "Date debut: " + dateDebutPicker.getValue() + "\n" +
+                "Date fin: " + dateFinPicker.getValue());
             return false;
         }
-        if (!isIntegerOrBlank(parcelleIdField.getText()) || !isIntegerOrBlank(cultureIdField.getText()) || !isIntegerOrBlank(createdByField.getText())) {
-            showWarning("Validation Error", "Parcelle ID, Culture ID and Created By must be numeric.");
+        
+        // Champs numériques doivent être valides
+        if (!isIntegerOrBlank(parcelleIdField.getText())) {
+            showWarning("Validation Error - Parcelle ID", "Parcelle ID must be a valid number or empty. Currently: " + parcelleIdField.getText());
             return false;
         }
+        if (!isIntegerOrBlank(cultureIdField.getText())) {
+            showWarning("Validation Error - Culture ID", "Culture ID must be a valid number or empty. Currently: " + cultureIdField.getText());
+            return false;
+        }
+        if (!isIntegerOrBlank(createdByField.getText())) {
+            showWarning("Validation Error - Created By", "Created By must be a valid number or empty. Currently: " + createdByField.getText());
+            return false;
+        }
+        
         return true;
     }
 
