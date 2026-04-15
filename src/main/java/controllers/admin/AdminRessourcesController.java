@@ -97,19 +97,26 @@ public class AdminRessourcesController {
 
         new Thread(() -> {
             try {
+                System.out.println("[DEBUG-ADMIN] Starting loadPage for: " + keyword);
                 totalCount = ressourceService.countRessources(keyword, "Tous");
+                System.out.println("[DEBUG-ADMIN] totalCount = " + totalCount);
+                
                 totalPages = (int) Math.ceil((double) totalCount / pageSize);
                 if (totalPages == 0) totalPages = 1;
                 if (currentPage > totalPages) currentPage = totalPages;
 
                 List<Ressource> ressources = ressourceService.searchRessourcesPaged(
                         keyword, "Tous", currentPage, pageSize);
+                System.out.println("[DEBUG-ADMIN] ressource list size = " + ressources.size());
 
                 Platform.runLater(() -> {
                     ressourcesTable.setItems(FXCollections.observableArrayList(ressources));
                     updatePaginationUI();
+                    System.out.println("[DEBUG-ADMIN] Table items set.");
                 });
             } catch (Exception e) {
+                System.err.println("[DEBUG-ADMIN] ERROR: " + e.getMessage());
+                e.printStackTrace();
                 Platform.runLater(() ->
                         totalLabel.setText("Erreur : " + e.getMessage()));
             }

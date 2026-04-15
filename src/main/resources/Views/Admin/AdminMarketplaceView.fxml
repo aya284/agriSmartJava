@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16"
+      xmlns:fx="http://javafx.com/fxml"
+    fx:controller="controllers.admin.AdminMarketplaceController"
+    stylesheets="@../../css/style.css"
+    styleClass="admin-page-root,admin-marketplace-special">
+
+  <HBox spacing="12" alignment="CENTER_LEFT" styleClass="admin-page-header,admin-marketplace-hero">
+    <VBox spacing="3">
+      <Label text="Marketplace Command Center" styleClass="admin-page-title,admin-marketplace-title"/>
+      <Label text="Suivi intelligent, moderation rapide, vision business en temps reel" styleClass="admin-marketplace-subtitle"/>
+    </VBox>
+        <HBox HBox.hgrow="ALWAYS"/>
+    <Button text="Actualiser" onAction="#refreshAll" styleClass="admin-btn-secondary"/>
+    </HBox>
+
+  <HBox spacing="12" styleClass="admin-stats-row">
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-total">
+      <Label text="Total" styleClass="admin-stat-title"/>
+      <Label fx:id="totalProductsLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-active">
+      <Label text="Actifs" styleClass="admin-stat-title"/>
+      <Label fx:id="activeProductsLabel" text="0" styleClass="admin-stat-value,admin-positive"/>
+        </VBox>
+
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-banned">
+      <Label text="Bannis" styleClass="admin-stat-title"/>
+      <Label fx:id="bannedProductsLabel" text="0" styleClass="admin-stat-value,admin-negative"/>
+        </VBox>
+
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-vente">
+      <Label text="Vente" styleClass="admin-stat-title"/>
+      <Label fx:id="ventesLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-location">
+      <Label text="Location" styleClass="admin-stat-title"/>
+      <Label fx:id="locationsLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+
+    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-promo">
+      <Label text="Promotions" styleClass="admin-stat-title"/>
+      <Label fx:id="promotionsLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" styleClass="admin-filter-box,admin-search-wrap">
+      <Label text="🔎" styleClass="admin-search-icon"/>
+      <TextField fx:id="searchField" promptText="Rechercher produit par nom ou categorie..." onKeyReleased="#handleSearch" HBox.hgrow="ALWAYS" styleClass="admin-search-field"/>
+      <Button text="Reset" onAction="#clearSearch" styleClass="admin-btn-secondary"/>
+    </HBox>
+
+  <HBox spacing="12" VBox.vgrow="NEVER" minHeight="270" prefHeight="270">
+    <VBox HBox.hgrow="ALWAYS" styleClass="admin-chart-card" spacing="8">
+      <Label text="Types d'offres" styleClass="admin-section-title"/>
+      <PieChart fx:id="typeChart" prefHeight="220" legendVisible="true" labelsVisible="true"/>
+    </VBox>
+    <VBox HBox.hgrow="ALWAYS" styleClass="admin-chart-card" spacing="8">
+      <Label text="Statut de moderation" styleClass="admin-section-title"/>
+      <PieChart fx:id="statusChart" prefHeight="220" legendVisible="true" labelsVisible="true"/>
+    </VBox>
+    <VBox HBox.hgrow="ALWAYS" styleClass="admin-chart-card" spacing="8">
+      <Label text="Distribution des stocks" styleClass="admin-section-title"/>
+      <BarChart fx:id="stockChart" prefHeight="220" categoryGap="18" barGap="5">
+        <xAxis>
+          <CategoryAxis/>
+        </xAxis>
+        <yAxis>
+          <NumberAxis/>
+        </yAxis>
+      </BarChart>
+    </VBox>
+  </HBox>
+
+  <VBox spacing="8" styleClass="admin-panel-card">
+    <HBox alignment="CENTER_LEFT" spacing="10">
+      <Label text="Tendances KPI" styleClass="admin-section-title"/>
+      <HBox HBox.hgrow="ALWAYS"/>
+      <Label text="Periode" styleClass="admin-meta-label"/>
+      <ComboBox fx:id="periodCombo" onAction="#handlePeriodChange" prefWidth="140"/>
+    </HBox>
+    <HBox spacing="12">
+      <LineChart fx:id="kpiTrendChart" HBox.hgrow="ALWAYS" prefHeight="240" createSymbols="false" animated="false" title="Orders, annulations, paiements, conversion">
+        <xAxis>
+          <CategoryAxis/>
+        </xAxis>
+        <yAxis>
+          <NumberAxis/>
+        </yAxis>
+      </LineChart>
+      <LineChart fx:id="revenueTrendChart" HBox.hgrow="ALWAYS" prefHeight="240" createSymbols="false" animated="false" title="Revenus (TND)">
+        <xAxis>
+          <CategoryAxis/>
+        </xAxis>
+        <yAxis>
+          <NumberAxis/>
+        </yAxis>
+      </LineChart>
+    </HBox>
+  </VBox>
+
+  <TableView fx:id="productsTable" VBox.vgrow="ALWAYS" prefHeight="380" styleClass="admin-table-view">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="70"/>
+            <TableColumn fx:id="colNom" text="Produit" prefWidth="250"/>
+            <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="180"/>
+            <TableColumn fx:id="colType" text="Type" prefWidth="130"/>
+            <TableColumn fx:id="colStock" text="Stock" prefWidth="120"/>
+            <TableColumn fx:id="colBanned" text="Statut" prefWidth="140"/>
+            <TableColumn fx:id="colActions" text="Moderation" prefWidth="220"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucun produit." style="-fx-text-fill: #aaa; -fx-font-size: 14;"/>
+        </placeholder>
+    </TableView>
+
+</VBox>

@@ -11,12 +11,19 @@ import java.util.List;
 public class WishlistService implements IService<WishlistItem> {
     private final Connection conn = MyConnection.getInstance().getConn();
 
+    public WishlistService() {
+        try {
+            ensureWishlistTable();
+        } catch (SQLException ignored) {
+            // Best effort initialization. CRUD methods throw explicit SQL errors.
+        }
+    }
+
     @Override
     public void ajouter(WishlistItem item) throws SQLException {
-        if (exists(item.getUserId(), item.getProduitId())) {
-            return;
-        }
-        String req = "INSERT INTO wishlist_item (user_id, produit_id, created_at) VALUES (?, ?, NOW())";
+        ensureWishlistTable();
+        String req = "INSERT INTO wishlist_item (user_id, produit_id, created_at) VALUES (?, ?, NOW()) " +
+                "ON DUPLICATE KEY UPDATE created_at = created_at";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setInt(1, item.getUserId());
             ps.setInt(2, item.getProduitId());
@@ -26,6 +33,7 @@ public class WishlistService implements IService<WishlistItem> {
 
     @Override
     public List<WishlistItem> afficher() throws SQLException {
+        ensureWishlistTable();
         List<WishlistItem> list = new ArrayList<>();
         String req = "SELECT * FROM wishlist_item";
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(req)) {
@@ -38,6 +46,7 @@ public class WishlistService implements IService<WishlistItem> {
 
     @Override
     public void modifier(WishlistItem item) throws SQLException {
+        ensureWishlistTable();
         String req = "UPDATE wishlist_item SET user_id=?, produit_id=? WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setInt(1, item.getUserId());
@@ -49,6 +58,7 @@ public class WishlistService implements IService<WishlistItem> {
 
     @Override
     public void supprimer(int id) throws SQLException {
+        ensureWishlistTable();
         String req = "DELETE FROM wishlist_item WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setInt(1, id);
@@ -56,9 +66,20 @@ public class WishlistService implements IService<WishlistItem> {
         }
     }
 
+    public void supprimerByUserAndProduit(int userId, int produitId) throws SQLException {
+        ensureWishlistTable();
+        String req = "DELETE FROM wishlist_item WHERE user_id=? AND produit_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, produitId);
+            ps.executeUpdate();
+        }
+    }
+
     public List<WishlistItem> getByUser(int userId) throws SQLException {
+        ensureWishlistTable();
         List<WishlistItem> list = new ArrayList<>();
-        String req = "SELECT * FROM wishlist_item WHERE user_id=?";
+        String req = "SELECT * FROM wishlist_item WHERE user_id=? ORDER BY created_at DESC";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -71,6 +92,7 @@ public class WishlistService implements IService<WishlistItem> {
     }
 
     public boolean exists(int userId, int produitId) throws SQLException {
+        ensureWishlistTable();
         String req = "SELECT COUNT(*) FROM wishlist_item WHERE user_id=? AND produit_id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setInt(1, userId);
@@ -85,6 +107,7 @@ public class WishlistService implements IService<WishlistItem> {
     }
 
     public int countAll() throws SQLException {
+        ensureWishlistTable();
         String req = "SELECT COUNT(*) FROM wishlist_item";
         try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(req)) {
             if (rs.next()) {
@@ -102,6 +125,21 @@ public class WishlistService implements IService<WishlistItem> {
         Timestamp ca = rs.getTimestamp("created_at");
         if (ca != null) item.setCreatedAt(ca.toLocalDateTime());
         return item;
+    }
+
+    private void ensureWishlistTable() throws SQLException {
+        String ddl = "CREATE TABLE IF NOT EXISTS wishlist_item (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY," +
+                "user_id INT NOT NULL," +
+                "produit_id INT NOT NULL," +
+                "created_at DATETIME NOT NULL," +
+                "UNIQUE KEY uq_wishlist_user_produit (user_id, produit_id)," +
+                "INDEX idx_wishlist_user (user_id)," +
+                "INDEX idx_wishlist_produit (produit_id)" +
+                ")";
+        try (Statement st = conn.createStatement()) {
+            st.execute(ddl);
+        }
     }
 }
 

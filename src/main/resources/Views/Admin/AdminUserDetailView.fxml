@@ -6,25 +6,20 @@
 
 <VBox spacing="20"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="controllers.admin.AdminUserDetailController">
+    fx:controller="controllers.admin.AdminUserDetailController"
+    stylesheets="@../../css/style.css"
+    styleClass="admin-page-root">
 
     <!-- Header avec bouton retour -->
-    <HBox alignment="CENTER_LEFT" spacing="12">
-        <Button text="← Retour" onAction="#goBack"
-                style="-fx-background-color: #ecf0f1;
-                       -fx-padding: 7 16; -fx-background-radius: 6;
-                       -fx-cursor: hand;"/>
-        <Label text="Détails de l'utilisateur"
-               style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="admin-page-header">
+        <Button text="← Retour" onAction="#goBack" styleClass="admin-btn-secondary"/>
+        <Label text="Détails de l'utilisateur" styleClass="admin-page-title"/>
     </HBox>
 
     <HBox spacing="20">
 
         <!-- ── Carte profil ── -->
-        <VBox spacing="16" prefWidth="260" alignment="CENTER"
-              style="-fx-background-color: white; -fx-padding: 24;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+          <VBox spacing="16" prefWidth="260" alignment="CENTER" styleClass="admin-panel-card">
 
             <ImageView fx:id="profileImage"
                        fitWidth="100" fitHeight="100"
@@ -47,18 +42,11 @@
             <Separator/>
 
             <!-- Changer statut depuis le détail -->
-            <Label text="Changer le statut :"
-                   style="-fx-font-weight: bold; -fx-text-fill: #555;"/>
+                 <Label text="Changer le statut :" styleClass="admin-filter-label"/>
             <HBox spacing="8" alignment="CENTER">
-                <Button text="Activer"    onAction="#setActive"
-                        style="-fx-background-color:#27ae60; -fx-text-fill:white;
-                               -fx-padding:5 10; -fx-background-radius:4;"/>
-                <Button text="Désactiver" onAction="#setInactive"
-                        style="-fx-background-color:#e74c3c; -fx-text-fill:white;
-                               -fx-padding:5 10; -fx-background-radius:4;"/>
-                <Button text="En attente" onAction="#setPending"
-                        style="-fx-background-color:#f39c12; -fx-text-fill:white;
-                               -fx-padding:5 10; -fx-background-radius:4;"/>
+                  <Button text="Activer" onAction="#setActive" styleClass="admin-btn-positive"/>
+                  <Button text="Désactiver" onAction="#setInactive" styleClass="admin-btn-danger"/>
+                  <Button text="En attente" onAction="#setPending" styleClass="admin-btn-warning"/>
             </HBox>
 
             <Label fx:id="statusMessage" visible="false"
@@ -66,14 +54,9 @@
         </VBox>
 
         <!-- ── Informations détaillées ── -->
-        <VBox spacing="14" HBox.hgrow="ALWAYS"
-              style="-fx-background-color: white; -fx-padding: 24;
-                     -fx-background-radius: 10;
-                     -fx-effect: dropshadow(gaussian,#ddd,6,0,0,2);">
+         <VBox spacing="14" HBox.hgrow="ALWAYS" styleClass="admin-panel-card">
 
-            <Label text="Informations personnelles"
-                   style="-fx-font-size: 15; -fx-font-weight: bold;
-                          -fx-text-fill: #2ecc71;"/>
+             <Label text="Informations personnelles" styleClass="admin-section-title"/>
 
             <HBox spacing="16">
                 <VBox spacing="4" HBox.hgrow="ALWAYS">
@@ -104,9 +87,7 @@
 
             <Separator/>
 
-            <Label text="Informations du compte"
-                   style="-fx-font-size: 15; -fx-font-weight: bold;
-                          -fx-text-fill: #2ecc71;"/>
+                 <Label text="Informations du compte" styleClass="admin-section-title"/>
 
             <HBox spacing="16">
                 <VBox spacing="4" HBox.hgrow="ALWAYS">

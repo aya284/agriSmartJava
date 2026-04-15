@@ -39,7 +39,9 @@ public class ConsommationService implements IService<Consommation> {
             try (PreparedStatement psUpdate = conn.prepareStatement(updateQuery)) {
                 psUpdate.setDouble(1, c.getQuantite());
                 psUpdate.setInt(2, c.getRessourceId());
-                psUpdate.executeUpdate();
+                int rows = psUpdate.executeUpdate();
+                System.out.println("[STOCK] Deduction successful: " + rows + " row(s) updated for ressource ID " + c.getRessourceId());
+                if (rows == 0) throw new SQLException("Erreur: Le stock n'a pas pu être mis à jour.");
             }
 
             // 3. Insérer la consommation
@@ -127,7 +129,8 @@ public class ConsommationService implements IService<Consommation> {
                 try (PreparedStatement ps = conn.prepareStatement(adjustStock)) {
                     ps.setDouble(1, delta);
                     ps.setInt(2, c.getRessourceId());
-                    ps.executeUpdate();
+                    int rows = ps.executeUpdate();
+                    System.out.println("[STOCK] Adjustment successful: " + rows + " row(s) updated (delta: " + delta + ")");
                 }
             }
 

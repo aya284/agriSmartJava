@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" spacing="14" styleClass="feature-page">
+
+    <VBox styleClass="feature-hero" spacing="10">
+        <Label text="Gestion Taches" styleClass="feature-title"/>
+        <Label text="Orchestration des operations quotidiennes et priorites equipe" styleClass="feature-subtitle"/>
+        <HBox spacing="10">
+            <Button text="Nouvelle tache" styleClass="action-chip primary"/>
+            <Button text="Kanban" styleClass="action-chip"/>
+            <Button text="Sprint agricole" styleClass="action-chip"/>
+            <Button text="Historique" styleClass="action-chip gold"/>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12">
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Taches ouvertes" styleClass="stat-title"/>
+            <Label text="34" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Urgentes" styleClass="stat-title"/>
+            <Label text="5" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+            <Label text="Terminees" styleClass="stat-title"/>
+            <Label text="112" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Backlog prioritaire" styleClass="panel-title"/>
+        <Label text="Vision consolidatee pour les operations terrain" styleClass="panel-muted"/>
+        <TableView VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn text="Tache" prefWidth="260"/>
+                <TableColumn text="Responsable" prefWidth="180"/>
+                <TableColumn text="Priorite" prefWidth="120"/>
+                <TableColumn text="Etat" prefWidth="140"/>
+                <TableColumn text="Echeance" prefWidth="140"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>

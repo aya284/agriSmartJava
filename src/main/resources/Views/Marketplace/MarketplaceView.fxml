@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.shape.Circle?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.MarketplaceController" stylesheets="@../../css/style.css">
+    
+    <BorderPane fx:id="mainContent" style="-fx-background-color: #F8F9FA;">
+
+        <!-- CENTER CONTENT: PRODUCT GRID -->
+        <center>
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #F8F9FA; -fx-border-color: transparent;">
+                <padding><Insets top="0" right="0" bottom="0" left="0"/></padding>
+                <VBox spacing="14" style="-fx-padding: 18 24 30 24;">
+                    <VBox styleClass="feature-hero" spacing="14">
+                    <Label text="Marketplace AgriSmart" styleClass="feature-title"/>
+                    <Label text="Produits agricoles en vente ou en location." styleClass="feature-subtitle"/>
+
+                    <HBox spacing="10">
+                        <Button text="Espace vendeur" styleClass="action-chip" onAction="#openSellerSpace"/>
+                        <Button fx:id="btnMessagingCenter" text="Messagerie" styleClass="action-chip,gold" onAction="#openMessagingCenter"/>
+                        <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
+                        <Button text="Publier une annonce" styleClass="action-chip,primary" onAction="#openAjouterProduit"/>
+                        <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
+                    </HBox>
+
+                    <HBox spacing="10" styleClass="module-chip-row">
+                        <Button text="Toutes" styleClass="module-chip,active" onAction="#handleCategoryChipFilter"/>
+                        <Button text="legumes" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="fruits" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="cereales" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="engrais" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="semences" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="materiel" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="irrigation" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="services" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                        <Button text="autre" styleClass="module-chip" onAction="#handleCategoryChipFilter"/>
+                    </HBox>
+                    </VBox>
+
+                    <HBox spacing="14" alignment="TOP_LEFT">
+                        <VBox spacing="10" styleClass="panel-card" prefWidth="280" minWidth="280" maxWidth="280">
+                            <Label text="Filtres" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                            <VBox spacing="6">
+                                <Label text="RECHERCHE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <TextField fx:id="searchField" promptText="Par mot cle..." onKeyReleased="#handleSearch"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="CATEGORIE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="categorieFilter" promptText="Toutes les categories" onAction="#handleFilterChange"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="TYPE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="typeFilter" promptText="Tous les types" onAction="#handleFilterChange"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="TRIER" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="sortCombo" promptText="De A a Z" onAction="#handleFilterChange"/>
+                            </VBox>
+
+                            <VBox spacing="8">
+                                <Label text="PRIX" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <CheckBox text="Moins de 200 DT" styleClass="filter-checkbox"/>
+                                <CheckBox text="Plus de 200 DT" styleClass="filter-checkbox"/>
+                                <CheckBox text="Plus de 400 DT" styleClass="filter-checkbox"/>
+                                <Slider min="0" max="5000" showTickLabels="true" showTickMarks="true"/>
+                            </VBox>
+                        </VBox>
+
+                        <VBox spacing="10" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 6 6 6 6;">
+                                <Label text="Nos Produits" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                                <HBox HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="statusLabel" text="..." style="-fx-text-fill: #888;"/>
+                            </HBox>
+
+                            <FlowPane fx:id="productGrid" hgap="25" vgap="25"/>
+
+                            <HBox alignment="CENTER_RIGHT" spacing="8" style="-fx-padding: 8 6 0 6;">
+                                <Button fx:id="prevPageButton" text="Precedent" onAction="#handlePrevPage" styleClass="action-chip"/>
+                                <Label fx:id="pageInfoLabel" text="Page 1 / 1" style="-fx-text-fill: #555; -fx-font-weight: bold;"/>
+                                <Button fx:id="nextPageButton" text="Suivant" onAction="#handleNextPage" styleClass="action-chip"/>
+                            </HBox>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+        </center>
+        
+    </BorderPane>
+
+    <StackPane fx:id="sellerOverlay" style="-fx-background-color: rgba(15,23,42,0.55); -fx-padding: 12;" visible="false">
+        <VBox styleClass="seller-shell" spacing="16" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox alignment="CENTER_LEFT" spacing="14">
+                <VBox spacing="4">
+                    <Label text="Mes Annonces" styleClass="seller-title"/>
+                    <Label text="Gerez vos produits (edition, suppression, suivi du stock)." styleClass="seller-subtitle"/>
+                </VBox>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <ToggleButton fx:id="btnManageProducts" text="Gestion annonces" styleClass="seller-order-toggle" onAction="#showManageProducts" selected="true"/>
+                <ToggleButton fx:id="btnSoldOrders" text="Produits vendus" styleClass="seller-order-toggle" onAction="#showSoldOrders" selected="true"/>
+                <ToggleButton fx:id="btnBoughtOrders" text="Produits achetes" styleClass="seller-order-toggle" onAction="#showBoughtOrders"/>
+                <Button text="Ajouter une offre" styleClass="seller-add-btn" onAction="#openAjouterProduit"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeSellerSpace"/>
+            </HBox>
+
+            <StackPane VBox.vgrow="ALWAYS">
+                <VBox fx:id="sellerProductsSection" styleClass="seller-table-card" VBox.vgrow="ALWAYS">
+                    <Label text="Gestion annonces" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                    <TableView fx:id="produitTable" VBox.vgrow="ALWAYS" styleClass="seller-table">
+                        <columns>
+                            <TableColumn fx:id="colId" text="#" prefWidth="1" visible="false"/>
+                            <TableColumn fx:id="colNom" text="Produit" prefWidth="390"/>
+                            <TableColumn fx:id="colCategorie" text="Categorie" prefWidth="130"/>
+                            <TableColumn fx:id="colType" text="Type" prefWidth="110"/>
+                            <TableColumn fx:id="colPrix" text="Prix" prefWidth="140"/>
+                            <TableColumn fx:id="colStock" text="Stock" prefWidth="140"/>
+                            <TableColumn fx:id="colPromo" text="Promo" prefWidth="90" visible="false"/>
+                            <TableColumn fx:id="colActions" text="Actions" prefWidth="180"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+
+                <VBox fx:id="sellerOrdersSection" styleClass="seller-table-card" VBox.vgrow="ALWAYS" visible="false" managed="false">
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label fx:id="sellerOrdersTitleLabel" text="Produits vendus" styleClass="seller-subtitle" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <TableView fx:id="commandeTable" VBox.vgrow="ALWAYS" styleClass="seller-table commande-table">
+                        <columns>
+                            <TableColumn fx:id="colCmdId" text="#" prefWidth="90"/>
+                            <TableColumn fx:id="colCmdStatut" text="Statut" prefWidth="220"/>
+                            <TableColumn fx:id="colCmdMontant" text="Montant" prefWidth="180"/>
+                            <TableColumn fx:id="colCmdPaiement" text="Paiement" prefWidth="180"/>
+                            <TableColumn fx:id="colCmdActions" text="Actions" prefWidth="170"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </StackPane>
+        </VBox>
+    </StackPane>
+
+    <!-- MODAL ADD PRODUCT -->
+    <StackPane fx:id="modalOverlay" style="-fx-background-color: rgba(15,23,42,0.62); -fx-padding: 12;" visible="false">
+        <VBox styleClass="publish-modal-shell" spacing="0" alignment="TOP_LEFT" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="publish-modal-header">
+                <Label fx:id="modalTitle" text="Nouvelle Annonce" styleClass="publish-modal-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Button text="Retour" styleClass="publish-header-btn" onAction="#closeModal"/>
+                <Button text="X" styleClass="publish-header-btn,danger" onAction="#closeModal"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" styleClass="invisible-scrollpane" VBox.vgrow="ALWAYS">
+                <HBox spacing="18" styleClass="publish-modal-body">
+                    <VBox spacing="12" styleClass="publish-form-card" HBox.hgrow="ALWAYS" prefWidth="770">
+                        <Label text="Nom de l'annonce *" styleClass="publish-field-label"/>
+                        <TextField fx:id="fldNom" promptText="Ex: Tracteur, Panier de legumes..." onKeyReleased="#handleProductFormInput"/>
+                        <Label fx:id="errNom" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+
+                        <HBox spacing="12">
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Categorie *" styleClass="publish-field-label"/>
+                                <ComboBox fx:id="fldCategorie" promptText="Choisir..." onAction="#handleProductFormInput" maxWidth="1.7976931348623157E308"/>
+                                <Label fx:id="errCategorie" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+                            </VBox>
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Type d'offre *" styleClass="publish-field-label"/>
+                                <ComboBox fx:id="fldType" promptText="Choisir..." onAction="#handleProductFormInput" maxWidth="1.7976931348623157E308"/>
+                                <Label fx:id="errType" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12">
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Prix (TND) *" styleClass="publish-field-label"/>
+                                <TextField fx:id="fldPrix" promptText="0.00" onKeyReleased="#handleProductFormInput"/>
+                                <Label fx:id="errPrix" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+                            </VBox>
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Stock disponible" styleClass="publish-field-label"/>
+                                <TextField fx:id="fldStock" promptText="Ex: 12" onKeyReleased="#handleProductFormInput"/>
+                                <Label fx:id="errStock" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+                            </VBox>
+                        </HBox>
+
+                        <Label text="Description" styleClass="publish-field-label"/>
+                        <TextArea fx:id="fldDescription" promptText="Decrivez votre produit..." wrapText="true" prefRowCount="5" onKeyReleased="#handleProductFormInput"/>
+                        <Label fx:id="errDescription" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+
+                        <VBox spacing="8" styleClass="publish-promo-box">
+                            <CheckBox fx:id="chkPromo" text="Activer un prix promotionnel" onAction="#handleProductFormInput"/>
+                            <TextField fx:id="fldPromoPrice" promptText="Prix promotionnel" onKeyReleased="#handleProductFormInput"/>
+                            <Label fx:id="errPromoPrice" styleClass="form-error-label" text=" " managed="false" visible="false"/>
+                        </VBox>
+
+                        <Label text="Image du produit" styleClass="publish-field-label"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <TextField fx:id="fldImage" promptText="Aucune image selectionnee" editable="false" HBox.hgrow="ALWAYS"/>
+                            <Button text="Choose File" styleClass="btn-secondary" onAction="#chooseImageFile"/>
+                        </HBox>
+
+                        <Button text="Publier l'annonce" styleClass="publish-submit-btn" onAction="#saveFormProduct"/>
+                    </VBox>
+
+                    <VBox spacing="12" styleClass="publish-preview-wrap" prefWidth="390" minWidth="390" maxWidth="390">
+                        <Label text="APERCU EN TEMPS REEL" styleClass="publish-preview-heading"/>
+                        <VBox styleClass="publish-preview-card" spacing="10">
+                            <StackPane styleClass="publish-preview-image-frame">
+                                <ImageView fx:id="publishPreviewImage" fitWidth="350" fitHeight="220" preserveRatio="false" smooth="true"/>
+                                <Label fx:id="publishPreviewTypeBadge" text="VENTE" styleClass="details-badge-primary" StackPane.alignment="TOP_RIGHT" style="-fx-padding: 6 12;"/>
+                            </StackPane>
+                            <Label fx:id="publishPreviewCategory" text="CHOISIR..." styleClass="publish-preview-category"/>
+                            <Label fx:id="publishPreviewTitle" text="Nom de l'annonce" styleClass="publish-preview-title" wrapText="true"/>
+                            <Label fx:id="publishPreviewPrice" text="0 TND" styleClass="publish-preview-price"/>
+                            <Label fx:id="publishPreviewLocation" text="Ville / Region non definie" styleClass="publish-preview-meta"/>
+                            <Label fx:id="publishPreviewStock" text="Stock: Non defini" styleClass="publish-preview-meta"/>
+                            <Label fx:id="publishPreviewDescription" text="Description..." wrapText="true" styleClass="publish-preview-desc"/>
+                        </VBox>
+                    </VBox>
+                </HBox>
+            </ScrollPane>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="detailsOverlay" style="-fx-background-color: rgba(0,0,0,0.45); -fx-padding: 12;" visible="false">
+        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="invisible-scrollpane">
+        <VBox maxWidth="1.7976931348623157E308" styleClass="details-shell" spacing="0">
+            <HBox alignment="CENTER_LEFT" styleClass="details-topbar" spacing="12">
+                <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Button text="Retour" styleClass="details-pill-button" onAction="#closeDetails"/>
+                <Button text="Messagerie" styleClass="details-pill-button,gold" onAction="#openMessagingCenter"/>
+                <Button text="Panier" styleClass="details-pill-button,primary" onAction="#openPanier"/>
+                <Button text="X" styleClass="btn-close" onAction="#closeDetails"/>
+            </HBox>
+
+            <HBox spacing="16" style="-fx-padding: 14;" VBox.vgrow="ALWAYS">
+                <VBox spacing="14" HBox.hgrow="ALWAYS" styleClass="details-left-panel" VBox.vgrow="ALWAYS">
+                    <StackPane styleClass="details-image-card" VBox.vgrow="ALWAYS">
+                        <ImageView fx:id="detailsImageView" fitWidth="960" fitHeight="520" preserveRatio="false" smooth="true"/>
+                        <HBox spacing="8" alignment="TOP_LEFT" StackPane.alignment="TOP_LEFT" style="-fx-padding: 12;">
+                            <Label fx:id="detailsTypeBadge" text="VENTE" styleClass="details-badge-primary"/>
+                            <Label fx:id="detailsCategory" text="MATERIEL" styleClass="details-badge-secondary"/>
+                        </HBox>
+                    </StackPane>
+
+                    <VBox styleClass="details-description-card" spacing="14">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Description" styleClass="details-section-title"/>
+                            <HBox HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="detailsId" text="# ID: 0" styleClass="details-id-pill"/>
+                        </HBox>
+                        <Label fx:id="detailsDesc" text="Description produit" wrapText="true" styleClass="details-description-text"/>
+                        <Separator/>
+                        <HBox spacing="12">
+                            <VBox styleClass="details-meta-box" HBox.hgrow="ALWAYS" spacing="6">
+                                <Label fx:id="detailsLocation" text="Localisation: -" styleClass="details-meta-text"/>
+                            </VBox>
+                            <VBox styleClass="details-meta-box" HBox.hgrow="ALWAYS" spacing="6">
+                                <Label fx:id="detailsStock" text="Stock: -" styleClass="details-meta-text"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+
+                <VBox spacing="14" styleClass="details-right-panel" prefWidth="340" minWidth="340" maxWidth="340">
+                    <VBox spacing="10" styleClass="details-price-card">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Prix" styleClass="details-label-muted"/>
+                            <HBox HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="detailsTypePill" text="Vente" styleClass="details-type-pill"/>
+                        </HBox>
+                        <HBox alignment="BASELINE_LEFT" spacing="10">
+                            <Label fx:id="detailsPrice" text="0.00" styleClass="details-price-main"/>
+                            <Label text="TND" styleClass="details-currency"/>
+                        </HBox>
+                        <Label fx:id="detailsOldPrice" text="" styleClass="details-old-price" visible="false" managed="false"/>
+                        <Label fx:id="detailsConvertedPrice" text="≈ 0 EUR · 0 USD" styleClass="details-converted-price"/>
+                        <Separator/>
+                        <Button text="Contacter le vendeur" styleClass="details-outline-button" onAction="#openMessagingForCurrentProduct"/>
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Quantite" styleClass="details-label-muted"/>
+                            <HBox HBox.hgrow="ALWAYS"/>
+                            <Spinner fx:id="detailsQuantitySpinner" prefWidth="130" editable="true"/>
+                        </HBox>
+                        <Button text="Ajouter au panier" styleClass="details-primary-button" onAction="#addCurrentDetailsToCart"/>
+                        <Button text="Voir mon panier" styleClass="details-outline-dark-button" onAction="#openPanier"/>
+                    </VBox>
+                </VBox>
+            </HBox>
+        </VBox>
+        </ScrollPane>
+    </StackPane>
+
+    <StackPane fx:id="cartOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
+        <VBox spacing="12" styleClass="panel-card,cart-shell" style="-fx-padding: 16; -fx-background-radius: 16;" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Mon Panier" style="-fx-font-size: 22px; -fx-font-weight: 800; -fx-text-fill: #163a2c;"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="cartCountLabel" text="Articles: 0" style="-fx-font-weight: 700; -fx-text-fill: #456b5a;"/>
+                <Label fx:id="cartTotalLabel" text="Total: 0.00 TND" style="-fx-font-weight: 800; -fx-text-fill: #1d5a3f;"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeCartOverlay"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                <content>
+                    <VBox fx:id="cartItemsBox" spacing="8"/>
+                </content>
+            </ScrollPane>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <Button text="Vider" styleClass="action-chip" onAction="#clearCartFromOverlay"/>
+                <Button text="Passer commande" styleClass="action-chip,primary" onAction="#checkoutFromOverlay"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="wishlistOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
+        <VBox styleClass="wishlist-shell" spacing="0" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox styleClass="wishlist-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="Ma Wishlist" styleClass="wishlist-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="wishlistMetaLabel" text="0 article" styleClass="wishlist-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeWishlistCenter"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                <content>
+                    <FlowPane fx:id="wishlistGrid" hgap="16" vgap="16" styleClass="wishlist-grid"/>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="messagingOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
+        <VBox styleClass="chat-shell" spacing="0" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox styleClass="chat-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="Messagerie Marketplace" styleClass="chat-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="messagingMetaLabel" text="0 conversation" styleClass="chat-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeMessagingCenter"/>
+            </HBox>
+
+            <HBox styleClass="chat-body" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" spacing="0">
+                <VBox styleClass="chat-sidebar" prefWidth="330" minWidth="300" maxWidth="360" spacing="10">
+                    <Label text="Conversations" styleClass="chat-sidebar-title"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                        <content>
+                            <VBox fx:id="conversationListBox" spacing="8" style="-fx-padding: 2 6 6 2;"/>
+                        </content>
+                    </ScrollPane>
+                </VBox>
+
+                <VBox styleClass="chat-main" HBox.hgrow="ALWAYS" spacing="10">
+                    <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                        <content>
+                            <VBox fx:id="messageListBox" spacing="10" styleClass="chat-thread-list"/>
+                        </content>
+                    </ScrollPane>
+
+                    <VBox styleClass="chat-composer-wrap" spacing="8">
+                        <TextArea fx:id="messageInputArea" promptText="Ecrire votre message..." wrapText="true" prefRowCount="3" styleClass="chat-input"/>
+                        <HBox alignment="CENTER_RIGHT">
+                            <Button text="Envoyer" styleClass="chat-send-btn" onAction="#sendCurrentMessage"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+</StackPane>

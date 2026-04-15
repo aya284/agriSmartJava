@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ProductDetailsController" stylesheets="@../../css/style.css" styleClass="details-shell">
+    <top>
+        <HBox alignment="CENTER_LEFT" styleClass="details-topbar" spacing="12">
+            <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
+            <HBox HBox.hgrow="ALWAYS"/>
+            <Button text="Retour" styleClass="details-pill-button" onAction="#closeWindow"/>
+            <Button text="Messagerie 6" styleClass="details-pill-button gold"/>
+            <Button text="Copier le lien" styleClass="details-pill-button"/>
+            <Button text="Panier" styleClass="details-pill-button primary"/>
+            <Button text="X" styleClass="btn-close" onAction="#closeWindow"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="invisible-scrollpane" BorderPane.alignment="CENTER">
+            <content>
+                <HBox spacing="16" style="-fx-padding: 14;" prefWidth="1200">
+                    <VBox spacing="14" HBox.hgrow="ALWAYS" styleClass="details-left-panel">
+                        <StackPane styleClass="details-image-card">
+                            <ImageView fx:id="detailsImageView" fitWidth="760" fitHeight="460" preserveRatio="false" smooth="true"/>
+                            <HBox spacing="8" alignment="TOP_LEFT" StackPane.alignment="TOP_LEFT" style="-fx-padding: 12;">
+                                <Label text="VENTE" styleClass="details-badge-primary"/>
+                                <Label fx:id="detailsCategory" text="MATERIEL" styleClass="details-badge-secondary"/>
+                            </HBox>
+                        </StackPane>
+
+                        <VBox styleClass="details-description-card" spacing="14">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Description" styleClass="details-section-title"/>
+                                <HBox HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="detailsId" text="# ID: 0" styleClass="details-id-pill"/>
+                            </HBox>
+                            <Label fx:id="detailsDesc" text="Description produit" wrapText="true" styleClass="details-description-text"/>
+                            <Separator/>
+                            <HBox spacing="12">
+                                <VBox styleClass="details-meta-box" HBox.hgrow="ALWAYS" spacing="6">
+                                    <Label fx:id="detailsLocation" text="Localisation: -" styleClass="details-meta-text"/>
+                                </VBox>
+                                <VBox styleClass="details-meta-box" HBox.hgrow="ALWAYS" spacing="6">
+                                    <Label fx:id="detailsStock" text="Stock: -" styleClass="details-meta-text"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <VBox spacing="14" styleClass="details-right-panel" prefWidth="340" minWidth="340" maxWidth="340">
+                        <VBox spacing="10" styleClass="details-price-card">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Prix" styleClass="details-label-muted"/>
+                                <HBox HBox.hgrow="ALWAYS"/>
+                                <Label text="Vente" styleClass="details-type-pill"/>
+                            </HBox>
+                            <HBox alignment="BASELINE_LEFT" spacing="10">
+                                <Label fx:id="detailsPrice" text="0.00" styleClass="details-price-main"/>
+                            </HBox>
+                            <Label fx:id="detailsOldPrice" text="" styleClass="details-old-price" visible="false" managed="false"/>
+                            <Label fx:id="detailsConvertedPrice" text="≈ 0 EUR · 0 USD" styleClass="details-converted-price"/>
+                            <Separator/>
+                            <Button text="Contacter le vendeur" styleClass="details-outline-button" onAction="#contactSeller"/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Quantite" styleClass="details-label-muted"/>
+                                <HBox HBox.hgrow="ALWAYS"/>
+                                <Spinner fx:id="detailsQuantitySpinner" prefWidth="130" editable="true"/>
+                            </HBox>
+                            <Button text="Ajouter au panier" styleClass="details-primary-button"/>
+                            <Button text="Voir mon panier" styleClass="details-outline-dark-button"/>
+                            <Button text="Copier le lien" styleClass="details-outline-dark-button"/>
+                        </VBox>
+                    </VBox>
+                </HBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
