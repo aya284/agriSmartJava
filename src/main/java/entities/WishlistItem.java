@@ -27,6 +27,6 @@ public class WishlistItem {
 
     @Override
     public String toString() {
-        return "Wishlist: User " + userId + " â†’ Produit " + produitId;
+        return "Wishlist: User " + userId + " -> Produit " + produitId;
     }
 }
