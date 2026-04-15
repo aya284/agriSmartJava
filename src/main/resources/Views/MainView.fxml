@@ -30,6 +30,10 @@
                 <HBox HBox.hgrow="ALWAYS"/>
 
                 <TextField fx:id="globalSearchField" promptText="Search module, order, product..." onKeyReleased="#handleGlobalSearch" prefWidth="280"/>
+                <HBox spacing="10" alignment="CENTER_LEFT" styleClass="user-profile-header">
+                    <Label fx:id="userNameLabel" text="User Name" styleClass="user-name-text"/>
+                    <Label fx:id="userRoleBadge" text="Role" styleClass="role-badge"/>
+                </HBox>
                 <Button text="Notifications" styleClass="header-icon-btn" onAction="#showNotifications"/>
                 <Button text="Profile"      styleClass="header-icon-btn" onAction="#showProfile"/>
                 <Button text="Déconnexion"  styleClass="header-icon-btn" onAction="#handleLogout"
@@ -39,6 +43,7 @@
                 <Label text="Modules" styleClass="module-label"/>
                 <Button fx:id="btnMarketplace" text="Marketplace" styleClass="module-pill" onAction="#openMarketplace"/>
                 <Button fx:id="btnCulture" text="Gestion Culture" styleClass="module-pill" onAction="#openCulture"/>
+                <Button fx:id="btnRessource" text="Gestion Ressource" styleClass="module-pill" onAction="#openResources"/>
                 <Button fx:id="btnTaches" text="Gestion Taches" styleClass="module-pill" onAction="#openTaches"/>
                 <Button fx:id="btnEmployes" text="Candidatures" styleClass="module-pill" onAction="#openEmployes"/>
                 <Button fx:id="btnUsers" text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
@@ -53,6 +58,7 @@
             </HBox>
         </VBox>
     </top>
+
 
     <center>
         <StackPane styleClass="content-stage">

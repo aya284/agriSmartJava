@@ -18,6 +18,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import utils.SessionManager;
+import entities.User;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,10 +32,13 @@ public class MainController {
     @FXML private TextField globalSearchField;
     @FXML private Label footerStatusLabel;
     @FXML private Label currentModuleLabel;
+    @FXML private Label userNameLabel;
+    @FXML private Label userRoleBadge;
     @FXML private HBox headerAlertBox;
     @FXML private Label headerAlertLabel;
     @FXML private Button btnMarketplace;
     @FXML private Button btnCulture;
+    @FXML private Button btnRessource;
     @FXML private Button btnTaches;
     @FXML private Button btnEmployes;
     @FXML private Button btnUsers;
@@ -48,6 +52,13 @@ public class MainController {
         headerAlertHide.setOnFinished(e -> hideHeaderAlert());
 
         SessionManager session = SessionManager.getInstance();
+        
+        // Update User Profile UI
+        if (session.isLoggedIn()) {
+            userNameLabel.setText(session.getCurrentUser().getFullName());
+            userRoleBadge.setText(session.getCurrentUser().getRole());
+        }
+
         if (session.isAdmin()) {
             openUsers();
         } else {
@@ -80,12 +91,22 @@ public class MainController {
 
     @FXML
     public void openCulture() {
-        loadView("/Views/CultureView.fxml", "Culture module loaded", "Gestion Culture", btnCulture);
+        loadView("/Views/ParcelleView.fxml", "Gestion des Parcelles chargée", "Gestion Culture", btnCulture);
+    }
+
+    @FXML
+    public void openResources() {
+        loadView("/Views/RessourceView.fxml", "Gestion des Ressources chargée", "Gestion Ressource", btnRessource);
     }
 
     @FXML
     public void openTaches() {
         loadView("/Views/TachesView.fxml", "Tasks module loaded", "Gestion Taches", btnTaches);
+    }
+
+    @FXML
+    public void openParcelles() {
+        // Redundant - Parcelle is now integrated into openCulture
     }
 
     @FXML
@@ -142,15 +163,23 @@ public class MainController {
             footerStatusLabel.setText(statusMessage);
             currentModuleLabel.setText("Current: " + moduleName);
             applyActiveModuleStyle(activeButton);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            footerStatusLabel.setText("View unavailable: " + moduleName);
-            currentModuleLabel.setText("Current: " + moduleName);
+            footerStatusLabel.setText("View unavailable");
+            currentModuleLabel.setText("Navigation Error");
             applyActiveModuleStyle(activeButton);
         }
     }
 
     private Parent getOrLoadView(String fxmlPath) throws IOException {
+        // Dynamic views should always be reloaded to ensure data is fresh
+        if (fxmlPath.contains("RessourceView") || fxmlPath.contains("ParcelleView")) {
+            System.out.println("[NAV] Force reloading dynamic view: " + fxmlPath);
+            Parent loaded = FXMLLoader.load(getClass().getResource(fxmlPath));
+            loaded.setUserData(fxmlPath);
+            return loaded;
+        }
+
         Parent cached = viewCache.get(fxmlPath);
         if (cached != null) {
             return cached;
@@ -197,7 +226,7 @@ public class MainController {
     }
 
     private void applyActiveModuleStyle(Button activeButton) {
-        Button[] moduleButtons = {btnMarketplace, btnCulture, btnTaches, btnEmployes, btnUsers};
+        Button[] moduleButtons = {btnMarketplace, btnCulture, btnRessource, btnTaches, btnEmployes, btnUsers};
         for (Button button : moduleButtons) {
             if (button != null) {
                 button.getStyleClass().remove("active");
@@ -205,6 +234,7 @@ public class MainController {
         }
         if (activeButton != null && !activeButton.getStyleClass().contains("active")) {
             activeButton.getStyleClass().add("active");
+
         }
     }
 

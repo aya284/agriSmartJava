@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ParcelleController" spacing="20" styleClass="feature-page">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <VBox>
+            <Label text="Gestion des Parcelles" styleClass="module-title"/>
+            <Label text="Visualisez et gérez vos domaines agricoles" styleClass="status-label"/>
+        </VBox>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="txtSearch" promptText="Rechercher une parcelle..." prefWidth="300" styleClass="search-field"/>
+        <Button text="Ajouter Parcelle" onAction="#openAddModal" styleClass="btn-primary"/>
+    </HBox>
+
+    <HBox spacing="20" VBox.vgrow="ALWAYS">
+        <!-- Détails à GAUCHE -->
+        <VBox fx:id="detailsContainer" spacing="15" prefWidth="480" styleClass="panel-card" visible="false">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label fx:id="lblDetailNom" text="Nom de la Parcelle" styleClass="panel-title" HBox.hgrow="ALWAYS"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox spacing="8">
+                    <Button text="Modifier" onAction="#openEditModal" styleClass="btn-gold"/>
+                    <Button text="Supprimer" onAction="#handleDelete" styleClass="btn-danger"/>
+                </HBox>
+            </HBox>
+            
+            <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                <Tab text="Informations">
+                    <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
+                        <GridPane vgap="10" hgap="10">
+                            <Label text="Surface:" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="panel-muted"/>
+                            <Label fx:id="lblDetailSurface" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="panel-value"/>
+                            
+                            <Label text="Type de Sol:" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="panel-muted"/>
+                            <Label fx:id="lblDetailType" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="panel-value"/>
+                            
+                            <Label text="Coordonnées:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="panel-muted"/>
+                            <Label fx:id="lblDetailCoords" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="panel-value"/>
+                        </GridPane>
+
+                        <Separator/>
+                        
+                        <Label text="Localisation" styleClass="panel-muted" style="-fx-font-weight: bold;"/>
+                        <WebView fx:id="webViewMap" prefHeight="250" minHeight="200" styleClass="map-preview"/>
+                    </VBox>
+                </Tab>
+                <Tab text="Cultures">
+                    <VBox spacing="10" style="-fx-padding: 15 0 0 0;">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="Historiques des cultures" styleClass="panel-title" style="-fx-font-size: 14px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="+ Ajouter Culture" onAction="#openAddCultureModal" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
+                        </HBox>
+                        
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                            <VBox fx:id="cultureListContainer" spacing="12"/>
+                        </ScrollPane>
+                    </VBox>
+                </Tab>
+            </TabPane>
+        </VBox>
+
+        <!-- Liste à DROITE -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <ListView fx:id="lvParcelles" VBox.vgrow="ALWAYS" styleClass="table-view"/>
+        </VBox>
+    </HBox>
+</VBox>

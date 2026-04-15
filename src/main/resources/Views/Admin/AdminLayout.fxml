@@ -56,6 +56,11 @@
                         onAction="#openEmployes"
                         maxWidth="Infinity" alignment="CENTER_LEFT"
                         styleClass="sidebar-btn"/>
+
+                <Button text="📦  Ressources"
+                        onAction="#openRessources"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
             </VBox>
 
             <!-- Spacer -->

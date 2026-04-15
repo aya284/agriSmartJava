@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.ConsommationFormController" spacing="20" prefWidth="450" styleClass="panel-card">
+    <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="5">
+        <Label text="Enregistrer une Consommation" styleClass="module-title" style="-fx-font-size: 20px;"/>
+        <Label fx:id="lblCultureName" text="Culture : -" styleClass="status-label"/>
+    </VBox>
+
+    <VBox spacing="15">
+        <!-- Ressource Selection -->
+        <VBox spacing="5">
+            <Label text="Ressource à utiliser" styleClass="panel-muted"/>
+            <ComboBox fx:id="cbRessource" maxWidth="Infinity" promptText="Choisir une ressource" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+            <Label fx:id="lblStockRestant" text="Stock disponible : -" style="-fx-font-size: 11px; -fx-text-fill: #27ae60;"/>
+            <Label fx:id="lblErrorRessource" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+        </VBox>
+
+        <HBox spacing="15">
+            <!-- Quantité -->
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Quantité consommée" styleClass="panel-muted"/>
+                <TextField fx:id="txtQuantite" promptText="Ex: 10.5" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 12;"/>
+                <Label fx:id="lblErrorQuantite" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+            </VBox>
+            
+            <!-- Date -->
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label text="Date de consommation" styleClass="panel-muted"/>
+                <DatePicker fx:id="dpDate" maxWidth="Infinity" style="-fx-pref-height: 40px; -fx-background-radius: 8; -fx-padding: 0 4;"/>
+                <Label fx:id="lblErrorDate" styleClass="error-label" visible="false" managed="false" wrapText="true"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Annuler" onAction="#cancel" styleClass="btn-danger" style="-fx-background-color: transparent; -fx-text-fill: #c94f52;"/>
+        <Button text="Valider" onAction="#save" styleClass="btn-primary" prefWidth="150"/>
+    </HBox>
+</VBox>
