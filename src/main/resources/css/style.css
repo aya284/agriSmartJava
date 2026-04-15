@@ -853,10 +853,12 @@
 }
 
 .table-view {
-    -fx-background-color: linear-gradient(to bottom, #ffffff, #fcfefd);
-    -fx-border-color: #dce8df;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 2;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 10, 0, 0, 4);
 }
 
 .form-error-label {
@@ -873,21 +875,44 @@
 }
 
 .table-row-cell {
-    -fx-background-color: #ffffff;
-    -fx-border-color: transparent transparent #eef4f0 transparent;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #f1f5f9 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 4;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f8fafc;
 }
 
 .table-row-cell:filled:selected {
-    -fx-background-color: #e9f4ed;
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: transparent transparent #bbf7d0 transparent;
+}
+
+/* En-tête de la table (Headers Soft et Modernes) */
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1.5 0;
 }
 
 .table-view .column-header {
-    -fx-background-color: #2D6A4F;
+    -fx-background-color: #f8fafc;
+    -fx-padding: 12 8;
+    -fx-border-color: transparent;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: white;
+    -fx-text-fill: #64748b;
     -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-transform: uppercase;
+}
+
+.table-view .filler, 
+.table-view .show-hide-columns-button {
+    -fx-background-color: #f8fafc;
 }
 
 .tab-pane *.tab-header-area *.tab-header-background {

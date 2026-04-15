@@ -8,6 +8,7 @@ import utils.MyConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,6 @@ public class CommandeService implements IService<Commande> {
     }
 
     private final Connection conn = MyConnection.getInstance().getConn();
-    private final OrderActionAuditService orderActionAuditService = new OrderActionAuditService();
 
     @Override
     public void ajouter(Commande c) throws SQLException {
@@ -87,10 +87,6 @@ public class CommandeService implements IService<Commande> {
                 ps.executeUpdate();
             }
 
-            if (!current.status.equals(nextStatus)) {
-                orderActionAuditService.logAction(c.getId(), current.status, nextStatus, 0, "SYSTEM", "Edit commande");
-            }
-
             conn.commit();
         } catch (SQLException ex) {
             conn.rollback();
@@ -142,7 +138,6 @@ public class CommandeService implements IService<Commande> {
                     ps.setInt(2, id);
                     ps.executeUpdate();
                 }
-                orderActionAuditService.logAction(id, snapshot.status, nextStatus, actorUserId, effectiveActor.name(), safe(reason));
             }
             conn.commit();
         } catch (SQLException ex) {
@@ -177,6 +172,22 @@ public class CommandeService implements IService<Commande> {
             }
         }
         return list;
+    }
+
+    public Set<Integer> getPurchasedProductIdsByClient(int clientId) throws SQLException {
+        Set<Integer> ids = new HashSet<>();
+        String req = "SELECT DISTINCT ci.produit_id FROM commande c "
+                + "JOIN commande_item ci ON ci.commande_id = c.id "
+                + "WHERE c.client_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(req)) {
+            ps.setInt(1, clientId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("produit_id"));
+                }
+            }
+        }
+        return ids;
     }
 
     public List<Commande> getBySeller(int sellerId) throws SQLException {
@@ -230,8 +241,8 @@ public class CommandeService implements IService<Commande> {
 
         String insertCommande = "INSERT INTO commande (statut, mode_paiement, adresse_livraison, montant_total, " +
                 "created_at, updated_at, client_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
-        String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire, created_at) " +
-                "VALUES (?, ?, ?, ?, NOW())";
+        String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire) " +
+            "VALUES (?, ?, ?, ?)";
         String lockProduit = "SELECT quantite_stock, prix, is_promotion, promotion_price, banned, vendeur_id " +
                 "FROM produit WHERE id=? FOR UPDATE";
         String updateStock = "UPDATE produit SET quantite_stock = quantite_stock - ?, updated_at=NOW() WHERE id = ?";

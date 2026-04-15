@@ -43,7 +43,13 @@
                 <Button fx:id="btnEmployes" text="Gestion Employes" styleClass="module-pill" onAction="#openEmployes"/>
                 <Button fx:id="btnUsers" text="Utilisateurs" styleClass="module-pill" onAction="#openUsers"/>
                 <HBox HBox.hgrow="ALWAYS"/>
-                <Label fx:id="currentModuleLabel" text="Current: Marketplace" styleClass="current-module-label"/>
+                <StackPane alignment="CENTER_RIGHT">
+                    <Label fx:id="currentModuleLabel" text="Current: Marketplace" styleClass="current-module-label"/>
+                    <HBox fx:id="headerAlertBox" alignment="CENTER_LEFT" spacing="6" managed="false" visible="false"
+                          styleClass="header-alert-box,header-alert-success">
+                        <Label fx:id="headerAlertLabel" text="Operation terminee" styleClass="header-alert-label"/>
+                    </HBox>
+                </StackPane>
             </HBox>
         </VBox>
     </top>

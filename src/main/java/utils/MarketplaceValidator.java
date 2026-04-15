@@ -98,8 +98,12 @@ public class MarketplaceValidator {
     }
 
     public static String validateCheckout(String deliveryMode, String paymentMode, String address) {
-        if (!"Livraison a domicile".equals(deliveryMode)) {
-            return "Selectionnez 'Livraison a domicile' pour passer au paiement.";
+        String mode = deliveryMode == null ? "" : deliveryMode.trim();
+        boolean homeDelivery = "Livraison a domicile".equals(mode);
+        boolean pickup = "Retrait sur place".equals(mode);
+
+        if (!homeDelivery && !pickup) {
+            return "Mode de livraison invalide.";
         }
         if (paymentMode == null || paymentMode.trim().isEmpty()) {
             return "Mode de paiement obligatoire.";
@@ -108,11 +112,13 @@ public class MarketplaceValidator {
         if (!"domicile".equals(payment) && !"carte".equals(payment)) {
             return "Mode de paiement autorise: domicile ou carte.";
         }
-        if (address == null || address.trim().isEmpty()) {
-            return "Adresse de livraison obligatoire.";
-        }
-        if (address.trim().length() < 5) {
-            return "Adresse trop courte (minimum 5 caracteres).";
+        if (homeDelivery) {
+            if (address == null || address.trim().isEmpty()) {
+                return "Adresse de livraison obligatoire.";
+            }
+            if (address.trim().length() < 5) {
+                return "Adresse trop courte (minimum 5 caracteres).";
+            }
         }
         return null;
     }

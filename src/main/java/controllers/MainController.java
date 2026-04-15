@@ -1,8 +1,10 @@
 package controllers;
 
 import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -12,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import utils.SessionManager;
@@ -22,10 +25,14 @@ import java.util.Map;
 
 public class MainController {
 
+    private static MainController activeInstance;
+
     @FXML private StackPane contentArea;
     @FXML private TextField globalSearchField;
     @FXML private Label footerStatusLabel;
     @FXML private Label currentModuleLabel;
+    @FXML private HBox headerAlertBox;
+    @FXML private Label headerAlertLabel;
     @FXML private Button btnMarketplace;
     @FXML private Button btnCulture;
     @FXML private Button btnTaches;
@@ -33,15 +40,37 @@ public class MainController {
     @FXML private Button btnUsers;
 
     private final Map<String, Parent> viewCache = new HashMap<>();
+    private final PauseTransition headerAlertHide = new PauseTransition(Duration.seconds(2.6));
 
     @FXML
     public void initialize() {
+        activeInstance = this;
+        headerAlertHide.setOnFinished(e -> hideHeaderAlert());
+
         SessionManager session = SessionManager.getInstance();
         if (session.isAdmin()) {
             openUsers();
         } else {
             openMarketplace();
         }
+    }
+
+    public static void publishHeaderAlert(String message, boolean success) {
+        MainController instance = activeInstance;
+        if (instance == null || message == null || message.isBlank()) {
+            return;
+        }
+
+        Platform.runLater(() -> instance.showHeaderAlert(message, success ? "header-alert-success" : "header-alert-error"));
+    }
+
+    public static void publishHeaderNotice(String message) {
+        MainController instance = activeInstance;
+        if (instance == null || message == null || message.isBlank()) {
+            return;
+        }
+
+        Platform.runLater(() -> instance.showHeaderAlert(message, "header-alert-note"));
     }
 
     @FXML
@@ -80,11 +109,7 @@ public class MainController {
 
     @FXML
     public void showNotifications() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Notifications");
-        alert.setHeaderText("Notifications");
-        alert.setContentText("Aucune nouvelle notification.");
-        alert.showAndWait();
+        publishHeaderNotice("Notifications - Aucune nouvelle notification.");
     }
 
     @FXML
@@ -190,6 +215,51 @@ public class MainController {
         contentArea.getChildren().setAll(msg);
         currentModuleLabel.setText("Current: Accès refusé");
     }
+
+    private void showHeaderAlert(String message, String styleClass) {
+        if (headerAlertBox == null || headerAlertLabel == null || currentModuleLabel == null) {
+            return;
+        }
+
+        headerAlertBox.getStyleClass().removeAll("header-alert-success", "header-alert-error", "header-alert-note");
+        headerAlertBox.getStyleClass().add(styleClass);
+        headerAlertLabel.setText(message.trim());
+
+        currentModuleLabel.setManaged(false);
+        currentModuleLabel.setVisible(false);
+
+        headerAlertBox.setManaged(true);
+        headerAlertBox.setVisible(true);
+        headerAlertBox.setOpacity(0);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(130), headerAlertBox);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        headerAlertHide.stop();
+        headerAlertHide.playFromStart();
+    }
+
+    private void hideHeaderAlert() {
+        if (headerAlertBox == null || currentModuleLabel == null) {
+            return;
+        }
+
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(160), headerAlertBox);
+        fadeOut.setFromValue(Math.max(0, headerAlertBox.getOpacity()));
+        fadeOut.setToValue(0);
+        fadeOut.setOnFinished(e -> {
+            headerAlertBox.setVisible(false);
+            headerAlertBox.setManaged(false);
+            headerAlertBox.setOpacity(1);
+
+            currentModuleLabel.setManaged(true);
+            currentModuleLabel.setVisible(true);
+        });
+        fadeOut.play();
+    }
+
     @FXML
     public void handleLogout() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);

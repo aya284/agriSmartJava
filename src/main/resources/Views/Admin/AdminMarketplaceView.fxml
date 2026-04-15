@@ -86,7 +86,7 @@
       <ComboBox fx:id="periodCombo" onAction="#handlePeriodChange" prefWidth="140"/>
     </HBox>
     <HBox spacing="12">
-      <LineChart fx:id="kpiTrendChart" HBox.hgrow="ALWAYS" prefHeight="240" createSymbols="false" animated="false" title="Orders, bans, annulations, conversion">
+      <LineChart fx:id="kpiTrendChart" HBox.hgrow="ALWAYS" prefHeight="240" createSymbols="false" animated="false" title="Orders, annulations, paiements, conversion">
         <xAxis>
           <CategoryAxis/>
         </xAxis>
@@ -119,21 +119,5 @@
             <Label text="Aucun produit." style="-fx-text-fill: #aaa; -fx-font-size: 14;"/>
         </placeholder>
     </TableView>
-
-  <VBox spacing="8" styleClass="admin-panel-card">
-    <Label text="Historique moderation" styleClass="admin-section-title"/>
-    <TableView fx:id="moderationHistoryTable" prefHeight="220" styleClass="admin-table-view">
-      <columns>
-        <TableColumn fx:id="colAuditTime" text="Date" prefWidth="140"/>
-        <TableColumn fx:id="colAuditAction" text="Action" prefWidth="120"/>
-        <TableColumn fx:id="colAuditProduct" text="Produit" prefWidth="260"/>
-        <TableColumn fx:id="colAuditAdmin" text="Admin" prefWidth="180"/>
-        <TableColumn fx:id="colAuditReason" text="Raison" prefWidth="420"/>
-      </columns>
-      <placeholder>
-        <Label text="Aucune action de moderation pour le moment." styleClass="admin-empty-label"/>
-      </placeholder>
-    </TableView>
-  </VBox>
 
 </VBox>

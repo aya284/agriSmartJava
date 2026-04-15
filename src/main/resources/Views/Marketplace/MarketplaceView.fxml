@@ -376,10 +376,4 @@
         </VBox>
     </StackPane>
 
-    <HBox fx:id="toastContainer" alignment="CENTER_LEFT" spacing="8" managed="false" visible="false"
-          StackPane.alignment="BOTTOM_RIGHT" styleClass="toast-base,toast-success" style="-fx-translate-x: -18; -fx-translate-y: -18;">
-        <Label fx:id="toastIconLabel" text="✔" styleClass="toast-icon"/>
-        <Label fx:id="toastLabel" text="Operation terminee" styleClass="toast-label"/>
-    </HBox>
-
 </StackPane>

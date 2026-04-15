@@ -1,6 +1,5 @@
 package controllers.admin;
 
-import entities.ProductModerationAudit;
 import entities.Commande;
 import entities.Produit;
 import javafx.collections.FXCollections;
@@ -19,14 +18,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
 import services.CommandeService;
-import services.ProductModerationAuditService;
 import services.ProduitService;
-import utils.SessionManager;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
@@ -66,18 +62,10 @@ public class AdminMarketplaceController {
     @FXML private TableColumn<Produit, Integer> colStock;
     @FXML private TableColumn<Produit, Boolean> colBanned;
     @FXML private TableColumn<Produit, Void> colActions;
-    @FXML private TableView<ProductModerationAudit> moderationHistoryTable;
-    @FXML private TableColumn<ProductModerationAudit, String> colAuditTime;
-    @FXML private TableColumn<ProductModerationAudit, String> colAuditAction;
-    @FXML private TableColumn<ProductModerationAudit, String> colAuditProduct;
-    @FXML private TableColumn<ProductModerationAudit, String> colAuditAdmin;
-    @FXML private TableColumn<ProductModerationAudit, String> colAuditReason;
 
     private final ProduitService produitService = new ProduitService();
     private final CommandeService commandeService = new CommandeService();
-    private final ProductModerationAuditService moderationAuditService = new ProductModerationAuditService();
     private List<Produit> allProducts = new ArrayList<>();
-    private static final DateTimeFormatter AUDIT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
     private static final String PERIOD_DAILY = "Daily";
     private static final String PERIOD_WEEKLY = "Weekly";
     private static final String PERIOD_MONTHLY = "Monthly";
@@ -87,7 +75,6 @@ public class AdminMarketplaceController {
     @FXML
     public void initialize() {
         setupTable();
-        setupAuditTable();
         setupPeriodControl();
         refreshAll();
     }
@@ -122,7 +109,6 @@ public class AdminMarketplaceController {
             refreshStats();
             refreshCharts();
             refreshKpiTrends();
-            loadModerationHistory();
         } catch (SQLException e) {
             showError("Erreur chargement produits", e.getMessage());
         }
@@ -205,103 +191,12 @@ public class AdminMarketplaceController {
             return;
         }
 
-        String reason = promptReason(action, produit);
-        if (reason == null) {
-            return;
-        }
-
         try {
             produitService.setBanned(produit.getId(), banned);
-            moderationAuditService.logAction(
-                    produit,
-                    banned,
-                    reason,
-                    getCurrentAdminId(),
-                    getCurrentAdminName()
-            );
             refreshAll();
         } catch (SQLException e) {
             showError("Erreur mise a jour", e.getMessage());
         }
-    }
-
-    private void setupAuditTable() {
-        if (moderationHistoryTable == null) {
-            return;
-        }
-
-        colAuditTime.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
-                cell.getValue().getCreatedAt() == null
-                        ? "-"
-                        : cell.getValue().getCreatedAt().format(AUDIT_TIME_FORMAT)
-        ));
-        colAuditAction.setCellValueFactory(new PropertyValueFactory<>("actionType"));
-        colAuditProduct.setCellValueFactory(new PropertyValueFactory<>("produitNom"));
-        colAuditAdmin.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(
-                safe(cell.getValue().getAdminName()).isBlank()
-                        ? ("Admin #" + cell.getValue().getAdminId())
-                        : cell.getValue().getAdminName()
-        ));
-        colAuditReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
-
-        colAuditAction.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    return;
-                }
-                setText("BAN".equalsIgnoreCase(item) ? "BANNI" : "DEBANNI");
-            }
-        });
-    }
-
-    private void loadModerationHistory() throws SQLException {
-        if (moderationHistoryTable == null) {
-            return;
-        }
-        moderationHistoryTable.setItems(FXCollections.observableArrayList(moderationAuditService.getRecent(25)));
-    }
-
-    private String promptReason(String action, Produit produit) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Moderation produit");
-        dialog.setHeaderText("Raison requise pour " + action + " le produit");
-        dialog.setContentText("Raison:");
-        dialog.getEditor().setPromptText("Ex: annonce non conforme, contenu trompeur...");
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isEmpty()) {
-            return null;
-        }
-
-        String reason = safe(result.get());
-        if (reason.isBlank()) {
-            showError("Moderation", "La raison est obligatoire pour tracer l'action.");
-            return null;
-        }
-        return reason;
-    }
-
-    private int getCurrentAdminId() {
-        entities.User user = SessionManager.getInstance().getCurrentUser();
-        if (user != null && user.getId() > 0) {
-            return user.getId();
-        }
-        return 0;
-    }
-
-    private String getCurrentAdminName() {
-        entities.User user = SessionManager.getInstance().getCurrentUser();
-        if (user == null) {
-            return "System";
-        }
-        String fullName = safe(user.getFullName());
-        if (!fullName.isBlank()) {
-            return fullName;
-        }
-        return safe(user.getEmail()).isBlank() ? "Admin" : user.getEmail();
     }
 
     private void applyFilter() {
@@ -391,7 +286,6 @@ public class AdminMarketplaceController {
 
         LinkedHashMap<String, KpiAccumulator> buckets = initBuckets(period, days);
         List<Commande> commandes = commandeService.getRecentSinceDays(days);
-        List<ProductModerationAudit> audits = moderationAuditService.getRecentSinceDays(days);
 
         for (Commande commande : commandes) {
             LocalDateTime createdAt = commande.getCreatedAt();
@@ -416,21 +310,8 @@ public class AdminMarketplaceController {
             }
         }
 
-        for (ProductModerationAudit audit : audits) {
-            if (audit.getCreatedAt() == null || !"BAN".equalsIgnoreCase(safe(audit.getActionType()))) {
-                continue;
-            }
-            String bucket = resolveBucketLabel(audit.getCreatedAt().toLocalDate(), period);
-            KpiAccumulator acc = buckets.get(bucket);
-            if (acc != null) {
-                acc.bans += 1;
-            }
-        }
-
         XYChart.Series<String, Number> ordersSeries = new XYChart.Series<>();
         ordersSeries.setName("Orders");
-        XYChart.Series<String, Number> bansSeries = new XYChart.Series<>();
-        bansSeries.setName("Bans");
         XYChart.Series<String, Number> cancellationsSeries = new XYChart.Series<>();
         cancellationsSeries.setName("Cancellations");
         XYChart.Series<String, Number> failedSeries = new XYChart.Series<>();
@@ -446,7 +327,6 @@ public class AdminMarketplaceController {
             KpiAccumulator acc = entry.getValue();
 
             ordersSeries.getData().add(new XYChart.Data<>(label, acc.orders));
-            bansSeries.getData().add(new XYChart.Data<>(label, acc.bans));
             cancellationsSeries.getData().add(new XYChart.Data<>(label, acc.cancellations));
             failedSeries.getData().add(new XYChart.Data<>(label, acc.failedPayments));
 
@@ -457,7 +337,7 @@ public class AdminMarketplaceController {
             revenueSeries.getData().add(new XYChart.Data<>(label, acc.revenue));
         }
 
-        kpiTrendChart.getData().setAll(ordersSeries, bansSeries, cancellationsSeries, failedSeries, conversionSeries);
+        kpiTrendChart.getData().setAll(ordersSeries, cancellationsSeries, failedSeries, conversionSeries);
         revenueTrendChart.getData().setAll(revenueSeries);
         kpiTrendChart.setLegendVisible(true);
         revenueTrendChart.setLegendVisible(true);
@@ -520,7 +400,6 @@ public class AdminMarketplaceController {
 
     private static final class KpiAccumulator {
         int orders;
-        int bans;
         int cancellations;
         int failedPayments;
         double revenue;
