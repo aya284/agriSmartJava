@@ -1,4 +1,4 @@
-package controllers;
+﻿package controllers;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
@@ -130,9 +130,8 @@ public class MainController {
 
     @FXML
     public void openEmployes() {
-        loadView("/Views/EmployesView.fxml", "Employees module loaded", "Gestion Employes", btnEmployes);
+        loadView("/Views/Offres/OffreList.fxml", " liste des offres", "Gestion des Employes/Offres", btnEmployes);
     }
-
     @FXML
     public void openUsers() {
         if (!SessionManager.getInstance().isAdmin()) {
@@ -185,7 +184,13 @@ public class MainController {
             applyActiveModuleStyle(activeButton);
         } catch (Exception e) {
             e.printStackTrace();
-            footerStatusLabel.setText("View unavailable");
+            try {
+                java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("scratch/nav_error.log", true));
+                pw.println("Error loading " + fxmlPath);
+                e.printStackTrace(pw);
+                pw.close();
+            } catch(Exception err) {}
+            footerStatusLabel.setText("View unavailable: " + e.getMessage());
             currentModuleLabel.setText("Navigation Error");
             applyActiveModuleStyle(activeButton);
         }

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class MyConnection {
     public String PATH = "jdbc:mysql://localhost:3306/agrismart";
     public String user = "root";
-    public String pwd = "";
+    public String pwd = "";  
     public Connection conn;
     public static MyConnection instance;
 

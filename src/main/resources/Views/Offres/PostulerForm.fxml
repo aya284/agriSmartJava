@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="20.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PostulerController">
+    <padding><Insets bottom="40.0" left="40.0" right="40.0" top="40.0" /></padding>
+
+    <Label text="Formulaire de Candidature" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a3323;" />
+
+    <GridPane hgap="20" vgap="15">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="50" />
+            <ColumnConstraints percentWidth="50" />
+        </columnConstraints>
+
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="Nom *" style="-fx-font-weight: bold;" />
+            <TextField fx:id="nomF" prefHeight="40" promptText="Votre nom" />
+            <Label fx:id="nomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
+        </VBox>
+
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="Prénom *" style="-fx-font-weight: bold;" />
+            <TextField fx:id="prenomF" prefHeight="40" promptText="Votre prénom" />
+            <Label fx:id="prenomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
+        </VBox>
+
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2">
+            <Label text="Numéro de téléphone *" style="-fx-font-weight: bold;" />
+            <TextField fx:id="phoneF" prefHeight="40" promptText="Ex: 55123456" />
+            <Label fx:id="phoneError" textFill="#e74c3c" style="-fx-font-size: 11;" />
+        </VBox>
+
+        <VBox GridPane.columnIndex="0" GridPane.rowIndex="2">
+            <Label text="CV (PDF) *" style="-fx-font-weight: bold;" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button onAction="#uploadCV" text="📁 Choisir CV" />
+                <Label fx:id="cvLabel" text="Aucun fichier" textFill="#7f8c8d" />
+            </HBox>
+            <Label fx:id="cvError" textFill="RED" style="-fx-font-size: 10;" />
+        </VBox>
+
+        <VBox GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <Label text="Lettre de Motivation (PDF) *" style="-fx-font-weight: bold;" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button onAction="#uploadLettre" text="📁 Choisir Lettre" />
+                <Label fx:id="lettreLabel" text="Aucun fichier" textFill="#7f8c8d" />
+            </HBox>
+            <Label fx:id="lettreError" textFill="RED" style="-fx-font-size: 10;" />
+        </VBox>
+    </GridPane>
+
+    <VBox spacing="10" alignment="CENTER">
+        <Button fx:id="btnSubmit" onAction="#handleSubmit" maxWidth="Infinity" prefHeight="50"
+                style="-fx-background-color: #1a3323; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" text="🚀 Envoyer ma candidature" />
+
+        <Button onAction="#cancel" text="Annuler"
+                style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-cursor: hand; -fx-font-weight: bold;" />
+    </VBox>
+</VBox>
