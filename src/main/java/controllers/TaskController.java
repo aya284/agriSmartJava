@@ -35,31 +35,54 @@ import java.util.Optional;
 
 public class TaskController {
 
-    @FXML private TextField titreField;
-    @FXML private TextArea descriptionArea;
-    @FXML private TextArea resumeArea;
-    @FXML private ComboBox<String> prioriteComboBox;
-    @FXML private ComboBox<String> statutComboBox;
-    @FXML private ComboBox<String> typeComboBox;
-    @FXML private DatePicker dateDebutPicker;
-    @FXML private DatePicker dateFinPicker;
-    @FXML private TextField localisationField;
-    @FXML private ComboBox<SelectionOption> parcelleIdComboBox;
-    @FXML private ComboBox<SelectionOption> cultureIdComboBox;
-    @FXML private ComboBox<SelectionOption> createdByComboBox;
+    @FXML
+    private TextField titreField;
+    @FXML
+    private TextArea descriptionArea;
+    @FXML
+    private TextArea resumeArea;
+    @FXML
+    private ComboBox<String> prioriteComboBox;
+    @FXML
+    private ComboBox<String> statutComboBox;
+    @FXML
+    private ComboBox<String> typeComboBox;
+    @FXML
+    private DatePicker dateDebutPicker;
+    @FXML
+    private DatePicker dateFinPicker;
+    @FXML
+    private TextField localisationField;
+    @FXML
+    private ComboBox<SelectionOption> parcelleIdComboBox;
+    @FXML
+    private ComboBox<SelectionOption> cultureIdComboBox;
+    @FXML
+    private ComboBox<SelectionOption> createdByComboBox;
 
-    @FXML private TableView<Task> taskTable;
-    @FXML private TableColumn<Task, Integer> idTaskColumn;
-    @FXML private TableColumn<Task, String> titreColumn;
-    @FXML private TableColumn<Task, String> descriptionColumn;
-    @FXML private TableColumn<Task, String> prioriteColumn;
-    @FXML private TableColumn<Task, String> statutColumn;
-    @FXML private TableColumn<Task, String> typeColumn;
-    @FXML private TableColumn<Task, LocalDate> dateDebutColumn;
-    @FXML private TableColumn<Task, LocalDate> dateFinColumn;
+    @FXML
+    private TableView<Task> taskTable;
+    @FXML
+    private TableColumn<Task, Integer> idTaskColumn;
+    @FXML
+    private TableColumn<Task, String> titreColumn;
+    @FXML
+    private TableColumn<Task, String> descriptionColumn;
+    @FXML
+    private TableColumn<Task, String> prioriteColumn;
+    @FXML
+    private TableColumn<Task, String> statutColumn;
+    @FXML
+    private TableColumn<Task, String> typeColumn;
+    @FXML
+    private TableColumn<Task, LocalDate> dateDebutColumn;
+    @FXML
+    private TableColumn<Task, LocalDate> dateFinColumn;
 
-    @FXML private TextField searchField;
-    @FXML private ComboBox<String> sortComboBox;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private ComboBox<String> sortComboBox;
 
     private final TaskService taskService = new TaskService();
     private final ParcelleService parcelleService = new ParcelleService();
@@ -160,23 +183,24 @@ public class TaskController {
     private void initializeCombos() {
         prioriteComboBox.setItems(FXCollections.observableArrayList("low", "medium", "high"));
         statutComboBox.setItems(FXCollections.observableArrayList("todo", "en_cours", "a_valider", "termine"));
-        typeComboBox.setItems(FXCollections.observableArrayList("arrosage", "recolte", "fertilisation", "inspection", "autre"));
+        typeComboBox.setItems(
+                FXCollections.observableArrayList("arrosage", "recolte", "fertilisation", "inspection", "autre"));
 
         configureSelectionComboBox(parcelleIdComboBox, parcelleOptions, "Choisir une parcelle");
         configureSelectionComboBox(cultureIdComboBox, cultureOptions, "Choisir une culture");
         configureSelectionComboBox(createdByComboBox, userOptions, "Choisir un utilisateur");
         loadReferenceData();
 
-        parcelleIdComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
-                loadCulturesForParcelle(newValue == null ? null : newValue.id()));
+        parcelleIdComboBox.valueProperty().addListener(
+                (observable, oldValue, newValue) -> loadCulturesForParcelle(newValue == null ? null : newValue.id()));
     }
 
     private void initializeInputValidation() {
-        titreField.setTextFormatter(new TextFormatter<>(change ->
-                change.getControlNewText().length() > 255 ? null : change));
+        titreField.setTextFormatter(
+                new TextFormatter<>(change -> change.getControlNewText().length() > 255 ? null : change));
 
-        descriptionArea.setTextFormatter(new TextFormatter<>(change ->
-                change.getControlNewText().length() > 1000 ? null : change));
+        descriptionArea.setTextFormatter(
+                new TextFormatter<>(change -> change.getControlNewText().length() > 1000 ? null : change));
     }
 
     private void initializeTable() {
@@ -185,18 +209,58 @@ public class TaskController {
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         prioriteColumn.setCellValueFactory(new PropertyValueFactory<>("priorite"));
         statutColumn.setCellValueFactory(new PropertyValueFactory<>("statut"));
+
+        // Colour-coded status badges
+        statutColumn.setCellFactory(col -> new javafx.scene.control.TableCell<Task, String>() {
+            private final javafx.scene.control.Label badge = new javafx.scene.control.Label();
+            private static final String BASE = "-fx-background-radius: 12; -fx-padding: 3 10; -fx-font-weight: bold; -fx-font-size: 11px; ";
+
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    switch (status) {
+                        case "todo" -> {
+                            badge.setText("\uD83D\uDD34 To Do");
+                            badge.setStyle(BASE + "-fx-background-color: #dc3545; -fx-text-fill: #ffffff;");
+                        }
+                        case "en_cours" -> {
+                            badge.setText("\uD83D\uDD35 En cours");
+                            badge.setStyle(BASE + "-fx-background-color: #0d6efd; -fx-text-fill: #ffffff;");
+                        }
+                        case "a_valider" -> {
+                            badge.setText("\u23F3 A valider");
+                            badge.setStyle(BASE + "-fx-background-color: #FFC107; -fx-text-fill: #5a3e00;");
+                        }
+                        case "termine" -> {
+                            badge.setText("\u2705 Termine");
+                            badge.setStyle(BASE + "-fx-background-color: #28a745; -fx-text-fill: #ffffff;");
+                        }
+                        default -> {
+                            badge.setText(status);
+                            badge.setStyle(BASE + "-fx-background-color: #e0e0e0; -fx-text-fill: #333;");
+                        }
+                    }
+                    setGraphic(badge);
+                    setText(null);
+                }
+            }
+        });
+
         typeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
-        dateDebutColumn.setCellValueFactory(cellData ->
-                new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateDebut())));
-        dateFinColumn.setCellValueFactory(cellData ->
-                new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateFin())));
+        dateDebutColumn.setCellValueFactory(
+                cellData -> new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateDebut())));
+        dateFinColumn.setCellValueFactory(
+                cellData -> new SimpleObjectProperty<>(toLocalDate(cellData.getValue().getDateFin())));
         taskTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }
 
     private void initializeSearchAndSort() {
         sortComboBox.setItems(FXCollections.observableArrayList(
-                "ID", "Titre", "Description", "Priorite", "Statut", "Type", "Date Debut", "Date Fin"
-        ));
+                "ID", "Titre", "Description", "Priorite", "Statut", "Type", "Date Debut", "Date Fin"));
         sortComboBox.setValue("ID");
 
         FilteredList<Task> filteredList = new FilteredList<>(taskList, p -> true);
@@ -204,8 +268,8 @@ public class TaskController {
         sortedList.comparatorProperty().bind(taskTable.comparatorProperty());
         taskTable.setItems(sortedList);
 
-        searchField.textProperty().addListener((observable, oldValue, newValue) ->
-                updateFilter(filteredList, newValue));
+        searchField.textProperty()
+                .addListener((observable, oldValue, newValue) -> updateFilter(filteredList, newValue));
     }
 
     private void updateFilter(FilteredList<Task> filteredList, String searchText) {
@@ -213,15 +277,19 @@ public class TaskController {
             filteredList.setPredicate(task -> true);
         } else {
             String lowerCaseFilter = searchText.toLowerCase();
-            filteredList.setPredicate(task ->
-                    (task.getTitre() != null && task.getTitre().toLowerCase().contains(lowerCaseFilter)) ||
-                    (task.getDescription() != null && task.getDescription().toLowerCase().contains(lowerCaseFilter)) ||
-                    (task.getType() != null && task.getType().toLowerCase().contains(lowerCaseFilter)) ||
-                    (task.getStatut() != null && task.getStatut().toLowerCase().contains(lowerCaseFilter)) ||
-                    (task.getPriorite() != null && task.getPriorite().toLowerCase().contains(lowerCaseFilter)) ||
-                    (task.getLocalisation() != null && task.getLocalisation().toLowerCase().contains(lowerCaseFilter)) ||
-                    String.valueOf(task.getIdTask()).contains(lowerCaseFilter)
-            );
+            filteredList.setPredicate(
+                    task -> (task.getTitre() != null && task.getTitre().toLowerCase().contains(lowerCaseFilter)) ||
+                            (task.getDescription() != null
+                                    && task.getDescription().toLowerCase().contains(lowerCaseFilter))
+                            ||
+                            (task.getType() != null && task.getType().toLowerCase().contains(lowerCaseFilter)) ||
+                            (task.getStatut() != null && task.getStatut().toLowerCase().contains(lowerCaseFilter)) ||
+                            (task.getPriorite() != null && task.getPriorite().toLowerCase().contains(lowerCaseFilter))
+                            ||
+                            (task.getLocalisation() != null
+                                    && task.getLocalisation().toLowerCase().contains(lowerCaseFilter))
+                            ||
+                            String.valueOf(task.getIdTask()).contains(lowerCaseFilter));
         }
     }
 
@@ -301,8 +369,7 @@ public class TaskController {
                 emptyToNull(localisationField.getText()),
                 getSelectedOptionId(parcelleIdComboBox),
                 getSelectedOptionId(cultureIdComboBox),
-                getSelectedOptionId(createdByComboBox)
-        );
+                getSelectedOptionId(createdByComboBox));
     }
 
     private boolean validateForm() {
@@ -313,7 +380,8 @@ public class TaskController {
             return false;
         }
         if (titre.length() < 3) {
-            showWarning("Validation Error - Titre", "Titre must be at least 3 characters long. Currently: " + titre.length() + " characters.");
+            showWarning("Validation Error - Titre",
+                    "Titre must be at least 3 characters long. Currently: " + titre.length() + " characters.");
             return false;
         }
 
@@ -437,7 +505,8 @@ public class TaskController {
 
     private void loadCulturesForParcelle(Integer parcelleId) {
         try {
-            List<Culture> cultures = parcelleId == null ? cultureService.afficher() : cultureService.getByParcelle(parcelleId);
+            List<Culture> cultures = parcelleId == null ? cultureService.afficher()
+                    : cultureService.getByParcelle(parcelleId);
             Integer currentCultureId = getSelectedOptionId(cultureIdComboBox);
             cultureOptions.setAll(toCultureOptions(cultures));
             selectOptionById(cultureIdComboBox, currentCultureId);
@@ -447,8 +516,8 @@ public class TaskController {
     }
 
     private void configureSelectionComboBox(ComboBox<SelectionOption> comboBox,
-                                            ObservableList<SelectionOption> items,
-                                            String promptText) {
+            ObservableList<SelectionOption> items,
+            String promptText) {
         comboBox.setItems(items);
         comboBox.setPromptText(promptText);
         comboBox.setMaxWidth(Double.MAX_VALUE);
@@ -509,8 +578,7 @@ public class TaskController {
                 .findFirst()
                 .ifPresentOrElse(
                         comboBox.getSelectionModel()::select,
-                        () -> comboBox.getSelectionModel().clearSelection()
-                );
+                        () -> comboBox.getSelectionModel().clearSelection());
     }
 
     private Integer getSelectedOptionId(ComboBox<SelectionOption> comboBox) {

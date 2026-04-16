@@ -400,4 +400,16 @@ public class UserService {
             ps.executeUpdate();
         }
     }
+
+    // ── GET BY ROLE ────────────────────────────────────────────
+    public List<User> getByRole(String role) throws SQLException {
+        List<User> users = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM users WHERE role = ?")) {
+            ps.setString(1, role);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) users.add(mapUser(rs));
+        }
+        return users;
+    }
 }

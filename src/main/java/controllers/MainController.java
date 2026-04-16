@@ -40,6 +40,7 @@ public class MainController {
     @FXML private Button btnCulture;
     @FXML private Button btnRessource;
     @FXML private Button btnTaches;
+    @FXML private Button btnTaskAssignment;
     @FXML private Button btnEmployes;
     @FXML private Button btnUsers;
 
@@ -57,6 +58,13 @@ public class MainController {
         if (session.isLoggedIn()) {
             userNameLabel.setText(session.getCurrentUser().getFullName());
             userRoleBadge.setText(session.getCurrentUser().getRole());
+
+            // Hide task management button for employees
+            User currentUser = session.getCurrentUser();
+            if (currentUser != null && "employee".equalsIgnoreCase(currentUser.getRole())) {
+                btnTaches.setVisible(false);
+                btnTaches.setManaged(false);
+            }
         }
 
         if (session.isAdmin()) {
@@ -101,7 +109,18 @@ public class MainController {
 
     @FXML
     public void openTaches() {
+        // Only farmers (agriculteur) can manage tasks
+        if (!SessionManager.getInstance().isLoggedIn() || 
+            !"agriculteur".equalsIgnoreCase(SessionManager.getInstance().getCurrentUser().getRole())) {
+            showAccessDenied("Task Management", "Only farmers can manage tasks.");
+            return;
+        }
         loadView("/Views/TachesView.fxml", "Tasks module loaded", "Gestion Taches", btnTaches);
+    }
+
+    @FXML
+    public void openTaskAssignment() {
+        loadView("/Views/TaskAssignment.fxml", "Task Assignment module loaded", "Affectation Taches", btnTaskAssignment);
     }
 
     @FXML
@@ -227,7 +246,7 @@ public class MainController {
     }
 
     private void applyActiveModuleStyle(Button activeButton) {
-        Button[] moduleButtons = {btnMarketplace, btnCulture, btnRessource, btnTaches, btnEmployes, btnUsers};
+        Button[] moduleButtons = {btnMarketplace, btnCulture, btnRessource, btnTaches, btnTaskAssignment, btnEmployes, btnUsers};
         for (Button button : moduleButtons) {
             if (button != null) {
                 button.getStyleClass().remove("active");
@@ -244,6 +263,13 @@ public class MainController {
         msg.setStyle("-fx-font-size:16; -fx-text-fill:#e74c3c; -fx-padding:40;");
         contentArea.getChildren().setAll(msg);
         currentModuleLabel.setText("Current: Accès refusé");
+    }
+
+    private void showAccessDenied(String title, String message) {
+        Label msg = new Label("⛔ " + message);
+        msg.setStyle("-fx-font-size:16; -fx-text-fill:#e74c3c; -fx-padding:40;");
+        contentArea.getChildren().setAll(msg);
+        currentModuleLabel.setText("Current: " + title);
     }
 
     private void showHeaderAlert(String message, String styleClass) {

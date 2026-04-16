@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.TaskAssignmentController"
+            stylesheets="@../css/style.css"
+            style="-fx-background-color: #F8F9FA;">
+
+    <center>
+        <StackPane fx:id="rootPane">
+
+            <!-- ═══════════════════════════════════════════
+                 FARMER VIEW
+            ══════════════════════════════════════════════ -->
+            <ScrollPane fx:id="farmerView" fitToWidth="true"
+                        style="-fx-background-color: transparent; -fx-background: #F8F9FA; -fx-border-color: transparent;">
+                <VBox spacing="14" style="-fx-padding: 18 24 30 24;">
+
+                    <!-- Hero banner -->
+                    <VBox styleClass="feature-hero" spacing="10">
+                        <Label text="Gestion des Affectations" styleClass="feature-title"/>
+                        <Label text="Assignez des taches aux employes et suivez leur avancement" styleClass="feature-subtitle"/>
+                        <HBox spacing="10">
+                            <Button text="Nouvelle affectation" styleClass="action-chip,primary" onAction="#handleAssign"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Stat cards -->
+                    <HBox spacing="12">
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Total affecte" styleClass="stat-title"/>
+                            <Label fx:id="statTotalLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Acceptees" styleClass="stat-title"/>
+                            <Label fx:id="statAcceptedLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Realisees" styleClass="stat-title"/>
+                            <Label fx:id="statDoneLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="En attente" styleClass="stat-title"/>
+                            <Label fx:id="statPendingLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="14">
+
+                        <!-- Left panel: form -->
+                        <VBox styleClass="panel-card" spacing="12" prefWidth="320" minWidth="300" maxWidth="340">
+                            <Label text="Assigner une Tache" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+                            <VBox spacing="6">
+                                <Label text="TACHE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="taskComboBox" maxWidth="Infinity"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="EMPLOYE" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="workerComboBox" maxWidth="Infinity"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="DATE D'AFFECTATION" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <DatePicker fx:id="dateAssignmentPicker" maxWidth="Infinity"/>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="STATUT" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #888;"/>
+                                <ComboBox fx:id="statutComboBox" maxWidth="Infinity"/>
+                            </VBox>
+
+                            <HBox spacing="8" style="-fx-padding: 6 0 0 0;">
+                                <Button text="Assigner"   styleClass="action-chip,primary" onAction="#handleAssign"  HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="Modifier"   styleClass="action-chip"         onAction="#handleUpdate"  HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Button text="Supprimer"  styleClass="action-chip,danger"  onAction="#handleDelete"  HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            </HBox>
+                            <Button text="Annuler" styleClass="action-chip" onAction="#handleClear" maxWidth="Infinity"/>
+
+                            <!-- hint -->
+                            <Label text="Double-cliquez sur une ligne pour voir le suivi de l'employe."
+                                   style="-fx-font-size: 11px; -fx-text-fill: #888; -fx-wrap-text: true;"/>
+                        </VBox>
+
+                        <!-- Right panel: table -->
+                        <VBox spacing="10" HBox.hgrow="ALWAYS">
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 4 6 4 6;">
+                                <Label text="Liste des Affectations"
+                                       style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                            </HBox>
+
+                            <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+                                <Label text="Affectations en cours" styleClass="panel-title"/>
+                                <Label text="Double-cliquez sur une ligne pour consulter le suivi" styleClass="panel-muted"/>
+                                <TableView fx:id="assignmentTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colId"     text="ID"               prefWidth="55"/>
+                                        <TableColumn fx:id="colTask"   text="Tache"             prefWidth="180"/>
+                                        <TableColumn fx:id="colWorker" text="Employe"           prefWidth="160"/>
+                                        <TableColumn fx:id="colDate"   text="Date d'affectation" prefWidth="160"/>
+                                        <TableColumn fx:id="colStatut" text="Statut"            prefWidth="110"/>
+                                    </columns>
+                                </TableView>
+                            </VBox>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+
+            <!-- ═══════════════════════════════════════════
+                 EMPLOYEE VIEW
+            ══════════════════════════════════════════════ -->
+            <ScrollPane fx:id="employeeView" fitToWidth="true"
+                        style="-fx-background-color: transparent; -fx-background: #F8F9FA; -fx-border-color: transparent;">
+                <VBox spacing="14" style="-fx-padding: 18 24 30 24;">
+
+                    <!-- Hero banner -->
+                    <VBox styleClass="feature-hero" spacing="10">
+                        <Label text="Mes Taches Assignees" styleClass="feature-title"/>
+                        <Label text="Consultez vos taches et soumettez vos rapports d'avancement" styleClass="feature-subtitle"/>
+                    </VBox>
+
+                    <!-- Stat cards -->
+                    <HBox spacing="12">
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Total" styleClass="stat-title"/>
+                            <Label fx:id="empStatTotalLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="Realisees" styleClass="stat-title"/>
+                            <Label fx:id="empStatDoneLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                        <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                            <Label text="En attente" styleClass="stat-title"/>
+                            <Label fx:id="empStatPendingLabel" text="0" styleClass="stat-value"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Table panel -->
+                    <VBox styleClass="panel-card" spacing="10" VBox.vgrow="ALWAYS">
+                        <Label text="Mes Taches" styleClass="panel-title"/>
+                        <Label text="Selectionnez une tache puis cliquez sur Marquer comme Realisee" styleClass="panel-muted"/>
+
+                        <TableView fx:id="employeeTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colEmpId"     text="ID"               prefWidth="55"/>
+                                <TableColumn fx:id="colEmpTask"   text="Tache"             prefWidth="250"/>
+                                <TableColumn fx:id="colEmpDate"   text="Date d'affectation" prefWidth="180"/>
+                                <TableColumn fx:id="colEmpStatut" text="Statut"            prefWidth="130"/>
+                            </columns>
+                        </TableView>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="markDoneBtn" text="Marquer comme Realisee"
+                                    styleClass="action-chip,primary" onAction="#handleMarkDone"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+
+        </StackPane>
+    </center>
+
+</BorderPane>
