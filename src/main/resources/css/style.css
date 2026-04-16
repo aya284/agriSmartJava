@@ -10,6 +10,19 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.error-label {
+    -fx-text-fill: #e74c3c;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 0 0 0;
+}
+
+.field-error {
+    -fx-border-color: #e74c3c !important;
+    -fx-border-width: 1.5px !important;
+    -fx-border-radius: 4px;
+}
+
 .app-header-top {
     -fx-background-color: linear-gradient(to bottom, #ffffff, #f8fdfb);
     -fx-padding: 10 14;

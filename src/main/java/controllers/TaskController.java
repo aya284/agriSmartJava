@@ -14,6 +14,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -59,6 +60,20 @@ public class TaskController {
     private ComboBox<SelectionOption> cultureIdComboBox;
     @FXML
     private ComboBox<SelectionOption> createdByComboBox;
+
+    // Stat Labels
+    @FXML private Label todoStatLabel;
+    @FXML private Label doingStatLabel;
+    @FXML private Label doneStatLabel;
+    @FXML private Label urgentStatLabel;
+
+    // Error Labels
+    @FXML private Label titreErrorLabel;
+    @FXML private Label prioriteErrorLabel;
+    @FXML private Label dateDebutErrorLabel;
+    @FXML private Label dateFinErrorLabel;
+    @FXML private Label statutErrorLabel;
+    @FXML private Label typeErrorLabel;
 
     @FXML
     private TableView<Task> taskTable;
@@ -201,6 +216,14 @@ public class TaskController {
 
         descriptionArea.setTextFormatter(
                 new TextFormatter<>(change -> change.getControlNewText().length() > 1000 ? null : change));
+
+        // Real-time error clearing
+        titreField.textProperty().addListener((obs, old, val) -> resetField(titreField, titreErrorLabel));
+        prioriteComboBox.valueProperty().addListener((obs, old, val) -> resetField(prioriteComboBox, prioriteErrorLabel));
+        statutComboBox.valueProperty().addListener((obs, old, val) -> resetField(statutComboBox, statutErrorLabel));
+        typeComboBox.valueProperty().addListener((obs, old, val) -> resetField(typeComboBox, typeErrorLabel));
+        dateDebutPicker.valueProperty().addListener((obs, old, val) -> resetField(dateDebutPicker, dateDebutErrorLabel));
+        dateFinPicker.valueProperty().addListener((obs, old, val) -> resetField(dateFinPicker, dateFinErrorLabel));
     }
 
     private void initializeTable() {
@@ -351,9 +374,22 @@ public class TaskController {
     private void loadTasks() {
         try {
             taskList.setAll(taskService.getAll());
+            updateStats();
         } catch (SQLException exception) {
             showSqlError(exception);
         }
+    }
+
+    private void updateStats() {
+        long todo = taskList.stream().filter(t -> "todo".equalsIgnoreCase(t.getStatut())).count();
+        long doing = taskList.stream().filter(t -> "en_cours".equalsIgnoreCase(t.getStatut())).count();
+        long done = taskList.stream().filter(t -> "termine".equalsIgnoreCase(t.getStatut())).count();
+        long urgent = taskList.stream().filter(t -> "high".equalsIgnoreCase(t.getPriorite()) || "haute".equalsIgnoreCase(t.getPriorite())).count();
+
+        todoStatLabel.setText(String.valueOf(todo));
+        doingStatLabel.setText(String.valueOf(doing));
+        doneStatLabel.setText(String.valueOf(done));
+        urgentStatLabel.setText(String.valueOf(urgent));
     }
 
     private Task buildTaskFromForm() {
@@ -373,42 +409,41 @@ public class TaskController {
     }
 
     private boolean validateForm() {
-        String titre = titreField.getText().trim();
+        resetErrorStates();
+        boolean isValid = true;
 
+        String titre = titreField.getText().trim();
         if (isBlank(titre)) {
-            showWarning("Validation Error - Titre", "Titre is required. Please enter a title.");
-            return false;
-        }
-        if (titre.length() < 3) {
-            showWarning("Validation Error - Titre",
-                    "Titre must be at least 3 characters long. Currently: " + titre.length() + " characters.");
-            return false;
+            showError(titreField, titreErrorLabel, "Le titre de la tâche est requis.");
+            isValid = false;
+        } else if (titre.length() < 3) {
+            showError(titreField, titreErrorLabel, "Le titre doit contenir au moins 3 caractères.");
+            isValid = false;
         }
 
         if (dateDebutPicker.getValue() == null) {
-            showWarning("Validation Error - Date Debut", "Date debut is required. Please select a start date.");
-            return false;
+            showError(dateDebutPicker, dateDebutErrorLabel, "La date de début est requise.");
+            isValid = false;
         }
 
         if (isBlank(prioriteComboBox.getValue())) {
-            showWarning("Validation Error - Priorite", "Priorite is required. Please select a priority level.");
-            return false;
-        }
-        if (isBlank(statutComboBox.getValue())) {
-            showWarning("Validation Error - Statut", "Statut is required. Please select a status.");
-            return false;
-        }
-        if (isBlank(typeComboBox.getValue())) {
-            showWarning("Validation Error - Type", "Type is required. Please select a type.");
-            return false;
+            showError(prioriteComboBox, prioriteErrorLabel, "Veuillez choisir une priorité.");
+            isValid = false;
         }
 
-        if (dateFinPicker.getValue() != null && dateFinPicker.getValue().isBefore(dateDebutPicker.getValue())) {
-            showWarning("Validation Error - Dates",
-                    "Date fin must be after or equal to Date debut.\n\n" +
-                            "Date debut: " + dateDebutPicker.getValue() + "\n" +
-                            "Date fin: " + dateFinPicker.getValue());
-            return false;
+        if (isBlank(statutComboBox.getValue())) {
+            showError(statutComboBox, statutErrorLabel, "Veuillez choisir un statut.");
+            isValid = false;
+        }
+
+        if (isBlank(typeComboBox.getValue())) {
+            showError(typeComboBox, typeErrorLabel, "Veuillez choisir un type.");
+            isValid = false;
+        }
+
+        if (isValid && dateFinPicker.getValue() != null && dateFinPicker.getValue().isBefore(dateDebutPicker.getValue())) {
+            showError(dateFinPicker, dateFinErrorLabel, "La date de fin ne peut pas être avant le début.");
+            isValid = false;
         }
 
         SelectionOption selectedCulture = cultureIdComboBox.getValue();
@@ -416,13 +451,38 @@ public class TaskController {
         if (selectedCulture != null && selectedParcelle != null && selectedCulture.parentId() != null
                 && !selectedCulture.parentId().equals(selectedParcelle.id())) {
             showWarning("Validation Error - Culture", "The selected culture does not belong to the selected parcelle.");
-            return false;
+            isValid = false;
         }
 
-        return true;
+        return isValid;
+    }
+
+    private void resetErrorStates() {
+        resetField(titreField, titreErrorLabel);
+        resetField(prioriteComboBox, prioriteErrorLabel);
+        resetField(dateDebutPicker, dateDebutErrorLabel);
+        resetField(dateFinPicker, dateFinErrorLabel);
+        resetField(statutComboBox, statutErrorLabel);
+        resetField(typeComboBox, typeErrorLabel);
+    }
+
+    private void resetField(javafx.scene.Node node, Label errorLabel) {
+        node.getStyleClass().remove("field-error");
+        errorLabel.setVisible(false);
+        errorLabel.setManaged(false);
+    }
+
+    private void showError(javafx.scene.Node node, Label errorLabel, String message) {
+        if (!node.getStyleClass().contains("field-error")) {
+            node.getStyleClass().add("field-error");
+        }
+        errorLabel.setText(message);
+        errorLabel.setVisible(true);
+        errorLabel.setManaged(true);
     }
 
     private void populateForm(Task task) {
+        resetErrorStates();
         titreField.setText(task.getTitre());
         descriptionArea.setText(task.getDescription() == null ? "" : task.getDescription());
         resumeArea.setText(task.getResume() == null ? "" : task.getResume());
@@ -439,6 +499,7 @@ public class TaskController {
     }
 
     private void clearForm() {
+        resetErrorStates();
         titreField.clear();
         descriptionArea.clear();
         resumeArea.clear();

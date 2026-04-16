@@ -36,6 +36,11 @@
                         styleClass="module-pill"
                         onAction="#openMesCandidatures"
                         style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;"/>
+
+                <Button text="Affectation Taches"
+                        styleClass="module-pill"
+                        onAction="#openTaskAssignment"
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;"/>
             </HBox>
         </VBox>
     </top>

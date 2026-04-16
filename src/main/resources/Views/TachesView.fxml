@@ -25,19 +25,19 @@
                 <HBox spacing="12">
                     <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                         <Label text="Taches a faire" styleClass="stat-title"/>
-                        <Label text="0" styleClass="stat-value"/>
+                        <Label fx:id="todoStatLabel" text="0" styleClass="stat-value"/>
                     </VBox>
                     <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                         <Label text="En cours" styleClass="stat-title"/>
-                        <Label text="0" styleClass="stat-value"/>
+                        <Label fx:id="doingStatLabel" text="0" styleClass="stat-value"/>
                     </VBox>
                     <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                         <Label text="Terminees" styleClass="stat-title"/>
-                        <Label text="0" styleClass="stat-value"/>
+                        <Label fx:id="doneStatLabel" text="0" styleClass="stat-value"/>
                     </VBox>
                     <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
                         <Label text="Urgentes" styleClass="stat-title"/>
-                        <Label text="0" styleClass="stat-value"/>
+                        <Label fx:id="urgentStatLabel" text="0" styleClass="stat-value"/>
                     </VBox>
                 </HBox>
 
@@ -103,10 +103,16 @@
                                     </columnConstraints>
 
                                     <Label text="Titre *" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                                    <TextField fx:id="titreField" promptText="Titre de la tache" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                                    <VBox GridPane.rowIndex="0" GridPane.columnIndex="1">
+                                        <TextField fx:id="titreField" promptText="Titre de la tache" />
+                                        <Label fx:id="titreErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Priorite *" GridPane.rowIndex="0" GridPane.columnIndex="2" />
-                                    <ComboBox fx:id="prioriteComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="3" />
+                                    <VBox GridPane.rowIndex="0" GridPane.columnIndex="3">
+                                        <ComboBox fx:id="prioriteComboBox" promptText="Choisir..." maxWidth="Infinity" />
+                                        <Label fx:id="prioriteErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Description" GridPane.rowIndex="1" GridPane.columnIndex="0" />
                                     <TextArea fx:id="descriptionArea" prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="1" />
@@ -115,16 +121,28 @@
                                     <TextArea fx:id="resumeArea" prefRowCount="3" wrapText="true" GridPane.rowIndex="1" GridPane.columnIndex="3" />
 
                                     <Label text="Date debut *" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                                    <DatePicker fx:id="dateDebutPicker" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                                    <VBox GridPane.rowIndex="2" GridPane.columnIndex="1">
+                                        <DatePicker fx:id="dateDebutPicker" maxWidth="Infinity" />
+                                        <Label fx:id="dateDebutErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Date fin" GridPane.rowIndex="2" GridPane.columnIndex="2" />
-                                    <DatePicker fx:id="dateFinPicker" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="3" />
+                                    <VBox GridPane.rowIndex="2" GridPane.columnIndex="3">
+                                        <DatePicker fx:id="dateFinPicker" maxWidth="Infinity" />
+                                        <Label fx:id="dateFinErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Statut *" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                                    <ComboBox fx:id="statutComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                                    <VBox GridPane.rowIndex="3" GridPane.columnIndex="1">
+                                        <ComboBox fx:id="statutComboBox" promptText="Choisir..." maxWidth="Infinity" />
+                                        <Label fx:id="statutErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Type *" GridPane.rowIndex="3" GridPane.columnIndex="2" />
-                                    <ComboBox fx:id="typeComboBox" promptText="Choisir..." maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="3" />
+                                    <VBox GridPane.rowIndex="3" GridPane.columnIndex="3">
+                                        <ComboBox fx:id="typeComboBox" promptText="Choisir..." maxWidth="Infinity" />
+                                        <Label fx:id="typeErrorLabel" styleClass="error-label" managed="false" visible="false" />
+                                    </VBox>
 
                                     <Label text="Localisation" GridPane.rowIndex="4" GridPane.columnIndex="0" />
                                     <TextField fx:id="localisationField" promptText="Localisation" GridPane.rowIndex="4" GridPane.columnIndex="1" />

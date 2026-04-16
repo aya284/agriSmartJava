@@ -1,4 +1,4 @@
-﻿package controllers;
+package controllers;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -68,5 +68,10 @@ public class FrontController {
     @FXML
     public void openMesCandidatures() {
         loadView("/Views/Offres/MesCandidaturesList.fxml", "Mon historique de candidatures");
+    }
+
+    @FXML
+    public void openTaskAssignment() {
+        loadView("/Views/TaskAssignment.fxml", "Affectation des tâches");
     }
 }

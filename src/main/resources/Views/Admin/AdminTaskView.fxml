@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="16"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controllers.admin.AdminTaskController"
+      stylesheets="@../../css/style.css"
+      styleClass="admin-page-root,admin-marketplace-special">
+
+    <HBox spacing="12" alignment="CENTER_LEFT" styleClass="admin-page-header,admin-marketplace-hero">
+        <VBox spacing="3">
+            <Label text="Console d'Administration des Tâches" styleClass="admin-page-title,admin-marketplace-title"/>
+            <Label text="Supervision globale, analyses de performance et reporting opérationnel" styleClass="admin-marketplace-subtitle"/>
+        </VBox>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Button text="Actualiser" onAction="#loadStats" styleClass="admin-btn-secondary"/>
+    </HBox>
+
+    <!-- ── Cartes de statistiques (KPI Style) ── -->
+    <HBox spacing="12" styleClass="admin-stats-row">
+        <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-total">
+            <Label text="Total" styleClass="admin-stat-title"/>
+            <Label fx:id="totalTasksLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-active">
+            <Label text="Terminées" styleClass="admin-stat-title"/>
+            <Label fx:id="completedTasksLabel" text="0" styleClass="admin-stat-value,admin-positive"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-location">
+            <Label text="En Cours" styleClass="admin-stat-title"/>
+            <Label fx:id="inProgressTasksLabel" text="0" styleClass="admin-stat-value"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="6" styleClass="admin-stat-card,kpi-banned">
+            <Label text="Priorité Haute" styleClass="admin-stat-title"/>
+            <Label fx:id="highPriorityTasksLabel" text="0" styleClass="admin-stat-value,admin-negative"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12" VBox.vgrow="ALWAYS">
+        <!-- Chart Section -->
+        <VBox HBox.hgrow="ALWAYS" styleClass="admin-chart-card" spacing="12">
+            <Label text="Répartition par Statut" styleClass="admin-section-title"/>
+            <PieChart fx:id="statusChart" prefHeight="300" legendVisible="true" labelsVisible="true"/>
+        </VBox>
+
+        <!-- Quick Actions Panel -->
+        <VBox spacing="16" styleClass="admin-panel-card" prefWidth="350">
+            <Label text="Actions Administratives" styleClass="admin-section-title"/>
+            <VBox spacing="10">
+                <Button text="📂 Voir la liste complète des tâches" 
+                        onAction="#openFullTaskList" 
+                        maxWidth="Infinity"
+                        styleClass="admin-btn-positive"
+                        style="-fx-padding: 12;"/>
+                
+                <Separator/>
+                
+                <Label text="Informations" styleClass="admin-meta-label"/>
+                <Label text="Cette console vous permet de surveiller l'état d'avancement de toutes les tâches agricoles assignées." 
+                       wrapText="true" styleClass="admin-meta-label"/>
+            </VBox>
+        </VBox>
+    </HBox>
+
+</VBox>

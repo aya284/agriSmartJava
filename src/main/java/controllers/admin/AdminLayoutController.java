@@ -1,4 +1,4 @@
-﻿package controllers.admin;
+package controllers.admin;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,8 +21,15 @@ public class AdminLayoutController {
     @FXML private Label     pageBreadcrumb;
     @FXML private Label     dateLabel;
 
+    private static AdminLayoutController instance;
+
+    public static AdminLayoutController getInstance() {
+        return instance;
+    }
+
     @FXML
     public void initialize() {
+        instance = this;
         // Nom de l'admin connecté
         if (SessionManager.getInstance().getCurrentUser() != null)
             adminNameLabel.setText(
@@ -34,6 +41,10 @@ public class AdminLayoutController {
 
         // Page par défaut
         openDashboard();
+    }
+
+    public void navigateTo(String fxmlPath, String title, String breadcrumb) {
+        loadContent(fxmlPath, title, breadcrumb);
     }
 
     @FXML public void openDashboard() {
@@ -57,8 +68,8 @@ public class AdminLayoutController {
     }
 
     @FXML public void openTaches() {
-        loadContent("/Views/TachesView.fxml",
-                "Tâches", "Admin / Tâches");
+        loadContent("/Views/Admin/AdminTaskView.fxml",
+                "Statistiques des Tâches", "Admin / Statistiques Tâches");
     }
 
     @FXML public void openEmployes() {

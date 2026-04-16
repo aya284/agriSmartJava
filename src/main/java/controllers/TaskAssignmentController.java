@@ -420,9 +420,6 @@ public class TaskAssignmentController {
 
             dialog.getDialogPane().setContent(gridPane);
 
-            // Add Validate, Refuse and Close buttons to the dialog.
-            // Refuse uses ButtonData.OTHER so that closing via the X button
-            // (which JavaFX maps to the CANCEL_CLOSE button) does NOT trigger refuse.
             ButtonType validateType = new ButtonType("Validate", ButtonBar.ButtonData.OK_DONE);
             ButtonType refuseType = new ButtonType("Refuse", ButtonBar.ButtonData.OTHER);
             ButtonType closeType = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -435,7 +432,7 @@ public class TaskAssignmentController {
                 } else if (result.get() == refuseType) {
                     handleRefuseFromDialog(selectedAssignment);
                 }
-                // closeType or X-button: do nothing
+
             }
 
         } catch (SQLException exception) {

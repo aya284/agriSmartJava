@@ -1,4 +1,4 @@
-﻿package controllers.user;
+package controllers.user;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
