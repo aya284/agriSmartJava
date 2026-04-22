@@ -170,7 +170,6 @@ public class CandidatOffreController implements Initializable {
             if (exists) {
                 new Alert(Alert.AlertType.INFORMATION, "Vous avez déjà postulé !").showAndWait();
             } else {
-                // FIX SQL : On passe bien l'ID pour éviter la SQLIntegrityConstraintViolationException
                 PostulerController.currentOffreId = selectedOffreForView.getId();
                 navigateToView("/Views/Offres/PostulerForm.fxml");
             }
@@ -225,7 +224,7 @@ public class CandidatOffreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════
-    //  CHATBOT AVANCÉ (Analyse CV + Typing Effect)
+    //  CHATBOT AMÉLIORÉ (Analyse CV + Réponses Courtes & Polies)
     // ════════════════════════════════════════════════════════
 
     @FXML
@@ -237,8 +236,7 @@ public class CandidatOffreController implements Initializable {
 
         if (file != null) {
             addMessage("📁 CV sélectionné : " + file.getName(), true);
-            // On envoie un prompt spécial à l'IA incluant le nom du fichier pour simuler l'analyse
-            handleSendIA("Analyse mon CV nommé '" + file.getName() + "' et propose-moi les offres AgriSmart adaptées à mon profil.");
+            handleSendIA("Analyse mon CV nommé '" + file.getName() + "' et propose-moi les offres AgriSmart adaptées.");
         }
     }
 
@@ -249,7 +247,7 @@ public class CandidatOffreController implements Initializable {
         chatContainer.setManaged(!visible);
         if (!visible && isFirstOpen) {
             isFirstOpen = false;
-            typeMessage("Bonjour ! Je suis AgriSmart Assistant.\nCliquez sur 📁 pour me montrer votre CV ou parlez-moi de vos compétences !", false);
+            typeMessage("Bonjour ! 😊 Je suis AgriSmart Assistant. Comment puis-je vous aider aujourd'hui ?", false);
         }
     }
 
@@ -273,8 +271,13 @@ public class CandidatOffreController implements Initializable {
             }
         } catch (Exception ignored) {}
 
-        String systemPrompt = "Tu es AgriSmart Bot. Tu aides les candidats. Voici les offres : " + offresCtx +
-                ". Si l'utilisateur envoie un CV, analyse ses chances et propose les postes correspondants.";
+        // --- INSTRUCTIONS DE CONTEXTE ET DE POLITESSE ---
+        String systemPrompt = "Tu es AgriSmart Bot, poli et serviable. " +
+                "RÈGLES : " +
+                "1. Réponds UNIQUEMENT sur les offres suivantes : " + offresCtx + ". " +
+                "2. Si la question est hors sujet, dis gentiment que tu es là pour aider sur les offres agricoles. " +
+                "3. Ta réponse doit être TRES COURTE (MAX 3 à 4 LIGNES). " +
+                "4. Sois chaleureux.";
 
         StringBuilder messagesJson = new StringBuilder();
         messagesJson.append("{\"role\":\"system\",\"content\":\"").append(cleanForJson(systemPrompt)).append("\"}");
@@ -282,7 +285,7 @@ public class CandidatOffreController implements Initializable {
             messagesJson.append(",{\"role\":\"").append(msg[0]).append("\",\"content\":\"").append(cleanForJson(msg[1])).append("\"}");
         }
 
-        String jsonBody = "{\"model\":\"mistral-small-latest\",\"temperature\":0.7,\"messages\":[" + messagesJson + "]}";
+        String jsonBody = "{\"model\":\"mistral-small-latest\",\"temperature\":0.5,\"messages\":[" + messagesJson + "]}";
 
         addMessage("...", false);
         int loadingIdx = chatMessagesArea.getChildren().size() - 1;
@@ -297,7 +300,7 @@ public class CandidatOffreController implements Initializable {
                 HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
                 String raw = response.body();
 
-                String reply = "Désolé, je rencontre un problème de connexion.";
+                String reply = "Désolé, je rencontre un problème. 😊";
                 if (response.statusCode() == 200 && raw.contains("\"content\":")) {
                     int s = raw.lastIndexOf("\"content\":");
                     s = raw.indexOf("\"", s + 10) + 1;
