@@ -1,10 +1,12 @@
 package controllers;
 
 import entities.Demande;
+import entities.Offre;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import services.DemandeService;
+import services.EmailOffreService; // Vérifie bien cet import
 import java.awt.Desktop;
 import java.io.File;
 import java.net.URL;
@@ -14,7 +16,7 @@ public class CandidateManagementController implements Initializable {
     @FXML private Label candidateName, phoneL, idL;
     @FXML private ComboBox<String> statusCombo;
     private static final String UPLOAD_DIR = "C:\\Users\\USER\\Documents\\Esprit\\PI JAVA\\agriSmartJava\\src\\main\\resources\\uploads\\";
-    public static Demande selectedDemande; // Passed from the previous screen
+    public static Demande selectedDemande;
     private final DemandeService service = new DemandeService();
 
     @Override
@@ -24,7 +26,7 @@ public class CandidateManagementController implements Initializable {
             phoneL.setText(selectedDemande.getPhone_number());
             idL.setText("ID Candidature: #" + selectedDemande.getId());
 
-            statusCombo.getItems().addAll("En cours", "Acceptée", "Refusée");
+            statusCombo.getItems().setAll("En cours", "Acceptée", "Refusée");
             statusCombo.setValue(selectedDemande.getStatut());
         }
     }
@@ -32,21 +34,47 @@ public class CandidateManagementController implements Initializable {
     @FXML
     private void handleStatusUpdate() {
         try {
-            selectedDemande.setStatut(statusCombo.getValue());
+            // 1. Récupérer la valeur RÉELLE de la ComboBox au moment du clic
+            String nouveauStatut = statusCombo.getValue();
+
+            // 2. Mettre à jour l'objet et la base de données
+            selectedDemande.setStatut(nouveauStatut);
             service.modifier(selectedDemande);
-            new Alert(Alert.AlertType.INFORMATION, "Statut mis à jour avec succès !").show();
-        } catch (Exception e) { e.printStackTrace(); }
+
+            // 3. Récupérer l'offre pour le titre et le lieu
+            Offre currentOffre = OffreController.getSelectedOffre();
+
+            // 4. Envoi de l'email avec le statut choisi (Acceptée ou Refusée)
+            System.out.println("Tentative d'envoi d'email avec le statut : " + nouveauStatut);
+
+            new Thread(() -> {
+                try {
+                    EmailOffreService.sendCandidatureStatusEmail(
+                            "akrem.zaied@etudiant-fsegt.utm.tn", // Ton mail de test
+                            selectedDemande.getNom() + " " + selectedDemande.getPrenom(),
+                            currentOffre.getTitle(),
+                            currentOffre.getLieu(),
+                            nouveauStatut // Ici on envoie "Acceptée" ou "Refusée"
+                    );
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+
+            new Alert(Alert.AlertType.INFORMATION, "Statut mis à jour : " + nouveauStatut).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void openCV() {
-        // Concatenate the base path + the subfolder + the filename from the database
         openFile(UPLOAD_DIR + "cv\\" + selectedDemande.getCv());
     }
 
     @FXML
     private void openLettre() {
-        // Concatenate the base path + the subfolder + the filename from the database
         openFile(UPLOAD_DIR + "lettres\\" + selectedDemande.getLettre_motivation());
     }
 
@@ -54,10 +82,9 @@ public class CandidateManagementController implements Initializable {
         try {
             File file = new File(fullPath);
             if (file.exists()) {
-                // This triggers the default system PDF viewer (Chrome, Adobe, etc.)
                 Desktop.getDesktop().open(file);
             } else {
-                showAlert("Erreur", "Le fichier est introuvable au chemin : " + fullPath);
+                showAlert("Erreur", "Le fichier est introuvable.");
             }
         } catch (Exception e) {
             e.printStackTrace();

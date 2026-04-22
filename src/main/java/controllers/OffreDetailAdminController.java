@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import services.EmailOffreService;
 
 public class OffreDetailAdminController implements Initializable {
     @FXML private Label titleL, lieuL, salaireL, descL, countL;
@@ -62,6 +63,24 @@ public class OffreDetailAdminController implements Initializable {
         Button manageBtn = new Button("Voir");
         manageBtn.setOnAction(e -> {
             CandidateManagementController.selectedDemande = d;
+
+            // --- LOGIQUE D'ENVOI D'EMAIL AJOUTÉE ---
+            new Thread(() -> {
+                try {
+                    // Remplace "candidat@mail.com" par d.getEmail() si ton entité Demande a le champ email
+                    EmailOffreService.sendCandidatureStatusEmail(
+                            "akrem.zaied@etudiant-fsegt.utm.tn", // Email destinataire
+                            d.getNom() + " " + d.getPrenom(),
+                            currentOffre.getTitle(),
+                            currentOffre.getLieu(),
+                            "En cours d'examen" // Statut informatif
+                    );
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+            // ---------------------------------------
+
             switchView("/Views/Offres/CandidateManagement.fxml");
         });
 
@@ -73,7 +92,9 @@ public class OffreDetailAdminController implements Initializable {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(path));
             StackPane contentArea = (StackPane) demandesContainer.getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(root);
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(root);
+            }
         } catch (Exception e) { e.printStackTrace(); }
     }
 }
