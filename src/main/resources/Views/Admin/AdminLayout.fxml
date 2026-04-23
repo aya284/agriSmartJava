@@ -95,6 +95,16 @@
                     <Label fx:id="pageBreadcrumb" text="Admin / Tableau de bord" styleClass="admin-topbar-breadcrumb"/>
                 </VBox>
                 <HBox HBox.hgrow="ALWAYS"/>
+                
+                <!-- Notification Bell -->
+                <StackPane onMouseClicked="#showNotifications"
+                           style="-fx-cursor: hand;"
+                           styleClass="notification-bell-container">
+                    <Label text="🔔" styleClass="notification-bell-icon"/>
+                    <Label fx:id="notificationBadge" text="0" styleClass="notification-badge" visible="false"
+                           StackPane.alignment="TOP_RIGHT"/>
+                </StackPane>
+
                 <Label fx:id="dateLabel" styleClass="admin-topbar-date"/>
             </HBox>
 

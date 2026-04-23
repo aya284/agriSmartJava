@@ -10,6 +10,7 @@ import javafx.scene.Parent;
 import javafx.stage.FileChooser;
 import entities.User;
 import services.UserService;
+import services.GoogleAuthService;
 import utils.FileStorageUtils;
 import utils.Validator;
 
@@ -18,41 +19,65 @@ import java.io.File;
 public class RegisterController {
 
     // ── Champs texte ──────────────────────────────────────────
-    @FXML private TextField       firstNameField;
-    @FXML private TextField       lastNameField;
-    @FXML private TextField       emailField;
-    @FXML private PasswordField   passwordField;
-    @FXML private PasswordField   confirmPasswordField;
-    @FXML private TextField       phoneField;
-    @FXML private TextField       addressField;
-    @FXML private ComboBox<String> roleComboBox;
+    @FXML
+    private TextField firstNameField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField emailField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private PasswordField confirmPasswordField;
+    @FXML
+    private TextField phoneField;
+    @FXML
+    private TextField addressField;
+    @FXML
+    private ComboBox<String> roleComboBox;
 
     // ── Fichiers ──────────────────────────────────────────────
-    @FXML private Label     documentFileLabel;
-    @FXML private Label     imageFileLabel;
-    @FXML private ImageView profilePreview;
+    @FXML
+    private Label documentFileLabel;
+    @FXML
+    private Label imageFileLabel;
+    @FXML
+    private ImageView profilePreview;
 
     // ── Labels d'erreur inline ────────────────────────────────
-    @FXML private Label errFirstName;
-    @FXML private Label errLastName;
-    @FXML private Label errEmail;
-    @FXML private Label errRole;
-    @FXML private Label errPassword;
-    @FXML private Label errConfirm;
-    @FXML private Label errPhone;
-    @FXML private Label errAddress;
-    @FXML private Label errImage;
-    @FXML private Label errDocument;
+    @FXML
+    private Label errFirstName;
+    @FXML
+    private Label errLastName;
+    @FXML
+    private Label errEmail;
+    @FXML
+    private Label errRole;
+    @FXML
+    private Label errPassword;
+    @FXML
+    private Label errConfirm;
+    @FXML
+    private Label errPhone;
+    @FXML
+    private Label errAddress;
+    @FXML
+    private Label errImage;
+    @FXML
+    private Label errDocument;
 
     // ── Feedback global ───────────────────────────────────────
-    @FXML private Label  successLabel;
-    @FXML private Button registerBtn;
+    @FXML
+    private Label successLabel;
+    @FXML
+    private Button registerBtn;
 
     // ── État interne ──────────────────────────────────────────
     private File selectedDocument;
     private File selectedImage;
 
     private final UserService userService = new UserService();
+    private final GoogleAuthService googleAuthService = new GoogleAuthService();
 
     // ─────────────────────────────────────────────────────────
     @FXML
@@ -65,34 +90,41 @@ public class RegisterController {
     // ── Validation en temps réel à la perte du focus ──────────
     private void setupRealtimeValidation() {
         firstNameField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errFirstName,
-                    Validator.validateFirstName(firstNameField.getText().trim()));
+            if (!focused)
+                showInline(errFirstName,
+                        Validator.validateFirstName(firstNameField.getText().trim()));
         });
         lastNameField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errLastName,
-                    Validator.validateLastName(lastNameField.getText().trim()));
+            if (!focused)
+                showInline(errLastName,
+                        Validator.validateLastName(lastNameField.getText().trim()));
         });
         emailField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errEmail,
-                    Validator.validateEmail(emailField.getText().trim()));
+            if (!focused)
+                showInline(errEmail,
+                        Validator.validateEmail(emailField.getText().trim()));
         });
         passwordField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errPassword,
-                    Validator.validatePassword(passwordField.getText()));
+            if (!focused)
+                showInline(errPassword,
+                        Validator.validatePassword(passwordField.getText()));
         });
         confirmPasswordField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errConfirm,
-                    Validator.validateConfirmPassword(
-                            passwordField.getText(),
-                            confirmPasswordField.getText()));
+            if (!focused)
+                showInline(errConfirm,
+                        Validator.validateConfirmPassword(
+                                passwordField.getText(),
+                                confirmPasswordField.getText()));
         });
         phoneField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errPhone,
-                    Validator.validatePhone(phoneField.getText().trim()));
+            if (!focused)
+                showInline(errPhone,
+                        Validator.validatePhone(phoneField.getText().trim()));
         });
         addressField.focusedProperty().addListener((o, was, focused) -> {
-            if (!focused) showInline(errAddress,
-                    Validator.validateAddress(addressField.getText().trim()));
+            if (!focused)
+                showInline(errAddress,
+                        Validator.validateAddress(addressField.getText().trim()));
         });
     }
 
@@ -155,16 +187,41 @@ public class RegisterController {
         String e7 = Validator.validatePhone(phoneField.getText().trim());
         String e8 = Validator.validateAddress(addressField.getText().trim());
 
-        if (e1 != null) { showInline(errFirstName, e1); hasError = true; }
-        if (e2 != null) { showInline(errLastName,  e2); hasError = true; }
-        if (e3 != null) { showInline(errEmail,     e3); hasError = true; }
-        if (e4 != null) { showInline(errRole,      e4); hasError = true; }
-        if (e5 != null) { showInline(errPassword,  e5); hasError = true; }
-        if (e6 != null) { showInline(errConfirm,   e6); hasError = true; }
-        if (e7 != null) { showInline(errPhone,     e7); hasError = true; }
-        if (e8 != null) { showInline(errAddress,   e8); hasError = true; }
+        if (e1 != null) {
+            showInline(errFirstName, e1);
+            hasError = true;
+        }
+        if (e2 != null) {
+            showInline(errLastName, e2);
+            hasError = true;
+        }
+        if (e3 != null) {
+            showInline(errEmail, e3);
+            hasError = true;
+        }
+        if (e4 != null) {
+            showInline(errRole, e4);
+            hasError = true;
+        }
+        if (e5 != null) {
+            showInline(errPassword, e5);
+            hasError = true;
+        }
+        if (e6 != null) {
+            showInline(errConfirm, e6);
+            hasError = true;
+        }
+        if (e7 != null) {
+            showInline(errPhone, e7);
+            hasError = true;
+        }
+        if (e8 != null) {
+            showInline(errAddress, e8);
+            hasError = true;
+        }
 
-        if (hasError) return;
+        if (hasError)
+            return;
 
         registerBtn.setDisable(true);
         registerBtn.setText("Création du compte...");
@@ -172,7 +229,7 @@ public class RegisterController {
         new Thread(() -> {
             try {
                 String documentPath = FileStorageUtils.save(selectedDocument, "documents");
-                String imagePath    = FileStorageUtils.save(selectedImage,    "profiles");
+                String imagePath = FileStorageUtils.save(selectedImage, "profiles");
 
                 User user = new User(
                         firstNameField.getText().trim(),
@@ -181,8 +238,7 @@ public class RegisterController {
                         roleComboBox.getValue(),
                         passwordField.getText(),
                         phoneField.getText().trim(),
-                        addressField.getText().trim()
-                );
+                        addressField.getText().trim());
                 user.setDocumentFile(documentPath);
                 user.setImage(imagePath);
 
@@ -208,6 +264,29 @@ public class RegisterController {
                     registerBtn.setDisable(false);
                     registerBtn.setText("Créer le compte");
                 });
+            }
+        }).start();
+    }
+
+    // ── Google Sign-up / Login ─────────────────────────────────
+    @FXML
+    public void handleGoogleLogin() {
+        registerBtn.setDisable(true);
+        new Thread(() -> {
+            try {
+                var userInfo = googleAuthService.authenticate();
+                userService.loginWithGoogle(
+                        userInfo.getId(),
+                        userInfo.getEmail(),
+                        userInfo.getGivenName(),
+                        userInfo.getFamilyName()).ifPresent(user -> Platform.runLater(() -> {
+                            utils.SessionManager.getInstance().setCurrentUser(user);
+                            goToLogin();
+                        }));
+            } catch (Exception e) {
+                Platform.runLater(() -> showInline(errEmail, "Google : " + e.getMessage()));
+            } finally {
+                Platform.runLater(() -> registerBtn.setDisable(false));
             }
         }).start();
     }
@@ -243,11 +322,16 @@ public class RegisterController {
     }
 
     private void clearAllErrors() {
-        clearInline(errFirstName); clearInline(errLastName);
-        clearInline(errEmail);     clearInline(errRole);
-        clearInline(errPassword);  clearInline(errConfirm);
-        clearInline(errPhone);     clearInline(errAddress);
-        clearInline(errImage);     clearInline(errDocument);
+        clearInline(errFirstName);
+        clearInline(errLastName);
+        clearInline(errEmail);
+        clearInline(errRole);
+        clearInline(errPassword);
+        clearInline(errConfirm);
+        clearInline(errPhone);
+        clearInline(errAddress);
+        clearInline(errImage);
+        clearInline(errDocument);
         successLabel.setVisible(false);
     }
 
@@ -256,13 +340,21 @@ public class RegisterController {
         String border = hasError
                 ? "-fx-border-color:#e74c3c; -fx-border-radius:4; -fx-border-width:1.5;"
                 : "";
-        if      (errLabel == errFirstName) firstNameField.setStyle(border);
-        else if (errLabel == errLastName)  lastNameField.setStyle(border);
-        else if (errLabel == errEmail)     emailField.setStyle(border);
-        else if (errLabel == errRole)      roleComboBox.setStyle(border);
-        else if (errLabel == errPassword)  passwordField.setStyle(border);
-        else if (errLabel == errConfirm)   confirmPasswordField.setStyle(border);
-        else if (errLabel == errPhone)     phoneField.setStyle(border);
-        else if (errLabel == errAddress)   addressField.setStyle(border);
+        if (errLabel == errFirstName)
+            firstNameField.setStyle(border);
+        else if (errLabel == errLastName)
+            lastNameField.setStyle(border);
+        else if (errLabel == errEmail)
+            emailField.setStyle(border);
+        else if (errLabel == errRole)
+            roleComboBox.setStyle(border);
+        else if (errLabel == errPassword)
+            passwordField.setStyle(border);
+        else if (errLabel == errConfirm)
+            confirmPasswordField.setStyle(border);
+        else if (errLabel == errPhone)
+            phoneField.setStyle(border);
+        else if (errLabel == errAddress)
+            addressField.setStyle(border);
     }
 }

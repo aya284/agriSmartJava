@@ -2919,3 +2919,50 @@
     -fx-background-color: #dce8fb;
     -fx-border-color: #b3c8ec;
 }
+
+/* Notification Bell & Badge */
+.notification-bell-container {
+    -fx-padding: 0 10;
+}
+
+.notification-bell-icon {
+    -fx-font-size: 20px;
+    -fx-text-fill: #123926;
+}
+
+.notification-badge {
+    -fx-background-color: #d9534f;
+    -fx-text-fill: white;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-padding: 1 5;
+    -fx-background-radius: 10;
+    -fx-translate-x: 8;
+    -fx-translate-y: -8;
+}
+
+.notification-item {
+    -fx-padding: 10;
+    -fx-border-color: transparent transparent #e0e0e0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.notification-item:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+.notification-item-type {
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-text-fill: #2D6A4F;
+}
+
+.notification-item-msg {
+    -fx-font-size: 13px;
+    -fx-text-fill: #333333;
+}
+
+.notification-item-date {
+    -fx-font-size: 10px;
+    -fx-text-fill: #888888;
+}

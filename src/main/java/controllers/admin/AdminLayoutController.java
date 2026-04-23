@@ -8,6 +8,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.control.ScrollPane;
+import javafx.application.Platform;
+import javafx.scene.input.MouseEvent;
 import utils.SessionManager;
 
 import java.time.LocalDate;
@@ -20,6 +24,9 @@ public class AdminLayoutController {
     @FXML private Label     pageTitle;
     @FXML private Label     pageBreadcrumb;
     @FXML private Label     dateLabel;
+    @FXML private Label     notificationBadge;
+
+    private final services.AdminNotificationService notificationService = new services.AdminNotificationService();
 
     @FXML
     public void initialize() {
@@ -32,17 +39,100 @@ public class AdminLayoutController {
         dateLabel.setText(LocalDate.now().format(
                 DateTimeFormatter.ofPattern("dd MMMM yyyy")));
 
+        // Update notification badge
+        updateNotificationCount();
+
         // Page par défaut
         openDashboard();
     }
 
+    private void updateNotificationCount() {
+        new Thread(() -> {
+            try {
+                int count = notificationService.countUnread();
+                Platform.runLater(() -> {
+                    if (count > 0) {
+                        notificationBadge.setText(String.valueOf(count));
+                        notificationBadge.setVisible(true);
+                    } else {
+                        notificationBadge.setVisible(false);
+                    }
+                });
+            } catch (Exception e) {
+                System.err.println("Error updating notifications: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    @FXML
+    public void showNotifications(MouseEvent event) {
+        try {
+            java.util.List<entities.AdminNotification> unread = notificationService.getUnreadNotifications();
+            if (unread.isEmpty()) {
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setTitle("Notifications");
+                info.setHeaderText(null);
+                info.setContentText("Aucune nouvelle notification.");
+                info.showAndWait();
+                return;
+            }
+
+            VBox container = new VBox(10);
+            container.setPadding(new javafx.geometry.Insets(10));
+            container.setPrefWidth(300);
+
+            for (entities.AdminNotification n : unread) {
+                VBox card = new VBox(2);
+                card.getStyleClass().add("notification-item");
+                
+                Label title = new Label(n.getTitle());
+                title.getStyleClass().add("notification-item-type");
+                
+                Label msg = new Label(n.getMessage());
+                msg.getStyleClass().add("notification-item-msg");
+                msg.setWrapText(true);
+                
+                Label date = new Label(n.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM HH:mm")));
+                date.getStyleClass().add("notification-item-date");
+                
+                card.getChildren().addAll(title, msg, date);
+                container.getChildren().add(card);
+            }
+
+            ScrollPane scroll = new ScrollPane(container);
+            scroll.setFitToWidth(true);
+            scroll.setPrefHeight(400);
+            scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
+            Alert dialog = new Alert(Alert.AlertType.NONE);
+            dialog.setTitle("Notifications");
+            dialog.getDialogPane().setContent(scroll);
+            dialog.getDialogPane().getButtonTypes().add(javafx.scene.control.ButtonType.CLOSE);
+            
+            // Mark as read when closed
+            dialog.showAndWait();
+            
+            new Thread(() -> {
+                try {
+                    notificationService.markAllAsRead();
+                    updateNotificationCount();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML public void openDashboard() {
-        loadContent("/Views/admin/AdminDashboard.fxml",
+        loadContent("/Views/Admin/AdminDashboard.fxml",
                 "Tableau de bord", "Admin / Dashboard");
     }
 
     @FXML public void openUsers() {
-        loadContent("/Views/admin/AdminUsersView.fxml",
+        loadContent("/Views/Admin/AdminUsersView.fxml",
                 "Gestion des Utilisateurs", "Admin / Utilisateurs");
     }
 
@@ -67,7 +157,7 @@ public class AdminLayoutController {
     }
 
     @FXML public void openRessources() {
-        loadContent("/Views/admin/AdminRessourcesView.fxml",
+        loadContent("/Views/Admin/AdminRessourcesView.fxml",
                 "Gestion des Ressources", "Admin / Ressources");
     }
 

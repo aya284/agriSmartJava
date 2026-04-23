@@ -25,15 +25,25 @@ public class GoogleAuthService {
         var transport   = GoogleNetHttpTransport.newTrustedTransport();
         var jsonFactory = GsonFactory.getDefaultInstance();
 
+        // Load credentials from resources
         InputStream in = getClass().getResourceAsStream("/client_secret.json");
+        if (in == null) {
+            throw new Exception("Fichier client_secret.json introuvable dans les resources.");
+        }
         var secrets = GoogleClientSecrets.load(jsonFactory, new InputStreamReader(in));
 
+        // Build flow — no DataStore so no token caching, always prompts login
         var flow = new GoogleAuthorizationCodeFlow.Builder(
                 transport, jsonFactory, secrets, SCOPES)
                 .setAccessType("online")
                 .build();
 
-        var receiver   = new LocalServerReceiver.Builder().setPort(8888).build();
+        // Use a random available port so it never conflicts
+        var receiver = new LocalServerReceiver.Builder()
+                .setHost("localhost")
+                .setPort(8888)
+                .build();
+
         Credential cred = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
 
         return new Oauth2.Builder(transport, jsonFactory, cred)

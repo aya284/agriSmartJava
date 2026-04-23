@@ -42,6 +42,7 @@ public class AdminUserDetailController {
     private User        currentUser;
     private Runnable    onBack;
     private final UserService userService = new UserService();
+    private final services.EmailService emailService = new services.EmailService();
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -129,9 +130,17 @@ public class AdminUserDetailController {
             try {
                 userService.updateStatus(currentUser.getId(), newStatus);
                 currentUser.setStatus(newStatus);
+
+                // Send email notification
+                try {
+                    emailService.sendStatusUpdateEmail(currentUser, newStatus);
+                } catch (Exception emailEx) {
+                    System.err.println("[AdminUserDetailController] Failed to send status email: " + emailEx.getMessage());
+                }
+
                 Platform.runLater(() -> {
                     refreshStatusBadge();
-                    showStatusMsg("✔ Statut mis à jour : " + newStatus.toUpperCase(), true);
+                    showStatusMsg("✔ Statut mis à jour et email envoyé : " + newStatus.toUpperCase(), true);
                 });
             } catch (Exception e) {
                 Platform.runLater(() ->

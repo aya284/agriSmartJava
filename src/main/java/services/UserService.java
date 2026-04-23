@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public class UserService {
     private final Connection conn = MyConnection.getInstance().getConn();
+    private final AdminNotificationService notificationService = new AdminNotificationService();
 
     // ── REGISTER ──────────────────────────────────────────────
     public void register(User user) throws Exception {
@@ -51,6 +52,14 @@ public class UserService {
 
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) user.setId(keys.getInt(1));
+
+            // Notify Admin
+            notificationService.addNotification(
+                "Nouveau Compte", 
+                "Un nouvel utilisateur s'est inscrit : " + user.getFirstName() + " " + user.getLastName(),
+                "NEW_USER",
+                user.getId()
+            );
         }
     }
     // ── LOGIN ─────────────────────────────────────────────────
@@ -120,6 +129,15 @@ public class UserService {
             user.setStatus("pending");
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) user.setId(keys.getInt(1));
+
+            // Notify Admin
+            notificationService.addNotification(
+                "Nouveau Compte (Google)", 
+                "Nouvel utilisateur via Google : " + firstName + " " + lastName,
+                "NEW_USER",
+                user.getId()
+            );
+
             return Optional.of(user);
         }
     }

@@ -152,6 +152,26 @@
                     <!-- Register Button -->
                     <Button fx:id="registerBtn" maxWidth="Infinity" onAction="#handleRegister" style="-fx-background-color: #2a5438;                                    -fx-text-fill: white;                                    -fx-font-size: 16px;                                    -fx-font-weight: bold;                                    -fx-background-radius: 12;                                    -fx-padding: 15 20;" text="Créer mon compte" />
 
+                    <!-- Divider OR -->
+                    <HBox alignment="CENTER" spacing="10">
+                        <Separator HBox.hgrow="ALWAYS"/>
+                        <Label text="OU" style="-fx-text-fill: #9ca3af; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                        <Separator HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <!-- Google Sign-up Button -->
+                    <Button maxWidth="Infinity" onAction="#handleGoogleLogin"
+                            text="🔵  S'inscrire avec Google"
+                            style="-fx-background-color: white;
+                                   -fx-text-fill: #374151;
+                                   -fx-font-weight: bold;
+                                   -fx-font-size: 15px;
+                                   -fx-background-radius: 12;
+                                   -fx-border-color: #d1d5db;
+                                   -fx-border-width: 1.5;
+                                   -fx-border-radius: 12;
+                                   -fx-padding: 12 20;"/>
+
                 </VBox>
             </VBox>
         </ScrollPane>

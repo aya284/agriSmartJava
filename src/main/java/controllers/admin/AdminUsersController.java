@@ -47,6 +47,7 @@ public class AdminUsersController {
     private int totalCount  = 0;
 
     private final UserService userService = new UserService();
+    private final services.EmailService emailService = new services.EmailService();
 
     // ─────────────────────────────────────────────────────────
     @FXML
@@ -290,6 +291,15 @@ public class AdminUsersController {
                 new Thread(() -> {
                     try {
                         userService.updateStatus(user.getId(), newStatus);
+                        user.setStatus(newStatus);
+
+                        // Send email notification
+                        try {
+                            emailService.sendStatusUpdateEmail(user, newStatus);
+                        } catch (Exception emailEx) {
+                            System.err.println("[AdminUsersController] Failed to send status email: " + emailEx.getMessage());
+                        }
+
                         Platform.runLater(this::loadPage);
                     } catch (Exception e) {
                         Platform.runLater(() ->
