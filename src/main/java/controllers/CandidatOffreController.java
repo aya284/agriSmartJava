@@ -1,5 +1,6 @@
 package controllers;
 
+import entities.Demande;
 import entities.Offre;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -18,6 +19,7 @@ import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import services.DemandeService;
 import services.OffreService;
+import services.ChatbotUpdateService;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class CandidatOffreController implements Initializable {
@@ -55,16 +58,18 @@ public class CandidatOffreController implements Initializable {
     // ── Historique conversation ──────────────────────────────
     private final List<String[]> conversationHistory = new ArrayList<>();
     private boolean isFirstOpen = true;
+    private Demande offreSelectionneePourChat = null;
 
     // ── API Mistral ──────────────────────────────────────────
     private static final String MISTRAL_KEY = "nA6CO7ubQH56abPXG6GfeymxyNV8B2oT";
     private static final String MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions";
 
-    // ── Service ─────────────────────────────────────────────
+    // ── Services ─────────────────────────────────────────────
     private final OffreService service = new OffreService();
+    private final DemandeService demandeService = new DemandeService();
+    private final ChatbotUpdateService updateService = new ChatbotUpdateService();
     public static Offre selectedOffreForView = null;
 
-    // ════════════════════════════════════════════════════════
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         if (statutFilter != null) {
@@ -77,9 +82,6 @@ public class CandidatOffreController implements Initializable {
         if (detailTitle != null && selectedOffreForView != null) setupDetailPage();
     }
 
-    // ════════════════════════════════════════════════════════
-    //  LISTE DES OFFRES
-    // ════════════════════════════════════════════════════════
     private void loadCandidateData() {
         try {
             List<Offre> list = service.afficher();
@@ -128,9 +130,6 @@ public class CandidatOffreController implements Initializable {
         return card;
     }
 
-    // ════════════════════════════════════════════════════════
-    //  DETAIL
-    // ════════════════════════════════════════════════════════
     private void setupDetailPage() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         detailTitle.setText(selectedOffreForView.getTitle());
@@ -163,8 +162,7 @@ public class CandidatOffreController implements Initializable {
     public void handlePostuler() {
         if (selectedOffreForView == null) return;
         try {
-            DemandeService ds = new DemandeService();
-            boolean exists = ds.afficher().stream()
+            boolean exists = demandeService.afficher().stream()
                     .anyMatch(d -> d.getUsers_id() == 2
                             && d.getOffre_id() == selectedOffreForView.getId().intValue());
             if (exists) {
@@ -178,9 +176,6 @@ public class CandidatOffreController implements Initializable {
         }
     }
 
-    // ════════════════════════════════════════════════════════
-    //  NAVIGATION & SEARCH
-    // ════════════════════════════════════════════════════════
     @FXML public void showListPage() {
         selectedOffreForView = null;
         switchView("/Views/Offres/CandidatOffreList.fxml");
@@ -224,7 +219,7 @@ public class CandidatOffreController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════
-    //  CHATBOT AMÉLIORÉ (Analyse CV + Réponses Courtes & Polies)
+    //  CHATBOT AMÉLIORÉ
     // ════════════════════════════════════════════════════════
 
     @FXML
@@ -247,7 +242,7 @@ public class CandidatOffreController implements Initializable {
         chatContainer.setManaged(!visible);
         if (!visible && isFirstOpen) {
             isFirstOpen = false;
-            typeMessage("Bonjour ! 😊 Je suis AgriSmart Assistant. Comment puis-je vous aider aujourd'hui ?", false);
+            typeMessage("Bonjour ! 😊 Je suis AgriSmart Assistant. Quelle offre voulez-vous modifier ?", false);
         }
     }
 
@@ -255,14 +250,51 @@ public class CandidatOffreController implements Initializable {
     public void handleSendChat() {
         String userText = chatInputField.getText().trim();
         if (userText.isEmpty()) return;
+
         addMessage(userText, true);
         chatInputField.clear();
+
+        try {
+            List<Demande> userDemandes = demandeService.afficher().stream()
+                    .filter(d -> d.getUsers_id() == 2)
+                    .toList();
+
+            if (offreSelectionneePourChat == null) {
+                for (Demande d : userDemandes) {
+                    Offre o = service.afficher().stream()
+                            .filter(off -> off.getId().equals((long)d.getOffre_id()))
+                            .findFirst().orElse(null);
+
+                    if (o != null && userText.toLowerCase().contains(o.getTitle().toLowerCase())) {
+                        offreSelectionneePourChat = d;
+                        // CORRECTION : Suppression de d.getNum() pour éviter l'erreur de build
+                        typeMessage("Bonjour ! 😊 Que souhaitez-vous modifier pour '" + o.getTitle() + "' ? \n" +
+                                "(Actuel: " + d.getNom() + " " + d.getPrenom() + ")", false);
+                        return;
+                    }
+                }
+            }
+
+            if (offreSelectionneePourChat != null) {
+                String localResponse = updateService.processMessage(userText, offreSelectionneePourChat);
+                if (localResponse != null) {
+                    typeMessage(localResponse, false);
+                    if (localResponse.contains("✅")) {
+                        demandeService.modifier(offreSelectionneePourChat);
+                        offreSelectionneePourChat = null;
+                    }
+                    return;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         handleSendIA(userText);
     }
 
     private void handleSendIA(String userPrompt) {
         conversationHistory.add(new String[]{"user", userPrompt});
-
         StringBuilder offresCtx = new StringBuilder();
         try {
             List<Offre> offres = service.afficher();
@@ -271,14 +303,7 @@ public class CandidatOffreController implements Initializable {
             }
         } catch (Exception ignored) {}
 
-        // --- INSTRUCTIONS DE CONTEXTE ET DE POLITESSE ---
-        String systemPrompt = "Tu es AgriSmart Bot, poli et serviable. " +
-                "RÈGLES : " +
-                "1. Réponds UNIQUEMENT sur les offres suivantes : " + offresCtx + ". " +
-                "2. Si la question est hors sujet, dis gentiment que tu es là pour aider sur les offres agricoles. " +
-                "3. Ta réponse doit être TRES COURTE (MAX 3 à 4 LIGNES). " +
-                "4. Sois chaleureux.";
-
+        String systemPrompt = "Tu es AgriSmart Bot. Réponds sur les offres : " + offresCtx;
         StringBuilder messagesJson = new StringBuilder();
         messagesJson.append("{\"role\":\"system\",\"content\":\"").append(cleanForJson(systemPrompt)).append("\"}");
         for (String[] msg : conversationHistory) {
