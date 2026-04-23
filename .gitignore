@@ -35,6 +35,7 @@ build/
 src/main/client_secret.json
 ### VS Code ###
 .vscode/
+src/main/resources/config.properties
 
 ### Mac OS ###
 .DS_Store
