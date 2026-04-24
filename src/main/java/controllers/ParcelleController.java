@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.concurrent.Worker;
 import javafx.scene.layout.*;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
@@ -49,6 +50,8 @@ public class ParcelleController {
     private ConsommationService consS = new ConsommationService();
     private ObservableList<Parcelle> parcelleList = FXCollections.observableArrayList();
     private FilteredList<Parcelle> filteredList;
+    private boolean mapReady;
+    private Parcelle pendingMapSelection;
 
     @FXML
     public void initialize() {

@@ -5,11 +5,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class MyConnection {
-    public String PATH = "jdbc:mysql://localhost:3306/agrismart";
-    public String user = "root";
-    public String pwd = "";  
-    public Connection conn;
-    public static MyConnection instance;
+    private final String PATH = "jdbc:mysql://localhost:3306/agrismart";
+    private final String user = "root";
+    private final String pwd = "";  
+    private Connection conn;
+    private static MyConnection instance;
 
     private MyConnection() {
         try {

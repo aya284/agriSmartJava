@@ -198,7 +198,6 @@ public class MarketplaceController implements Initializable {
     private boolean openSellerOnBoughtOrders = false;
     private int currentPage = 0;
 
-    // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
     @FXML private StackPane sellerOverlay;
     @FXML private VBox sellerProductsSection;
@@ -626,9 +625,9 @@ public class MarketplaceController implements Initializable {
         produitTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnView = new Button("\u25ce");
-            private final Button btnEdit = new Button("\u270e");
-            private final Button btnDelete = new Button("\ud83d\uddd1");
+            private final Button btnView = new Button("👁");
+            private final Button btnEdit = new Button("✏");
+            private final Button btnDelete = new Button("❌");
             private final HBox box = new HBox(8, btnView, btnEdit, btnDelete);
 
             {
@@ -636,9 +635,18 @@ public class MarketplaceController implements Initializable {
                 btnView.getStyleClass().addAll("seller-action-btn", "view");
                 btnEdit.getStyleClass().addAll("seller-action-btn", "edit");
                 btnDelete.getStyleClass().addAll("seller-action-btn", "delete");
-                btnView.setOnAction(e -> showProductDetails(getTableView().getItems().get(getIndex())));
-                btnEdit.setOnAction(e -> openModifierProduit(getTableView().getItems().get(getIndex())));
-                btnDelete.setOnAction(e -> handleDeleteProduit(getTableView().getItems().get(getIndex())));
+                btnView.setOnAction(e -> {
+                    Produit p = getTableView().getItems().get(getIndex());
+                    if (p != null) showProductDetails(p);
+                });
+                btnEdit.setOnAction(e -> {
+                    Produit p = getTableView().getItems().get(getIndex());
+                    if (p != null) openModifierProduit(p);
+                });
+                btnDelete.setOnAction(e -> {
+                    Produit p = getTableView().getItems().get(getIndex());
+                    if (p != null) handleDeleteProduit(p);
+                });
             }
 
             @Override
@@ -716,9 +724,9 @@ public class MarketplaceController implements Initializable {
         });
 
         colCmdActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEdit = new Button("Modifier");
-            private final Button btnDelete = new Button("Supprimer");
-            private final Button btnFacture = new Button("Facture");
+            private final Button btnEdit = new Button("✏");
+            private final Button btnDelete = new Button("❌");
+            private final Button btnFacture = new Button("📥");
             private final HBox box = new HBox(8, btnEdit, btnDelete, btnFacture);
 
             {
