@@ -20,6 +20,9 @@ import javafx.stage.Stage;
 import services.ParcelleService;
 import services.CultureService;
 import services.ConsommationService;
+import services.WeatherService;
+import org.json.JSONObject;
+import org.json.JSONArray;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +46,10 @@ public class ParcelleController {
     private VBox cultureListContainer;
     @FXML
     private TextField txtSearch;
+    @FXML
+    private VBox weatherContainer;
+
+    private WeatherService weatherS = new WeatherService();
 
     private ParcelleService ps = new ParcelleService();
     private CultureService cs = new CultureService();
@@ -61,6 +68,7 @@ public class ParcelleController {
         setupCellFactory();
         refreshList();
         loadMap();
+        System.out.println("ParcelleController initialized. weatherContainer: " + weatherContainer);
     }
 
     private void setupSearch() {
@@ -180,13 +188,214 @@ public class ParcelleController {
         lblDetailType.setText(p.getTypeSol());
         lblDetailCoords.setText("Lat: " + p.getLatitude() + " | Lon: " + p.getLongitude());
 
-        String script = "if(marker) map.removeLayer(marker); " +
-                "marker = L.marker([" + p.getLatitude() + "," + p.getLongitude() + "], {icon: customIcon}).addTo(map);"
-                +
-                "map.setView([" + p.getLatitude() + "," + p.getLongitude() + "], 13);";
-        webViewMap.getEngine().executeScript(script);
+        try {
+            String script = "if(marker) map.removeLayer(marker); " +
+                    "marker = L.marker([" + p.getLatitude() + "," + p.getLongitude() + "], {icon: customIcon}).addTo(map);"
+                    +
+                    "map.setView([" + p.getLatitude() + "," + p.getLongitude() + "], 13);";
+            webViewMap.getEngine().executeScript(script);
+        } catch (Exception e) {
+            System.err.println("Map script error: " + e.getMessage());
+        }
 
         loadCultures(p.getId());
+        loadWeather(p);
+    }
+
+    private void loadWeather(Parcelle p) {
+        if (weatherContainer == null) {
+            System.err.println("weatherContainer is NULL!");
+            return;
+        }
+        weatherContainer.getChildren().clear();
+        Label loading = new Label("Chargement de la météo pour " + p.getNom() + "...");
+        loading.getStyleClass().add("panel-muted");
+        weatherContainer.getChildren().add(loading);
+
+        // Run in background
+        Thread thread = new Thread(() -> {
+            try {
+                JSONObject weatherData = weatherS.getWeatherData(p.getLatitude(), p.getLongitude());
+                javafx.application.Platform.runLater(() -> {
+                    weatherContainer.getChildren().clear();
+                    if (weatherData != null) {
+                        displayWeather(weatherData);
+                    } else {
+                        weatherContainer.getChildren().add(new Label("Erreur: Impossible de joindre le service météo."));
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    weatherContainer.getChildren().clear();
+                    weatherContainer.getChildren().add(new Label("Erreur interne: " + e.getMessage()));
+                });
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void displayWeather(JSONObject data) {
+        JSONObject current = data.getJSONObject("current");
+        double temp = current.getDouble("temperature_2m");
+        int humidity = current.getInt("relative_humidity_2m");
+        double wind = current.getDouble("wind_speed_10m");
+        double rain = current.getDouble("rain");
+        int code = current.getInt("weather_code");
+
+        // Current Weather Card
+        VBox currentCard = new VBox(15);
+        currentCard.getStyleClass().add("weather-card-current");
+
+        HBox header = new HBox(20);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        Label iconLarge = new Label(weatherS.getWeatherIcon(code));
+        iconLarge.getStyleClass().addAll("weather-icon-large", "weather-icon-emoji");
+        iconLarge.setMinWidth(80);
+        iconLarge.setAlignment(Pos.CENTER);
+
+        VBox tempBox = new VBox(2);
+        Label lblTemp = new Label(temp + "°C");
+        lblTemp.getStyleClass().add("weather-temp-main");
+        Label lblDesc = new Label(weatherS.getWeatherDescription(code));
+        lblDesc.getStyleClass().add("weather-desc-main");
+        tempBox.getChildren().addAll(lblTemp, lblDesc);
+
+        header.getChildren().addAll(iconLarge, tempBox);
+
+        HBox infoRow = new HBox(10);
+        infoRow.setAlignment(Pos.CENTER);
+        infoRow.getChildren().addAll(
+            createWeatherInfoBox("Humidité", humidity + "%", "💧"),
+            createWeatherInfoBox("Vent", wind + " km/h", "💨"),
+            createWeatherInfoBox("Pluie", rain + " mm", "☔")
+        );
+
+        currentCard.getChildren().addAll(header, infoRow);
+        weatherContainer.getChildren().add(currentCard);
+
+        // Alerts
+        displayAlerts(current);
+
+        // Forecast
+        Label lblForecast = new Label("Prévisions sur 7 jours");
+        lblForecast.getStyleClass().add("panel-title");
+        lblForecast.setStyle("-fx-font-size: 14px; -fx-padding: 10 0 0 0;");
+        weatherContainer.getChildren().add(lblForecast);
+
+        ScrollPane forecastScroll = new ScrollPane();
+        forecastScroll.setFitToHeight(true);
+        forecastScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;");
+        
+        HBox forecastBox = new HBox(10);
+        forecastBox.setPadding(new Insets(5, 0, 10, 0));
+        
+        JSONObject daily = data.getJSONObject("daily");
+        JSONArray times = daily.getJSONArray("time");
+        JSONArray tempsMax = daily.getJSONArray("temperature_2m_max");
+        JSONArray tempsMin = daily.getJSONArray("temperature_2m_min");
+        JSONArray codes = daily.getJSONArray("weather_code");
+
+        for (int i = 0; i < times.length(); i++) {
+            forecastBox.getChildren().add(createForecastCard(
+                times.getString(i),
+                tempsMax.getDouble(i),
+                tempsMin.getDouble(i),
+                codes.getInt(i)
+            ));
+        }
+        
+        forecastScroll.setContent(forecastBox);
+        weatherContainer.getChildren().add(forecastScroll);
+    }
+
+    private VBox createWeatherInfoBox(String label, String value, String icon) {
+        VBox box = new VBox(2);
+        box.getStyleClass().add("weather-info-box");
+        box.setAlignment(Pos.CENTER);
+        HBox.setHgrow(box, Priority.ALWAYS);
+
+        Label l = new Label(icon + " " + label);
+        l.getStyleClass().addAll("weather-info-label", "weather-icon-emoji");
+        Label v = new Label(value);
+        v.getStyleClass().add("weather-info-value");
+
+        box.getChildren().addAll(l, v);
+        return box;
+    }
+
+    private void displayAlerts(JSONObject current) {
+        double temp = current.getDouble("temperature_2m");
+        double wind = current.getDouble("wind_speed_10m");
+        double rain = current.getDouble("rain");
+        int code = current.getInt("weather_code");
+
+        // --- SMART ALERTS (CRITICAL) ---
+        if (temp > 35) {
+            addAlert("Forte Chaleur", "Risque de stress hydrique. Augmentez l'irrigation et évitez le travail intensif.", "danger");
+        } else if (temp < 2) {
+            addAlert("Risque de Gel", "Protégez les cultures sensibles avec des voiles thermiques.", "danger");
+        }
+
+        if (wind > 40) {
+            addAlert("Vent Fort", "Évitez tout traitement chimique aujourd'hui pour limiter la dérive.", "warning");
+        }
+
+        if (rain > 15) {
+            addAlert("Pluie Intense", "Risque de lessivage. Ne fertilisez pas et ne pulvérisez pas de pesticides.", "warning");
+        }
+
+        // --- SMART ADVICE (OPTIMIZATION) ---
+        if (rain == 0 && temp > 15 && temp < 28 && wind < 15) {
+            addAlert("Conditions Idéales", "Moment parfait pour la fertilisation ou les traitements phytosanitaires.", "success");
+        } else if (code >= 0 && code <= 3 && rain == 0 && wind < 25) {
+            addAlert("Conseil Récolte", "Le temps est sec et stable : idéal pour la récolte ou le labour.", "info");
+        }
+    }
+
+    private void addAlert(String title, String msg, String type) {
+        VBox alert = new VBox(5);
+        alert.getStyleClass().addAll("weather-alert-box", "weather-alert-" + type);
+        
+        String icon = "🔔 ";
+        String color = "#d35400";
+        
+        if (type.equals("danger")) { icon = "⚠️ "; color = "#c0392b"; }
+        else if (type.equals("success")) { icon = "🌱 "; color = "#27ae60"; }
+        else if (type.equals("info")) { icon = "💡 "; color = "#2980b9"; }
+        
+        Label t = new Label(icon + title);
+        t.getStyleClass().addAll("weather-alert-title", "weather-icon-emoji");
+        t.setStyle("-fx-text-fill: " + color + ";");
+        
+        Label m = new Label(msg);
+        m.getStyleClass().add("weather-alert-msg");
+        m.setWrapText(true);
+        
+        alert.getChildren().addAll(t, m);
+        weatherContainer.getChildren().add(alert);
+    }
+
+    private VBox createForecastCard(String date, double max, double min, int code) {
+        VBox card = new VBox(8);
+        card.getStyleClass().add("weather-card-forecast");
+        
+        String day = date.substring(5); // MM-DD
+        Label lblDay = new Label(day);
+        lblDay.getStyleClass().add("weather-forecast-day");
+        
+        Label icon = new Label(weatherS.getWeatherIcon(code));
+        icon.getStyleClass().addAll("weather-forecast-icon", "weather-icon-emoji");
+        icon.setMinWidth(40);
+        icon.setAlignment(Pos.CENTER);
+        
+        Label lblTemp = new Label(Math.round(max) + "° / " + Math.round(min) + "°");
+        lblTemp.getStyleClass().add("weather-forecast-temp");
+        
+        card.getChildren().addAll(lblDay, icon, lblTemp);
+        return card;
     }
 
     private void loadCultures(int parcelleId) {

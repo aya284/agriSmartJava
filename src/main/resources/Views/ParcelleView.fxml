@@ -62,6 +62,16 @@
                         </ScrollPane>
                     </VBox>
                 </Tab>
+                <Tab text="Météo Direct">
+                    <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                            <VBox fx:id="weatherContainer" spacing="15" styleClass="weather-container">
+                                <!-- Contenu généré dynamiquement par le contrôleur -->
+                                <Label text="Sélectionnez une parcelle pour voir la météo." styleClass="panel-muted"/>
+                            </VBox>
+                        </ScrollPane>
+                    </VBox>
+                </Tab>
             </TabPane>
         </VBox>
 

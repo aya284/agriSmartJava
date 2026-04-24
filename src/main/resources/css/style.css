@@ -2789,3 +2789,119 @@
     -fx-background-color: #dce8fb;
     -fx-border-color: #b3c8ec;
 }
+
+/* ===================== WEATHER MODULE ===================== */
+
+.weather-container {
+    -fx-padding: 10;
+}
+
+.weather-card-current {
+    -fx-background-color: linear-gradient(to bottom right, #2D6A4F, #1B4332);
+    -fx-background-radius: 12;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 4);
+}
+
+.weather-temp-main {
+    -fx-text-fill: white;
+    -fx-font-size: 40px;
+    -fx-font-weight: 800;
+}
+
+.weather-desc-main {
+    -fx-text-fill: #b7e4c7;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.weather-icon-emoji {
+    -fx-font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    -fx-text-fill: white; /* For primary card */
+}
+
+.weather-icon-large {
+    -fx-font-size: 64px;
+}
+
+.weather-forecast-icon {
+    -fx-font-size: 32px;
+    -fx-text-fill: #2D6A4F; /* Dark green for visibility on white background */
+    -fx-padding: 5 0;
+}
+
+.weather-info-box {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 10;
+    -fx-padding: 10 15;
+}
+
+.weather-info-label {
+    -fx-text-fill: #d8f3dc;
+    -fx-font-size: 11px;
+}
+
+.weather-info-value {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.weather-card-forecast {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #d8f3dc;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-alignment: CENTER;
+    -fx-min-width: 90;
+}
+
+.weather-forecast-day {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #2D6A4F;
+}
+
+.weather-forecast-temp {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1B4332;
+}
+
+.weather-alert-box {
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-border-radius: 10;
+}
+
+.weather-alert-warning {
+    -fx-background-color: #fff9e6;
+    -fx-border-color: #ffcc00;
+}
+
+.weather-alert-danger {
+    -fx-background-color: #fff5f5;
+    -fx-border-color: #ff4d4d;
+}
+
+.weather-alert-success {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #22c55e;
+}
+
+.weather-alert-info {
+    -fx-background-color: #f0f9ff;
+    -fx-border-color: #0ea5e9;
+}
+
+.weather-alert-title {
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+.weather-alert-msg {
+    -fx-font-size: 12px;
+    -fx-text-fill: #555;
+}
+
