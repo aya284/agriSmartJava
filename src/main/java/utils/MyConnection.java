@@ -5,9 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class MyConnection {
-    public String PATH = "jdbc:mysql://localhost:3306/agrismart";
-    public String user = "root";
-    public String pwd = "";
+    public String PATH = ConfigLoader.get("DB_URL", "jdbc:mysql://localhost:3306/agrismart");
+    public String user = ConfigLoader.get("DB_USER", "root");
+    public String pwd = ConfigLoader.get("DB_PASS", "");
     public Connection conn;
     public static MyConnection instance;
 

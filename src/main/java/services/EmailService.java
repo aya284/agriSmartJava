@@ -1,5 +1,7 @@
 package services;
 
+import utils.ConfigLoader;
+
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import java.util.Properties;
@@ -10,10 +12,10 @@ public class EmailService {
 
     private static final String SMTP_HOST  = "smtp.gmail.com";
     private static final String SMTP_PORT  = "587";
-    private static final String FROM_EMAIL = "abirbenkhlifa17@gmail.com";
-    private static final String FROM_PASS  = "rwqh foyv dpio bjku";
+    private static final String FROM_EMAIL = ConfigLoader.get("EMAIL_USER");
+    private static final String FROM_PASS  = ConfigLoader.get("EMAIL_PASS");
 
-    public void sendPasswordResetEmail(String toEmail, String fullToken) throws Exception {
+    public void sendPasswordResetEmail(String toEmail, String otp) throws Exception {
         Properties props = new Properties();
         props.put("mail.smtp.auth",            "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -30,8 +32,8 @@ public class EmailService {
         Message msg = new MimeMessage(session);
         msg.setFrom(new InternetAddress(FROM_EMAIL, "AgriSmart"));
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-        msg.setSubject("AgriSmart – Réinitialisation du mot de passe");
-        msg.setContent(buildHtml(fullToken), "text/html; charset=utf-8");
+        msg.setSubject("AgriSmart – Votre code de réinitialisation");
+        msg.setContent(buildHtml(otp), "text/html; charset=utf-8");
 
         Transport.send(msg);
     }
@@ -102,24 +104,25 @@ public class EmailService {
         """.formatted(user.getFirstName(), statusColor, statusLabel, message);
     }
 
-    private String buildHtml(String token) {
+    private String buildHtml(String otp) {
         return """
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;
-                        border:1px solid #e0e0e0;border-radius:8px;padding:32px;">
-              <h2 style="color:#2ecc71;margin-top:0;">AgriSmart</h2>
-              <h3>Réinitialisation du mot de passe</h3>
-              <p>Vous avez demandé à réinitialiser votre mot de passe.<br>
-                 Copiez le jeton ci-dessous et collez-le dans l'application :</p>
-              <div style="background:#f4f6f8;border-radius:6px;padding:16px;
-                          font-family:monospace;font-size:14px;
-                          word-break:break-all;letter-spacing:0.5px;">
+                        border:1px solid #e0e0e0;border-radius:12px;padding:40px;text-align:center;">
+              <h2 style="color:#2a5438;margin-top:0;font-size:28px;">AgriSmart</h2>
+              <div style="border-bottom: 2px solid #f0f0f0; margin: 20px 0;"></div>
+              <h3 style="color:#333;font-size:20px;">Réinitialisation du mot de passe</h3>
+              <p style="color:#555;font-size:16px;">Vous avez demandé à réinitialiser votre mot de passe.<br>
+                 Utilisez le code de vérification ci-dessous :</p>
+              <div style="background:#f4f6f8;border-radius:12px;padding:20px;
+                          font-family:monospace;font-size:32px;font-weight:bold;
+                          color:#2a5438;letter-spacing:8px;margin:25px 0;">
                 %s
               </div>
-              <p style="color:#888;font-size:13px;margin-top:24px;">
-                Ce jeton expire dans <strong>60 minutes</strong>.<br>
-                Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.
+              <p style="color:#888;font-size:14px;margin-top:30px;">
+                Ce code est valable pendant <strong>60 minutes</strong>.<br>
+                Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.
               </p>
             </div>
-        """.formatted(token);
+        """.formatted(otp);
     }
 }

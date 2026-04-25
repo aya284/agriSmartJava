@@ -1,5 +1,6 @@
-package services;
+package services.ocr;
 
+import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import utils.ConfigLoader;
@@ -8,6 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+/**
+ * OcrService is responsible for extracting text from visual documents.
+ * It uses Google Cloud Vision as the foundational OCR layer.
+ */
 public class OcrService {
 
     private static final String API_KEY = ConfigLoader.get("GOOGLE_VISION_API_KEY");
@@ -18,6 +23,11 @@ public class OcrService {
      * @return extracted text as a String
      */
     public String extractText(String filePath) throws Exception {
+        if (API_KEY == null || API_KEY.isBlank()) {
+            throw new Exception("Google Vision API Key is missing in config.properties");
+        }
+
+        System.out.println("OCR: Processing file: " + filePath);
 
         // Read file as bytes
         byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
@@ -36,25 +46,28 @@ public class OcrService {
                 .setImage(image)
                 .build();
 
-        // Call API
+        // Call API using API Key in headers (standard for Vision API key auth)
         ImageAnnotatorSettings settings = ImageAnnotatorSettings.newBuilder()
-                .setApiKey(API_KEY) // ← API key auth (no service account needed)
+                .setHeaderProvider(FixedHeaderProvider.create("x-goog-api-key", API_KEY))
                 .build();
 
         try (ImageAnnotatorClient client = ImageAnnotatorClient.create(settings)) {
-            BatchAnnotateImagesResponse response =
-                    client.batchAnnotateImages(List.of(request));
-
-            AnnotateImageResponse imageResponse =
-                    response.getResponsesList().get(0);
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(List.of(request));
+            AnnotateImageResponse imageResponse = response.getResponsesList().get(0);
 
             if (imageResponse.hasError()) {
-                throw new Exception("Vision API error: "
-                        + imageResponse.getError().getMessage());
+                throw new Exception("Vision API error: " + imageResponse.getError().getMessage());
             }
 
-            // Return full extracted text
-            return imageResponse.getFullTextAnnotation().getText();
+            TextAnnotation annotation = imageResponse.getFullTextAnnotation();
+            if (annotation == null || annotation.getText().isBlank()) {
+                System.out.println("OCR: No text detected in " + filePath);
+                return "";
+            }
+
+            String text = annotation.getText();
+            System.out.println("OCR: Successfully extracted " + text.length() + " characters.");
+            return text;
         }
     }
 }

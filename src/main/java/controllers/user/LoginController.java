@@ -6,8 +6,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import entities.User;
 import netscape.javascript.JSObject;
 import services.GoogleAuthService;
@@ -20,59 +23,97 @@ import java.util.Optional;
 
 public class LoginController {
 
-    @FXML
-    private TextField emailField;
-    @FXML
-    private PasswordField passwordField;
-    @FXML
-    private Label errorLabel;
-    @FXML
-    private Button loginBtn;
-    @FXML
-    private Button googleBtn;
-
-    // ── reCAPTCHA ─────────────────────────────────────────────
-    @FXML
-    private WebView recaptchaWebView;
-    @FXML
-    private Label errCaptcha;
+    @FXML private TextField emailField;
+    @FXML private PasswordField passwordField;
+    @FXML private Label errorLabel;
+    @FXML private Button loginBtn;
+    @FXML private Button googleBtn;
+    @FXML private CheckBox captchaCheckBox;
+    @FXML private Label errCaptcha;
 
     private String recaptchaToken = null;
 
-    private final UserService userService = new UserService();
+    private final UserService userService         = new UserService();
     private final GoogleAuthService googleAuthService = new GoogleAuthService();
-    private final RecaptchaService recaptchaService = new RecaptchaService();
+
+    // ✅ Store as field so it's not garbage collected
+    private RecaptchaBridge recaptchaBridge;
+    private RecaptchaService recaptchaService;
 
     @FXML
     public void initialize() {
-        setupRecaptcha();
+        // Initialize service but don't start server yet
+        try {
+            recaptchaService = new RecaptchaService();
+        } catch (Exception e) {
+            System.err.println("Failed to start reCAPTCHA service: " + e.getMessage());
+        }
     }
 
-    // ── reCAPTCHA Setup ───────────────────────────────────────
-    private void setupRecaptcha() {
-        WebEngine engine = recaptchaWebView.getEngine();
+    private Stage captchaStage;
+
+    @FXML
+    private void handleCaptchaClick() {
+        if (captchaCheckBox.isSelected()) {
+            if (recaptchaToken != null) return; // Already solved
+            showCaptchaModal();
+        } else {
+            recaptchaToken = null; // Reset if unchecked
+        }
+    }
+
+    private void showCaptchaModal() {
+        if (captchaStage != null && captchaStage.isShowing()) return;
+
+        WebView webView = new WebView();
+        WebEngine engine = webView.getEngine();
         engine.setJavaScriptEnabled(true);
 
-        engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-            if (newState == Worker.State.SUCCEEDED) {
+        recaptchaBridge = new RecaptchaBridge();
+
+        engine.getLoadWorker().stateProperty().addListener((obs, old, state) -> {
+            if (state == Worker.State.SUCCEEDED) {
                 JSObject window = (JSObject) engine.executeScript("window");
-                window.setMember("javaConnector", new RecaptchaBridge());
+                window.setMember("javaConnector", recaptchaBridge);
             }
         });
 
-        engine.loadContent(RecaptchaService.getRecaptchaHtml());
+        // Start server if not running
+        recaptchaService.startServer();
+        engine.load("http://localhost:" + RecaptchaService.PORT);
+
+        captchaStage = new Stage();
+        captchaStage.initModality(Modality.APPLICATION_MODAL);
+        captchaStage.initOwner(captchaCheckBox.getScene().getWindow());
+        captchaStage.setTitle("Vérification de sécurité");
+
+        Scene scene = new Scene(webView, 360, 520);
+        captchaStage.setScene(scene);
+
+        captchaStage.setOnCloseRequest(e -> {
+            if (recaptchaToken == null) {
+                captchaCheckBox.setSelected(false);
+            }
+        });
+
+        captchaStage.show();
     }
 
-    /**
-     * JavaScript bridge to receive callbacks from the reCAPTCHA widget.
-     */
+    public void cleanup() {
+        if (recaptchaService != null) {
+            recaptchaService.stopServer();
+            System.out.println("reCAPTCHA server stopped.");
+        }
+    }
+
+    // ── JS Bridge ─────────────────────────────────────────────
     public class RecaptchaBridge {
         public void onCaptchaCompleted(String token) {
             Platform.runLater(() -> {
                 recaptchaToken = token;
-                if (errCaptcha != null) {
-                    errCaptcha.setVisible(false);
-                }
+                captchaCheckBox.setSelected(true);
+                if (errCaptcha != null) errCaptcha.setVisible(false);
+                if (captchaStage != null) captchaStage.close();
             });
         }
 
@@ -87,52 +128,53 @@ public class LoginController {
         }
     }
 
-    // ── Login classique ───────────────────────────────────────
+    // ── Login ─────────────────────────────────────────────────
     @FXML
     public void handleLogin() {
         clearError();
 
-        String email = emailField.getText().trim();
+        String email    = emailField.getText().trim();
         String password = passwordField.getText();
 
-        // Validation avant appel au service
         String error = Validator.validateLoginForm(email, password);
-        if (error != null) {
-            showError(error);
-            return;
-        }
+        if (error != null) { showError(error); return; }
 
-        // Validate reCAPTCHA
+        // ✅ reCAPTCHA check
         if (recaptchaToken == null || recaptchaToken.isBlank()) {
-            if (errCaptcha != null) {
-                errCaptcha.setText("⚠ Veuillez compléter le captcha.");
-                errCaptcha.setVisible(true);
-            }
+            errCaptcha.setText("⚠ Veuillez compléter le captcha.");
+            errCaptcha.setVisible(true);
             return;
         }
 
         loginBtn.setDisable(true);
         loginBtn.setText("Connexion en cours...");
 
+        // ✅ Capture token before thread (avoid race condition)
+        String tokenSnapshot = recaptchaToken;
+
         new Thread(() -> {
             try {
-                // Server-side reCAPTCHA verification
-                if (!recaptchaService.verify(recaptchaToken)) {
+                if (!recaptchaService.verify(tokenSnapshot)) {
                     Platform.runLater(() -> {
                         showError("Échec de la vérification captcha. Réessayez.");
-                        loginBtn.setDisable(false);
-                        loginBtn.setText("Se connecter");
                         recaptchaToken = null;
-                        recaptchaWebView.getEngine().loadContent(RecaptchaService.getRecaptchaHtml());
+                        captchaCheckBox.setSelected(false);
                     });
                     return;
                 }
 
                 Optional<User> result = userService.login(email, password);
+
+                if (result.isEmpty()) {
+                    Platform.runLater(() -> showError("Email ou mot de passe incorrect."));
+                    return;
+                }
+
                 result.ifPresent(user -> Platform.runLater(() -> {
                     SessionManager.getInstance().setCurrentUser(user);
                     navigateByRole(user.getRole());
                 }));
+
             } catch (Exception e) {
                 Platform.runLater(() -> showError(e.getMessage()));
             } finally {
@@ -144,7 +186,7 @@ public class LoginController {
         }).start();
     }
 
-    // ── Login Google ──────────────────────────────────────────
+    // ── Google Login ──────────────────────────────────────────
     @FXML
     public void handleGoogleLogin() {
         googleBtn.setDisable(true);
@@ -158,10 +200,17 @@ public class LoginController {
                         userInfo.getEmail(),
                         userInfo.getGivenName(),
                         userInfo.getFamilyName());
+
+                if (result.isEmpty()) {
+                    Platform.runLater(() -> showError("Compte Google introuvable."));
+                    return;
+                }
+
                 result.ifPresent(user -> Platform.runLater(() -> {
                     SessionManager.getInstance().setCurrentUser(user);
                     navigateByRole(user.getRole());
                 }));
+
             } catch (Exception e) {
                 Platform.runLater(() -> showError("Connexion Google échouée : " + e.getMessage()));
             } finally {
@@ -173,23 +222,16 @@ public class LoginController {
         }).start();
     }
 
-    @FXML
-    public void goToForgotPassword() {
-        loadView("/Views/ForgotPasswordView.fxml");
-    }
-
     // ── Navigation ────────────────────────────────────────────
-    @FXML
-    public void goToRegister() {
-        loadView("/Views/RegisterView.fxml");
-    }
+    @FXML public void goToRegister()      { loadView("/Views/RegisterView.fxml"); }
+    @FXML public void goToForgotPassword(){ loadView("/Views/ForgotPasswordView.fxml"); }
 
     private void navigateByRole(String role) {
         String view = switch (role.toLowerCase()) {
-            case "admin" -> "/Views/Admin/AdminLayout.fxml";
-            case "employee" -> "/Views/MainView.fxml";
+            case "admin"       -> "/Views/Admin/AdminLayout.fxml";
+            case "employee"    -> "/Views/MainView.fxml";
             case "fournisseur" -> "/Views/MainView.fxml";
-            default -> "/Views/MainView.fxml";
+            default            -> "/Views/MainView.fxml";
         };
         loadView(view);
     }
@@ -213,8 +255,6 @@ public class LoginController {
     private void clearError() {
         errorLabel.setText("");
         errorLabel.setVisible(false);
-        if (errCaptcha != null) {
-            errCaptcha.setVisible(false);
-        }
+        if (errCaptcha != null) errCaptcha.setVisible(false);
     }
 }

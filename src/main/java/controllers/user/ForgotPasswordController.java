@@ -37,11 +37,11 @@ public class ForgotPasswordController {
                 // Always show same message to prevent email enumeration
                 Optional<User> userOpt = userService.findByEmail(email);
                 if (userOpt.isPresent()) {
-                    String token = passwordResetService.createResetToken(userOpt.get().getId());
-                    emailService.sendPasswordResetEmail(email, token);
+                    String otp = passwordResetService.createResetOTP(userOpt.get().getId());
+                    emailService.sendPasswordResetEmail(email, otp);
                 }
                 Platform.runLater(() ->
-                        showStatus("Si cet e-mail existe, un jeton a été envoyé.", true));
+                        showStatus("Si cet e-mail existe, un code OTP a été envoyé.", true));
             } catch (Exception e) {
                 Platform.runLater(() ->
                         showStatus("Erreur : " + e.getMessage(), false));

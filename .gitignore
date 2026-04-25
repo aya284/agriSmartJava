@@ -32,7 +32,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 # Google OAuth secret
-src/main/client_secret.json
+src/main/resources/client_secret.json
 ### VS Code ###
 .vscode/
 src/main/resources/config.properties

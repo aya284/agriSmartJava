@@ -1,141 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.web.WebView?>
+<?import javafx.scene.web.*?>
 
-<StackPane xmlns:fx="http://javafx.com/fxml/1"
-           xmlns="http://javafx.com/javafx/17"
-           fx:controller="controllers.user.LoginController"
-           style="-fx-background-color: #f8f9fa;">
+<StackPane style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.user.LoginController">
 
-    <!-- Larger centered card -->
-    <VBox spacing="22"
-          alignment="CENTER"
-          prefWidth="460"
-          prefHeight="700"
-          maxWidth="460"
-          maxHeight="700"
-          style="-fx-background-color: white;
-                 -fx-background-radius: 20;
-                 -fx-padding: 50 55 40 55;
-                 -fx-border-color: #e5e7eb;
-                 -fx-border-width: 1;
-                 -fx-border-radius: 20;
-                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 28, 0.0, 0, 14);">
+    <VBox alignment="CENTER" maxHeight="740" maxWidth="460" prefHeight="740" prefWidth="460" spacing="22" style="-fx-background-color: white;                  -fx-background-radius: 20;                  -fx-padding: 50 55 40 55;                  -fx-border-color: #e5e7eb;                  -fx-border-width: 1;                  -fx-border-radius: 20;                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 28, 0.0, 0, 14);">
 
         <!-- Header -->
-        <VBox spacing="6" alignment="CENTER">
-            <Label text="AgriSmart"
-                   style="-fx-text-fill: #2a5438;
-                          -fx-font-size: 36px;
-                          -fx-font-weight: bold;"/>
-            <Label text="Connectez-vous à votre compte"
-                   style="-fx-text-fill: #555555;
-                          -fx-font-size: 16px;"/>
+        <VBox alignment="CENTER" spacing="6">
+            <Label style="-fx-text-fill: #2a5438;                           -fx-font-size: 36px;                           -fx-font-weight: bold;" text="AgriSmart" />
+            <Label style="-fx-text-fill: #555555;                           -fx-font-size: 16px;" text="Connectez-vous à votre compte" />
         </VBox>
 
-        <!-- Form Fields -->
-        <VBox spacing="18" maxWidth="340">
+        <!-- Form -->
+        <VBox maxWidth="340" prefHeight="238.0" prefWidth="320.0" spacing="18">
 
             <!-- Email -->
             <VBox spacing="6">
-                <Label text="Adresse e-mail"
-                       style="-fx-text-fill: #2a5438;
-                              -fx-font-size: 13px;
-                              -fx-font-weight: bold;"/>
-                <TextField fx:id="emailField"
-                           promptText="Entrez votre adresse e-mail"
-                           style="-fx-background-color: #f8f9fa;
-                                  -fx-background-radius: 12;
-                                  -fx-border-color: #d1d5db;
-                                  -fx-border-width: 1;
-                                  -fx-padding: 14 16;
-                                  -fx-font-size: 15px;"/>
+                <Label style="-fx-text-fill: #2a5438; -fx-font-size: 13px; -fx-font-weight: bold;" text="Adresse e-mail" />
+                <TextField fx:id="emailField" promptText="Entrez votre adresse e-mail" style="-fx-background-color: #f8f9fa;                                   -fx-background-radius: 12;                                   -fx-border-color: #d1d5db;                                   -fx-border-width: 1;                                   -fx-padding: 14 16;                                   -fx-font-size: 15px;" />
             </VBox>
 
             <!-- Password -->
             <VBox spacing="6">
-                <Label text="Mot de passe"
-                       style="-fx-text-fill: #2a5438;
-                              -fx-font-size: 13px;
-                              -fx-font-weight: bold;"/>
-                <PasswordField fx:id="passwordField"
-                               promptText="Entrez votre mot de passe"
-                               style="-fx-background-color: #f8f9fa;
-                                      -fx-background-radius: 12;
-                                      -fx-border-color: #d1d5db;
-                                      -fx-border-width: 1;
-                                      -fx-padding: 14 16;
-                                      -fx-font-size: 15px;"/>
+                <Label style="-fx-text-fill: #2a5438; -fx-font-size: 13px; -fx-font-weight: bold;" text="Mot de passe" />
+                <PasswordField fx:id="passwordField" promptText="Entrez votre mot de passe" style="-fx-background-color: #f8f9fa;                                       -fx-background-radius: 12;                                       -fx-border-color: #d1d5db;                                       -fx-border-width: 1;                                       -fx-padding: 14 16;                                       -fx-font-size: 15px;" />
             </VBox>
 
             <!-- Forgot Password -->
             <HBox alignment="CENTER_RIGHT">
-                <Hyperlink text="Mot de passe oublié ?"
-                           onAction="#goToForgotPassword"
-                           style="-fx-text-fill: #2a5438;
-                                  -fx-font-size: 12.5px;"/>
+                <Hyperlink onAction="#goToForgotPassword" style="-fx-text-fill: #2a5438; -fx-font-size: 12.5px;" text="Mot de passe oublié ?" />
             </HBox>
 
-            <!-- reCAPTCHA -->
-            <VBox spacing="6" alignment="CENTER" maxWidth="340">
-                <WebView fx:id="recaptchaWebView" prefHeight="90" prefWidth="320" maxHeight="90" />
-                <Label fx:id="errCaptcha" style="-fx-text-fill:#e74c3c; -fx-font-size:12px;" visible="false" />
+            <!-- ✅ reCAPTCHA — height increased to 100 for proper rendering -->
+            <!-- ✅ reCAPTCHA Checkbox -->
+            <VBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 0 5;">
+                <CheckBox fx:id="captchaCheckBox" onAction="#handleCaptchaClick" style="-fx-text-fill: #555555; -fx-font-size: 14px; -fx-cursor: hand;" text="Je ne suis pas un robot" />
+                <Label fx:id="errCaptcha" maxWidth="320" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" visible="false" wrapText="true" />
             </VBox>
         </VBox>
 
         <!-- Error Label -->
-        <Label fx:id="errorLabel"
-               style="-fx-text-fill: #e74c3c;
-                      -fx-font-size: 13.5px;"
-               visible="false"
-               maxWidth="Infinity"
-               alignment="CENTER"/>
+        <Label fx:id="errorLabel" alignment="CENTER" maxWidth="340" style="-fx-text-fill: #e74c3c; -fx-font-size: 13.5px;" visible="false" wrapText="true" />
 
-        <!-- Sign In Button -->
-        <Button fx:id="loginBtn"
-                text="Se connecter"
-                onAction="#handleLogin"
-                maxWidth="340"
-                style="-fx-background-color: #2a5438;
-                       -fx-text-fill: white;
-                       -fx-font-weight: bold;
-                       -fx-font-size: 16px;
-                       -fx-background-radius: 12;
-                       -fx-padding: 14 20;"/>
+        <!-- Login Button -->
+        <Button fx:id="loginBtn" maxWidth="340" onAction="#handleLogin" style="-fx-background-color: #2a5438;                        -fx-text-fill: white;                        -fx-font-weight: bold;                        -fx-font-size: 16px;                        -fx-background-radius: 12;                        -fx-padding: 14 20;" text="Se connecter" />
 
-        <!-- Divider OR -->
-        <HBox alignment="CENTER" spacing="10" maxWidth="340">
-            <Separator HBox.hgrow="ALWAYS"/>
-            <Label text="OU" style="-fx-text-fill: #9ca3af; -fx-font-size: 12px; -fx-font-weight: bold;"/>
-            <Separator HBox.hgrow="ALWAYS"/>
+        <!-- Divider -->
+        <HBox alignment="CENTER" maxWidth="340" spacing="10">
+            <Separator HBox.hgrow="ALWAYS" />
+            <Label style="-fx-text-fill: #9ca3af; -fx-font-size: 12px; -fx-font-weight: bold;" text="OU" />
+            <Separator HBox.hgrow="ALWAYS" />
         </HBox>
 
         <!-- Google Button -->
-        <Button fx:id="googleBtn"
-                text="🔵  Continuer avec Google"
-                onAction="#handleGoogleLogin"
-                maxWidth="340"
-                style="-fx-background-color: white;
-                       -fx-text-fill: #374151;
-                       -fx-font-weight: bold;
-                       -fx-font-size: 15px;
-                       -fx-background-radius: 12;
-                       -fx-border-color: #d1d5db;
-                       -fx-border-width: 1.5;
-                       -fx-border-radius: 12;
-                       -fx-padding: 12 20;"/>
+        <Button fx:id="googleBtn" maxWidth="340" onAction="#handleGoogleLogin" style="-fx-background-color: white;                        -fx-text-fill: #374151;                        -fx-font-weight: bold;                        -fx-font-size: 15px;                        -fx-background-radius: 12;                        -fx-border-color: #d1d5db;                        -fx-border-width: 1.5;                        -fx-border-radius: 12;                        -fx-padding: 12 20;" text="🔵  Continuer avec Google" />
 
         <!-- Register Link -->
         <HBox alignment="CENTER" spacing="8">
-            <Label text="Vous n'avez pas de compte ?"
-                   style="-fx-text-fill: #6b7280;
-                          -fx-font-size: 14.5px;"/>
-            <Hyperlink text="S'inscrire"
-                       onAction="#goToRegister"
-                       style="-fx-text-fill: #E6BF4A;
-                              -fx-font-weight: bold;
-                              -fx-font-size: 14.5px;"/>
+            <Label style="-fx-text-fill: #6b7280; -fx-font-size: 14.5px;" text="Vous n'avez pas de compte ?" />
+            <Hyperlink onAction="#goToRegister" style="-fx-text-fill: #E6BF4A;                               -fx-font-weight: bold;                               -fx-font-size: 14.5px;" text="S'inscrire" />
         </HBox>
 
     </VBox>

@@ -1,5 +1,7 @@
 package services;
 
+import utils.ConfigLoader;
+
 import entities.PasswordResetRequest;
 import utils.MyConnection;
 
@@ -13,18 +15,17 @@ import java.util.Optional;
 
 public class PasswordResetService {
 
-    private static final String SECRET_KEY      = "agrismart-secret-2026"; // change in prod
+    private static final String SECRET_KEY      = ConfigLoader.get("APP_SECRET", "agrismart-fallback-secret");
     private static final int    EXPIRY_MINUTES  = 60;
     private final Connection    conn            = MyConnection.getInstance().getConn();
 
-    // ── Create token and persist it ───────────────────────────
-    public String createResetToken(int userId) throws Exception {
-        // Clean up old tokens for this user first
+    // ── Create OTP and persist it ────────────────────────────
+    public String createResetOTP(int userId) throws Exception {
+        // Clean up old tokens/OTPs for this user first
         deleteOldTokens(userId);
 
-        String selector  = randomString(20);
-        String rawToken  = randomString(32);
-        String hashed    = hmac(rawToken);
+        String otp = generateOTP(6);
+        String hashed = hmac(otp);
 
         LocalDateTime now     = LocalDateTime.now();
         LocalDateTime expires = now.plusMinutes(EXPIRY_MINUTES);
@@ -36,7 +37,7 @@ public class PasswordResetService {
         """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, selector);
+            ps.setString(1, "OTP_REQUEST"); // We use a generic selector for OTPs
             ps.setString(2, hashed);
             ps.setTimestamp(3, Timestamp.valueOf(now));
             ps.setTimestamp(4, Timestamp.valueOf(expires));
@@ -44,48 +45,40 @@ public class PasswordResetService {
             ps.executeUpdate();
         }
 
-        // What is sent in the email: selector:rawToken
-        return selector + ":" + rawToken;
+        return otp;
     }
 
-    // ── Validate token → returns userId if valid ──────────────
-    public Optional<Integer> validateToken(String fullToken) throws Exception {
-        String[] parts = fullToken.split(":");
-        if (parts.length != 2) return Optional.empty();
-
-        String selector = parts[0];
-        String rawToken = parts[1];
-        String hashed   = hmac(rawToken);
+    // ── Validate OTP → returns userId if valid ───────────────
+    public Optional<Integer> validateOTP(String otp) throws Exception {
+        String hashed = hmac(otp);
 
         String sql = """
-            SELECT user_id, hashed_token, expires_at
+            SELECT user_id, expires_at
             FROM reset_password_request
-            WHERE selector = ?
+            WHERE hashed_token = ?
             ORDER BY id DESC LIMIT 1
         """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, selector);
+            ps.setString(1, hashed);
             ResultSet rs = ps.executeQuery();
 
             if (!rs.next()) return Optional.empty();
 
-            String    storedHash = rs.getString("hashed_token");
-            Timestamp expiresAt  = rs.getTimestamp("expires_at");
             int       userId     = rs.getInt("user_id");
+            Timestamp expiresAt  = rs.getTimestamp("expires_at");
 
-            boolean valid = storedHash.equals(hashed)
-                    && expiresAt.toLocalDateTime().isAfter(LocalDateTime.now());
+            boolean valid = expiresAt.toLocalDateTime().isAfter(LocalDateTime.now());
 
             return valid ? Optional.of(userId) : Optional.empty();
         }
     }
 
-    // ── Delete all tokens for a selector after use ────────────
-    public void invalidateToken(String selector) throws SQLException {
+    // ── Delete all OTPs for a user after use ─────────────────
+    public void invalidateOTP(int userId) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
-                "DELETE FROM reset_password_request WHERE selector = ?")) {
-            ps.setString(1, selector);
+                "DELETE FROM reset_password_request WHERE user_id = ?")) {
+            ps.setInt(1, userId);
             ps.executeUpdate();
         }
     }
@@ -100,12 +93,12 @@ public class PasswordResetService {
     }
 
     // ── Helpers ───────────────────────────────────────────────
-    private String randomString(int length) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private String generateOTP(int length) {
+        String digits = "0123456789";
         SecureRandom rng = new SecureRandom();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++)
-            sb.append(chars.charAt(rng.nextInt(chars.length())));
+            sb.append(digits.charAt(rng.nextInt(digits.length())));
         return sb.toString();
     }
 
