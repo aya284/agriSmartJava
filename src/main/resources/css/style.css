@@ -2905,3 +2905,47 @@
     -fx-text-fill: #555;
 }
 
+/* ===================== NOTIFICATION POPUP ===================== */
+.notification-popup {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #dce8df;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);
+    -fx-padding: 0;
+}
+
+.notification-header {
+    -fx-padding: 12 15;
+    -fx-background-color: linear-gradient(to right, #2D6A4F, #1B4332);
+    -fx-background-radius: 12 12 0 0;
+}
+
+.notification-header-text {
+    -fx-text-fill: white;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+.notification-item {
+    -fx-padding: 12 15;
+    -fx-border-color: transparent transparent #f0f4f1 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cursor: hand;
+}
+
+.notification-item:hover {
+    -fx-background-color: #f5f9f6;
+}
+
+.notification-item-text {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 12px;
+}
+
+.notification-empty {
+    -fx-padding: 20;
+    -fx-text-fill: #95a5a6;
+    -fx-font-style: italic;
+    -fx-alignment: center;
+}

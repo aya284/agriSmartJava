@@ -34,7 +34,7 @@
                     <Label fx:id="userNameLabel" text="User Name" styleClass="user-name-text"/>
                     <Label fx:id="userRoleBadge" text="Role" styleClass="role-badge"/>
                 </HBox>
-                <Button text="Notifications" styleClass="header-icon-btn" onAction="#showNotifications"/>
+                <Button fx:id="btnNotifications" text="Notifications" styleClass="header-icon-btn" onAction="#showNotifications"/>
                 <Button text="Profile"      styleClass="header-icon-btn" onAction="#showProfile"/>
                 <Button text="Déconnexion"  styleClass="header-icon-btn" onAction="#handleLogout"
                         style="-fx-text-fill: #e74c3c;"/>            </HBox>

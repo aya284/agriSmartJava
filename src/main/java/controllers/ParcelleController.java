@@ -56,6 +56,8 @@ public class ParcelleController {
     private ConsommationService consS = new ConsommationService();
     private ObservableList<Parcelle> parcelleList = FXCollections.observableArrayList();
     private FilteredList<Parcelle> filteredList;
+    private boolean isMapLoaded = false;
+    private Parcelle pendingParcelle;
 
     @FXML
     public void initialize() {
@@ -159,23 +161,55 @@ public class ParcelleController {
     }
 
     private void loadMap() {
+        webViewMap.getEngine().getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+                isMapLoaded = true;
+                if (pendingParcelle != null) {
+                    afficherDetails(pendingParcelle);
+                    pendingParcelle = null;
+                }
+            }
+        });
+
         javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(300));
         pause.setOnFinished(e -> {
             java.net.URL cssResource = getClass().getResource("/leaflet/leaflet.css");
             java.net.URL jsResource = getClass().getResource("/leaflet/leaflet.js");
-            String cssUrl = cssResource != null ? cssResource.toExternalForm()
-                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-            String jsUrl = jsResource != null ? jsResource.toExternalForm()
-                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+            String cssUrl = cssResource != null ? cssResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+            String jsUrl = jsResource != null ? jsResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 
-            String content = "<html><head><link rel='stylesheet' href='" + cssUrl + "'/><script src='" + jsUrl
-                    + "'></script></head>"
+            String content = "<html><head><link rel='stylesheet' href='" + cssUrl + "'/><script src='" + jsUrl + "'></script></head>"
                     + "<body style='margin:0;'><div id='map' style='height:100%;'></div>"
                     + "<script>"
                     + "var map = L.map('map').setView([36.8065, 10.1815], 6); "
                     + "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); "
                     + "var customIcon = L.divIcon({ className: 'custom-icon', html: '<svg viewBox=\"0 0 24 24\" width=\"36\" height=\"36\" fill=\"#2D6A4F\"><path d=\"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\"/></svg>', iconSize: [36, 36], iconAnchor: [18, 36] });"
-                    + "var marker;"
+                    + "var markers = []; var polygon; "
+                    + "function resetMap() {"
+                    + "  markers.forEach(m => map.removeLayer(m)); markers = [];"
+                    + "  if(polygon) map.removeLayer(polygon); polygon = null;"
+                    + "}"
+                    + "function setCoordinates(json) {"
+                    + "  resetMap(); if(!json) return;"
+                    + "  try {"
+                    + "    var pts = JSON.parse(json);"
+                    + "    var points = pts.map(p => [p.lat, p.lng]);"
+                    + "    points.forEach(p => {"
+                    + "      var m = L.marker(p, {icon: customIcon}).addTo(map);"
+                    + "      markers.push(m);"
+                    + "    });"
+                    + "    if(points.length > 1) {"
+                    + "      polygon = L.polygon(points, {color: '#2D6A4F', fillOpacity: 0.3}).addTo(map);"
+                    + "      map.fitBounds(polygon.getBounds());"
+                    + "    }"
+                    + "  } catch(e) { console.error(e); }"
+                    + "}"
+                    + "function setLocation(lat, lon) {"
+                    + "  resetMap();"
+                    + "  var m = L.marker([lat, lon], {icon: customIcon}).addTo(map);"
+                    + "  markers.push(m);"
+                    + "  map.setView([lat, lon], 13);"
+                    + "}"
                     + "</script></body></html>";
             webViewMap.getEngine().loadContent(content);
         });
@@ -183,17 +217,27 @@ public class ParcelleController {
     }
 
     private void afficherDetails(Parcelle p) {
+        if (!isMapLoaded) {
+            pendingParcelle = p;
+            lblDetailNom.setText(p.getNom());
+            lblDetailSurface.setText(p.getSurface() + " Hectares");
+            lblDetailType.setText(p.getTypeSol());
+            lblDetailCoords.setText("Lat: " + p.getLatitude() + " | Lon: " + p.getLongitude());
+            return;
+        }
+
         lblDetailNom.setText(p.getNom());
         lblDetailSurface.setText(p.getSurface() + " Hectares");
         lblDetailType.setText(p.getTypeSol());
         lblDetailCoords.setText("Lat: " + p.getLatitude() + " | Lon: " + p.getLongitude());
 
         try {
-            String script = "if(marker) map.removeLayer(marker); " +
-                    "marker = L.marker([" + p.getLatitude() + "," + p.getLongitude() + "], {icon: customIcon}).addTo(map);"
-                    +
-                    "map.setView([" + p.getLatitude() + "," + p.getLongitude() + "], 13);";
-            webViewMap.getEngine().executeScript(script);
+            String coords = p.getCoordonnees();
+            if (coords != null && !coords.isEmpty() && !coords.equals("[]")) {
+                webViewMap.getEngine().executeScript("setCoordinates('" + coords + "')");
+            } else {
+                webViewMap.getEngine().executeScript("setLocation(" + p.getLatitude() + "," + p.getLongitude() + ")");
+            }
         } catch (Exception e) {
             System.err.println("Map script error: " + e.getMessage());
         }

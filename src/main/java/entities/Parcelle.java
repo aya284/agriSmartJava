@@ -8,12 +8,13 @@ public class Parcelle {
     private double longitude;
     private String typeSol;
     private int userId;
+    private String coordonnees; // Stockage JSON des points du polygone
 
     // Constructeurs
     public Parcelle() {
     }
 
-    public Parcelle(int id, String nom, double surface, double latitude, double longitude, String typeSol, int userId) {
+    public Parcelle(int id, String nom, double surface, double latitude, double longitude, String typeSol, int userId, String coordonnees) {
         this.id = id;
         this.nom = nom;
         this.surface = surface;
@@ -21,15 +22,17 @@ public class Parcelle {
         this.longitude = longitude;
         this.typeSol = typeSol;
         this.userId = userId;
+        this.coordonnees = coordonnees;
     }
 
-    public Parcelle(String nom, double surface, double latitude, double longitude, String typeSol, int userId) {
+    public Parcelle(String nom, double surface, double latitude, double longitude, String typeSol, int userId, String coordonnees) {
         this.nom = nom;
         this.surface = surface;
         this.latitude = latitude;
         this.longitude = longitude;
         this.typeSol = typeSol;
         this.userId = userId;
+        this.coordonnees = coordonnees;
     }
 
     // Getters et Setters (indispensables pour la TableView)
@@ -88,4 +91,12 @@ public class Parcelle {
     public void setUserId(int userId) {
         this.userId = userId;
     }
-}
+
+    public String getCoordonnees() {
+        return coordonnees;
+    }
+
+    public void setCoordonnees(String coordonnees) {
+        this.coordonnees = coordonnees;
+    }
+}

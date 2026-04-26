@@ -69,6 +69,7 @@ public class FormulaireCultureController {
                 cs.modifier(c);
                 NotificationUtil.showSuccess(null, "Culture mise à jour !");
             }
+            MainController.refreshNotifications();
             close();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur SQL", "Une erreur technique est survenue : " + e.getMessage());
