@@ -6,62 +6,56 @@
 <StackPane xmlns="http://javafx.com/javafx/17"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="controllers.CandidatOffreController"
-           style="-fx-background-color: #f4f7f6;">
+           style="-fx-background-color:#f4f7f6;">
 
-    <!-- ══════════════════════════════════════════════════════
-         PAGE PRINCIPALE : liste des offres
-         ══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════
+         PAGE PRINCIPALE
+         ═══════════════════════════════════════════ -->
     <VBox spacing="15.0">
         <padding><Insets bottom="15.0" left="30.0" right="30.0" top="15.0"/></padding>
 
-        <!-- HEADER BANNIÈRE -->
+        <!-- BANNIERE SIMULATEUR -->
         <HBox alignment="CENTER_LEFT" prefHeight="70.0" spacing="15.0"
-              style="-fx-background-color: #1a7a43; -fx-background-radius: 12; -fx-padding: 10 20;">
-            <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" spacing="2">
-                <HBox spacing="8" alignment="CENTER_LEFT">
-                    <Label text="💠" style="-fx-text-fill: white; -fx-font-size: 18;"/>
-                    <Label text="Entraînement Vocal IA"
-                           style="-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;"/>
-                </HBox>
-                <Label text="Améliorez votre score en pratiquant un entretien réel avec notre IA."
-                       style="-fx-text-fill: white; -fx-font-size: 12; -fx-opacity: 0.9;"/>
+              style="-fx-background-color:#1a7a43;-fx-background-radius:12;-fx-padding:10 20;">
+            <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" spacing="3">
+                <Label text="Entrainement Vocal IA"
+                       style="-fx-text-fill:white;-fx-font-size:16;-fx-font-weight:bold;"/>
+                <Label text="Ameliorez votre score en pratiquant un entretien avec notre IA."
+                       style="-fx-text-fill:white;-fx-font-size:12;-fx-opacity:0.9;"/>
             </VBox>
-            <Button onAction="#handleLancerTest" text="🎙 Lancer le test"
-                    style="-fx-background-color: white; -fx-text-fill: #1a7a43;
-                           -fx-font-weight: bold; -fx-background-radius: 20;
-                           -fx-padding: 6 18; -fx-cursor: hand; -fx-font-size: 12;"/>
+            <Button onAction="#handleLancerTest" text="Lancer le test"
+                    style="-fx-background-color:white;-fx-text-fill:#1a7a43;
+                           -fx-font-weight:bold;-fx-background-radius:20;
+                           -fx-padding:6 18;-fx-cursor:hand;-fx-font-size:12;"/>
         </HBox>
 
-        <!-- BARRE DE RECHERCHE -->
-        <HBox alignment="CENTER_LEFT" spacing="20.0"
-              style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 15;
-                     -fx-effect: dropshadow(three-pass-box,rgba(0,0,0,0.05),10,0,0,0);">
-            <VBox HBox.hgrow="ALWAYS" spacing="5">
-                <Label text="RECHERCHE"
-                       style="-fx-font-weight: bold; -fx-text-fill: #95a5a6; -fx-font-size: 10;"/>
-                <TextField fx:id="searchField" onKeyReleased="#handleSearch" prefHeight="40.0"
-                           promptText="Titre, lieu..."
-                           style="-fx-background-radius: 10; -fx-border-color: #ddd; -fx-border-radius: 10;"/>
+        <!-- RECHERCHE -->
+        <HBox alignment="CENTER_LEFT" spacing="15.0"
+              style="-fx-background-color:white;-fx-padding:18 20;-fx-background-radius:12;
+                     -fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.05),8,0,0,2);">
+            <VBox HBox.hgrow="ALWAYS" spacing="4">
+                <Label text="RECHERCHE" style="-fx-font-weight:bold;-fx-text-fill:#95a5a6;-fx-font-size:10;"/>
+                <TextField fx:id="searchField" onKeyReleased="#handleSearch"
+                           prefHeight="38.0" promptText="Titre, lieu..."
+                           style="-fx-background-radius:8;-fx-border-color:#ddd;-fx-border-radius:8;-fx-padding:0 10;-fx-font-size:13;"/>
             </VBox>
-            <VBox prefWidth="220.0" spacing="5">
-                <Label text="STATUT"
-                       style="-fx-font-weight: bold; -fx-text-fill: #95a5a6; -fx-font-size: 10;"/>
-                <ComboBox fx:id="statutFilter" maxWidth="Infinity" prefHeight="40.0"
+            <VBox prefWidth="200.0" spacing="4">
+                <Label text="STATUT" style="-fx-font-weight:bold;-fx-text-fill:#95a5a6;-fx-font-size:10;"/>
+                <ComboBox fx:id="statutFilter" maxWidth="Infinity" prefHeight="38.0"
                           promptText="Toutes les offres"
-                          style="-fx-background-radius: 10; -fx-border-color: #ddd; -fx-border-radius: 10;"/>
+                          style="-fx-background-radius:8;-fx-border-color:#ddd;-fx-border-radius:8;"/>
             </VBox>
-            <Button onAction="#handleSearch" prefHeight="40.0" prefWidth="130.0"
-                    style="-fx-background-color: #1a3323; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;"
-                    text="Rechercher"/>
+            <Button onAction="#handleSearch" text="Rechercher"
+                    prefHeight="38.0" prefWidth="120.0"
+                    style="-fx-background-color:#1a3323;-fx-text-fill:white;-fx-font-weight:bold;-fx-background-radius:8;-fx-cursor:hand;"/>
         </HBox>
 
-        <Label fx:id="countLabel" text="0 offre(s) disponible(s)"
-               style="-fx-text-fill: #7f8c8d; -fx-font-size: 12;"/>
+        <Label fx:id="countLabel" text="Chargement..."
+               style="-fx-text-fill:#7f8c8d;-fx-font-size:12;"/>
 
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                    style="-fx-background-color: transparent; -fx-background: transparent;">
-            <FlowPane fx:id="cardsContainer" hgap="25.0" vgap="25.0">
+                    style="-fx-background-color:transparent;-fx-background:transparent;-fx-border-color:transparent;">
+            <FlowPane fx:id="cardsContainer" hgap="20.0" vgap="20.0">
                 <padding><Insets bottom="10.0" left="5.0" right="5.0" top="10.0"/></padding>
             </FlowPane>
         </ScrollPane>
@@ -69,143 +63,178 @@
 
     <!-- OVERLAY -->
     <Region fx:id="overlay" visible="false"
-            style="-fx-background-color: rgba(0,0,0,0.65);"
-            mouseTransparent="false"/>
+            style="-fx-background-color:rgba(0,0,0,0.65);" mouseTransparent="false"/>
 
-    <!-- ══════════════════════════════════════════════════════
-         MODAL SIMULATEUR — deux états gérés par le controller :
-         1) intro  (simulatorIntroPane visible)
-         2) bilan  (simulatorBilanPane visible)
-         ══════════════════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════
+         MODAL SIMULATEUR
+         ═══════════════════════════════════════════ -->
     <VBox fx:id="simulatorModal" visible="false"
-          maxWidth="560.0" maxHeight="540.0"
-          alignment="TOP_CENTER" spacing="0"
-          style="-fx-background-color: white; -fx-background-radius: 20;
-                 -fx-effect: dropshadow(three-pass-box,rgba(0,0,0,0.35),25,0,0,0);">
-
-        <!-- ── Bouton fermer (toujours visible) ── -->
-        <HBox alignment="TOP_RIGHT" style="-fx-padding: 12 12 0 12;">
-            <Button text="✕" onAction="#closeSimulator"
-                    style="-fx-background-color: transparent; -fx-font-size: 18;
-                           -fx-cursor: hand; -fx-text-fill: #7f8c8d;"/>
+          maxWidth="560.0" maxHeight="560.0" alignment="TOP_CENTER" spacing="0"
+          style="-fx-background-color:white;-fx-background-radius:20;
+                 -fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.35),25,0,0,0);">
+        <HBox alignment="TOP_RIGHT" style="-fx-padding:12 12 0 12;">
+            <Button text="X" onAction="#closeSimulator"
+                    style="-fx-background-color:transparent;-fx-font-size:16;-fx-cursor:hand;-fx-text-fill:#7f8c8d;"/>
         </HBox>
-
-        <!-- ════════════════════════════
-             PANE INTRO (état 1)
-             ════════════════════════════ -->
-        <VBox fx:id="simulatorIntroPane" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
-            <Label text="🤖" style="-fx-font-size: 55;"/>
-            <Label fx:id="simulatorMainText" text="Simulateur d'Entretien"
+        <!-- INTRO -->
+        <VBox fx:id="simulatorIntroPane" alignment="CENTER" spacing="18" VBox.vgrow="ALWAYS">
+            <Label fx:id="simulatorMainText" text="Simulateur d Entretien"
                    wrapText="true" textAlignment="CENTER"
-                   style="-fx-font-size: 20; -fx-font-weight: bold;
-                          -fx-text-fill: #1a3323; -fx-padding: 0 40 0 40;"/>
-            <Label fx:id="simulatorSubText"
-                   text="Entraînement général pour tous les métiers agricoles."
+                   style="-fx-font-size:20;-fx-font-weight:bold;-fx-text-fill:#1a3323;-fx-padding:0 40 0 40;"/>
+            <Label fx:id="simulatorSubText" text="Entrainement general pour tous les metiers agricoles."
                    wrapText="true" textAlignment="CENTER"
-                   style="-fx-font-size: 13; -fx-text-fill: #95a5a6; -fx-padding: 0 40 0 40;"/>
-
-            <!-- Indicateurs écoute (cachés au départ) -->
-            <HBox fx:id="listeningStatus" visible="false" managed="false"
-                  alignment="CENTER" spacing="8">
-                <Label text="L'IA vous écoute..."
-                       style="-fx-font-size: 12; -fx-text-fill: #95a5a6;"/>
+                   style="-fx-font-size:13;-fx-text-fill:#95a5a6;-fx-padding:0 40 0 40;"/>
+            <HBox fx:id="listeningStatus" visible="false" managed="false" alignment="CENTER" spacing="8">
+                <Label text="L IA vous ecoute..." style="-fx-font-size:12;-fx-text-fill:#95a5a6;"/>
             </HBox>
-            <HBox fx:id="micIndicator" visible="false" managed="false"
-                  alignment="CENTER" spacing="8">
-                <Label fx:id="micDot" text="⏺"
-                       style="-fx-font-size: 14; -fx-text-fill: #e74c3c;"/>
-                <Label text="IA en écoute..."
-                       style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #e74c3c;"/>
+            <HBox fx:id="micIndicator" visible="false" managed="false" alignment="CENTER" spacing="8">
+                <Label fx:id="micDot" text="●" style="-fx-font-size:14;-fx-text-fill:#e74c3c;"/>
+                <Label text="IA en ecoute..." style="-fx-font-size:13;-fx-font-weight:bold;-fx-text-fill:#e74c3c;"/>
             </HBox>
-
-            <!-- Bouton lancer -->
-            <Button fx:id="btnLancerEntrainement" text="Lancer l'entraînement"
-                    onAction="#startSimulation"
-                    style="-fx-background-color: #1a7a43; -fx-text-fill: white;
-                           -fx-font-weight: bold; -fx-font-size: 14;
-                           -fx-background-radius: 30; -fx-padding: 12 40; -fx-cursor: hand;"/>
-            <VBox.margin><Insets bottom="20.0"/></VBox.margin>
+            <Button fx:id="btnLancerEntrainement" text="Lancer l entrainement" onAction="#startSimulation"
+                    style="-fx-background-color:#1a7a43;-fx-text-fill:white;-fx-font-weight:bold;
+                           -fx-font-size:14;-fx-background-radius:30;-fx-padding:12 40;-fx-cursor:hand;"/>
+            <VBox.margin><Insets bottom="30.0"/></VBox.margin>
         </VBox>
-
-        <!-- ════════════════════════════
-             PANE BILAN (état 2) — construit dynamiquement
-             ════════════════════════════ -->
+        <!-- BILAN -->
         <VBox fx:id="simulatorBilanPane" visible="false" managed="false"
               alignment="TOP_CENTER" spacing="0" VBox.vgrow="ALWAYS">
-
-            <!-- ScrollPane pour le contenu du bilan -->
             <ScrollPane fx:id="bilanScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
-                        style="-fx-background-color: transparent; -fx-background: transparent;
-                               -fx-border-color: transparent;">
-                <!-- VBox injectée dynamiquement par le controller -->
+                        style="-fx-background-color:transparent;-fx-background:transparent;-fx-border-color:transparent;">
                 <VBox fx:id="bilanContent" spacing="12" alignment="TOP_CENTER">
                     <padding><Insets top="5" right="20" bottom="10" left="20"/></padding>
                 </VBox>
             </ScrollPane>
-
-            <!-- Bouton fermer en bas -->
-            <HBox alignment="CENTER" style="-fx-padding: 15 0 20 0;">
-                <Button fx:id="btnFermerBilan" text="✓ Fermer"
-                        onAction="#closeSimulator"
-                        style="-fx-background-color: #1a3323; -fx-text-fill: white;
-                               -fx-font-weight: bold; -fx-font-size: 14;
-                               -fx-background-radius: 30; -fx-padding: 12 50; -fx-cursor: hand;"/>
+            <HBox alignment="CENTER" style="-fx-padding:15 0 20 0;">
+                <Button text="Fermer" onAction="#closeSimulator"
+                        style="-fx-background-color:#1a3323;-fx-text-fill:white;-fx-font-weight:bold;
+                               -fx-font-size:14;-fx-background-radius:30;-fx-padding:12 50;-fx-cursor:hand;"/>
             </HBox>
         </VBox>
-
     </VBox>
 
-    <!-- ═══════════════════════════════════════════
-         CHATBOT FLOTTANT
-         ═══════════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════════════════════
+         CHATBOT FLOTTANT — Design premium avec avatar et chips
+         ═══════════════════════════════════════════════════════════════ -->
     <StackPane alignment="BOTTOM_RIGHT" pickOnBounds="false">
         <padding><Insets bottom="20.0" right="20.0"/></padding>
-        <VBox alignment="BOTTOM_RIGHT" spacing="15" pickOnBounds="false">
+        <VBox alignment="BOTTOM_RIGHT" spacing="10" pickOnBounds="false">
 
+            <!-- ══ FENETRE CHAT ══════════════════════════════════ -->
             <VBox fx:id="chatContainer" visible="false" managed="false"
-                  prefWidth="300.0" prefHeight="400.0" maxWidth="300.0" maxHeight="400.0"
-                  style="-fx-background-color: white; -fx-background-radius: 15;
-                         -fx-effect: dropshadow(three-pass-box,rgba(0,0,0,0.2),15,0,0,0);
-                         -fx-border-color: #e0e0e0; -fx-border-radius: 15; -fx-border-width: 1;">
-                <HBox alignment="CENTER_LEFT" prefHeight="45.0"
-                      style="-fx-background-color: #28a745; -fx-background-radius: 15 15 0 0; -fx-padding: 0 15;">
-                    <Label text="🌱 Assistant AgriSmart"
-                           style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13;"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="✕" onAction="#toggleChat"
-                            style="-fx-background-color: transparent; -fx-text-fill: white;
-                                   -fx-font-size: 14; -fx-cursor: hand; -fx-padding: 0;"/>
-                </HBox>
+                  prefWidth="355.0" prefHeight="500.0" maxWidth="355.0" maxHeight="500.0"
+                  style="-fx-background-color:#f9fafb;-fx-background-radius:20;
+                         -fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.18),20,0,0,6);
+                         -fx-border-color:#e2e8e4;-fx-border-radius:20;-fx-border-width:1;">
+
+                <!-- HEADER avec dégradé vert -->
+                <VBox style="-fx-background-color:#1a4331;-fx-background-radius:20 20 0 0;-fx-padding:14 16 10 16;" spacing="4">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <!-- Avatar robot -->
+                        <StackPane style="-fx-background-color:#2d6a4f;-fx-background-radius:50;
+                                         -fx-min-width:38;-fx-min-height:38;-fx-max-width:38;-fx-max-height:38;">
+                            <Label text="AI" style="-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13;"/>
+                        </StackPane>
+                        <VBox HBox.hgrow="ALWAYS" spacing="1">
+                            <Label text="Assistant AgriSmart"
+                                   style="-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:13;"/>
+                            <HBox alignment="CENTER_LEFT" spacing="5">
+                                <Label fx:id="chatStatusDot" text="●"
+                                       style="-fx-text-fill:#52e882;-fx-font-size:8;"/>
+                                <Label fx:id="chatStatusLabel" text="En ligne - Pret a vous aider"
+                                       style="-fx-text-fill:rgba(255,255,255,0.7);-fx-font-size:10;"/>
+                            </HBox>
+                        </VBox>
+                        <Button text="X" onAction="#toggleChat"
+                                style="-fx-background-color:rgba(255,255,255,0.15);
+                                       -fx-text-fill:white;-fx-font-size:11;-fx-cursor:hand;
+                                       -fx-background-radius:50;-fx-min-width:26;-fx-min-height:26;
+                                       -fx-max-width:26;-fx-max-height:26;-fx-padding:0;"/>
+                    </HBox>
+                    <!-- Sous-titre -->
+                    <Label text="Conseiller emploi agricole personnalise"
+                           style="-fx-text-fill:rgba(255,255,255,0.55);-fx-font-size:10;-fx-padding:0 0 0 48;"/>
+                </VBox>
+
+                <!-- ZONE MESSAGES -->
                 <ScrollPane fx:id="chatScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
-                            style="-fx-background-color: white; -fx-background: white; -fx-border-color: transparent;">
+                            style="-fx-background-color:#f9fafb;-fx-background:#f9fafb;-fx-border-color:transparent;">
                     <VBox fx:id="chatMessagesArea" spacing="10">
-                        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                        <padding><Insets top="14" right="12" bottom="8" left="12"/></padding>
                     </VBox>
                 </ScrollPane>
-                <HBox spacing="10" alignment="CENTER"
-                      style="-fx-padding: 10; -fx-border-color: #f0f0f0; -fx-border-width: 1 0 0 0;">
-                    <Button onAction="#handleUploadCV" text="📎"
-                            style="-fx-background-color: transparent; -fx-text-fill: #666666;
-                                   -fx-cursor: hand; -fx-font-size: 16;"/>
-                    <TextField fx:id="chatInputField" HBox.hgrow="ALWAYS" onAction="#handleSendChat"
-                               promptText="Message..."
-                               style="-fx-background-color: #f1f3f4; -fx-background-radius: 20;
-                                      -fx-border-color: transparent; -fx-padding: 5 12; -fx-font-size: 11;"/>
-                    <Button onAction="#handleSendChat" text="➤"
-                            style="-fx-background-color: #28a745; -fx-text-fill: white;
-                                   -fx-background-radius: 50; -fx-cursor: hand;
-                                   -fx-min-width: 30; -fx-min-height: 30;
-                                   -fx-max-width: 30; -fx-max-height: 30; -fx-font-size: 10;"/>
+
+                <!-- BARRE PREVIEW FICHIER -->
+                <HBox fx:id="filePreviewBar" visible="false" managed="false"
+                      alignment="CENTER_LEFT" spacing="8"
+                      style="-fx-background-color:#ecfdf5;-fx-padding:7 14;
+                             -fx-border-color:#6ee7b7;-fx-border-width:1 0 0 0;">
+                    <Label fx:id="filePreviewIcon" text="CV"
+                           style="-fx-background-color:#1a4331;-fx-text-fill:white;
+                                  -fx-font-size:9;-fx-font-weight:bold;-fx-padding:2 5;
+                                  -fx-background-radius:4;"/>
+                    <Label fx:id="filePreviewName" text=""
+                           style="-fx-font-size:11;-fx-text-fill:#1a4331;-fx-font-weight:bold;"
+                           HBox.hgrow="ALWAYS"/>
+                    <Button text="X" onAction="#supprimerFichier"
+                            style="-fx-background-color:transparent;-fx-text-fill:#e74c3c;
+                                   -fx-cursor:hand;-fx-font-size:11;-fx-padding:0;"/>
+                </HBox>
+
+                <!-- CHIPS ACTIONS RAPIDES -->
+                <HBox fx:id="chipsBox" spacing="6" style="-fx-padding:8 12 4 12;">
+                    <Button text="Les offres" onAction="#handleChipOffres"
+                            style="-fx-background-color:#e8f5e9;-fx-text-fill:#1a4331;
+                                   -fx-background-radius:20;-fx-padding:5 12;
+                                   -fx-cursor:hand;-fx-font-size:11;-fx-border-color:#b7dfbf;
+                                   -fx-border-radius:20;-fx-border-width:1;"/>
+                    <Button text="Analyser mon CV" onAction="#handleUploadCV"
+                            style="-fx-background-color:#e8f5e9;-fx-text-fill:#1a4331;
+                                   -fx-background-radius:20;-fx-padding:5 12;
+                                   -fx-cursor:hand;-fx-font-size:11;-fx-border-color:#b7dfbf;
+                                   -fx-border-radius:20;-fx-border-width:1;"/>
+                    <Button text="Comment postuler" onAction="#handleChipPostuler"
+                            style="-fx-background-color:#e8f5e9;-fx-text-fill:#1a4331;
+                                   -fx-background-radius:20;-fx-padding:5 12;
+                                   -fx-cursor:hand;-fx-font-size:11;-fx-border-color:#b7dfbf;
+                                   -fx-border-radius:20;-fx-border-width:1;"/>
+                </HBox>
+
+                <!-- ZONE SAISIE -->
+                <HBox spacing="8" alignment="CENTER"
+                      style="-fx-padding:8 12 12 12;-fx-border-color:#e8ebe8;-fx-border-width:1 0 0 0;
+                             -fx-background-color:white;-fx-background-radius:0 0 20 20;">
+                    <TextField fx:id="chatInputField" HBox.hgrow="ALWAYS"
+                               onAction="#handleSendChat"
+                               promptText="Posez votre question..."
+                               style="-fx-background-color:#f3f4f6;-fx-background-radius:22;
+                                      -fx-border-color:transparent;-fx-padding:9 14;-fx-font-size:12;"/>
+                    <Button onAction="#handleSendChat"
+                            style="-fx-background-color:#1a4331;-fx-text-fill:white;
+                                   -fx-background-radius:50;-fx-cursor:hand;-fx-font-size:14;
+                                   -fx-min-width:38;-fx-min-height:38;-fx-max-width:38;-fx-max-height:38;
+                                   -fx-effect:dropshadow(three-pass-box,rgba(26,67,49,0.3),6,0,0,2);"
+                            text="->"/>
                 </HBox>
             </VBox>
 
-            <Button onAction="#toggleChat"
-                    style="-fx-background-color: #28a745; -fx-background-radius: 50;
-                           -fx-min-width: 55; -fx-min-height: 55;
-                           -fx-max-width: 55; -fx-max-height: 55;
-                           -fx-cursor: hand; -fx-font-size: 22;
-                           -fx-effect: dropshadow(three-pass-box,rgba(0,0,0,0.3),10,0,0,5);"
-                    text="🤖"/>
+            <!-- BOUTON FLOTTANT -->
+            <HBox alignment="CENTER_RIGHT">
+                <!-- Badge notification -->
+                <StackPane>
+                    <Button onAction="#toggleChat"
+                            style="-fx-background-color:#1a4331;-fx-background-radius:50;
+                                   -fx-min-width:58;-fx-min-height:58;
+                                   -fx-max-width:58;-fx-max-height:58;
+                                   -fx-cursor:hand;-fx-font-size:11;-fx-font-weight:bold;
+                                   -fx-text-fill:white;
+                                   -fx-effect:dropshadow(three-pass-box,rgba(26,67,49,0.45),14,0,0,5);"
+                            text="AI"/>
+                    <!-- Point vert "en ligne" -->
+                    <Label text="●" style="-fx-text-fill:#52e882;-fx-font-size:12;"
+                           StackPane.alignment="TOP_RIGHT"/>
+                </StackPane>
+            </HBox>
         </VBox>
     </StackPane>
 

@@ -9,14 +9,41 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.json.JSONObject;
 import org.json.JSONArray;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class RecrutementIAService {
 
-    // ✅ NOUVELLE CLÉ API (testée et fonctionnelle)
-    private final String API_KEY = "AIzaSyDy4hf--l-Dz9lbmD9cAQbjq-M9KC00t-s";
+    private String API_KEY;
+    private String API_URL;
 
-    // ✅ Utiliser gemini-2.5-flash (fonctionne parfaitement)
-    private final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+    public RecrutementIAService() {
+        loadApiKey();
+    }
+
+    private void loadApiKey() {
+        try {
+            Properties props = new Properties();
+            InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties");
+            if (input != null) {
+                props.load(input);
+                this.API_KEY = props.getProperty("GEMINI_API_KEY", "");
+                input.close();
+            }
+            if (this.API_KEY == null || this.API_KEY.isEmpty()) {
+                System.err.println("❌ ERREUR: Clé API Gemini non trouvée dans config.properties");
+                this.API_KEY = ""; // Clé vide pour éviter les erreurs
+            } else {
+                System.out.println("✅ Clé API Gemini chargée avec succès depuis config.properties");
+            }
+            // ✅ Utiliser gemini-2.5-flash
+            this.API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors du chargement de config.properties: " + e.getMessage());
+            e.printStackTrace();
+            this.API_KEY = "";
+        }
+    }
 
     public String obtenirConseilRecrutement(String userMessage, String cvContent, List<Offre> offresDisponibles) {
 

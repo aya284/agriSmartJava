@@ -34,17 +34,16 @@ import java.util.ResourceBundle;
 public class PostulerController implements Initializable {
 
     // ══════════════════════════════════════════════════════════
-    //  CHAMPS EXISTANTS — NE PAS MODIFIER
-    //  Ces noms correspondent exactement à votre PostulerForm.fxml
+    //  CHAMPS FXML EXISTANTS
+    //  Correspondent exactement a votre PostulerForm.fxml actuel
     // ══════════════════════════════════════════════════════════
-    @FXML private TextField nomF;           // fx:id="nomF"
-    @FXML private TextField prenomF;        // fx:id="prenomF"
-    @FXML private TextField phoneF;         // fx:id="phoneF"
-    @FXML private Label     cvLabel;        // fx:id="cvLabel"
-    @FXML private Label     lettreLabel;    // fx:id="lettreLabel"
-    @FXML private Button    btnSubmit;      // fx:id="btnSubmit"
+    @FXML private TextField nomF;
+    @FXML private TextField prenomF;
+    @FXML private TextField phoneF;
+    @FXML private Label     cvLabel;
+    @FXML private Label     lettreLabel;
+    @FXML private Button    btnSubmit;
 
-    // Labels d'erreur existants
     @FXML private Label nomError;
     @FXML private Label prenomError;
     @FXML private Label phoneError;
@@ -52,25 +51,27 @@ public class PostulerController implements Initializable {
     @FXML private Label lettreError;
 
     // ══════════════════════════════════════════════════════════
-    //  NOUVEAUX CHAMPS FXML — à ajouter dans PostulerForm.fxml
+    //  NOUVEAUX CHAMPS FXML — a ajouter dans PostulerForm.fxml
     // ══════════════════════════════════════════════════════════
-    @FXML private Button voiceBtn;           // fx:id="voiceBtn"
-    @FXML private Label  voiceStatusLabel;   // fx:id="voiceStatusLabel"
-    @FXML private Label  voiceSubLabel;      // fx:id="voiceSubLabel"
+    @FXML private Button voiceBtn;
+    @FXML private Label  voiceStatusLabel;
+    @FXML private Label  voiceSubLabel;
 
-    @FXML private VBox   iaZone;             // fx:id="iaZone"
-    @FXML private VBox   iaPlaceholder;      // fx:id="iaPlaceholder"
-    @FXML private VBox   iaSuccessBox;       // fx:id="iaSuccessBox"
-    @FXML private Label  iaFilenameLabel;    // fx:id="iaFilenameLabel"
+    @FXML private VBox  iaZone;
+    @FXML private VBox  iaPlaceholder;
+    @FXML private VBox  iaSuccessBox;
+    @FXML private Label iaFilenameLabel;
 
     // ══════════════════════════════════════════════════════════
-    //  ÉTAT INTERNE
+    //  ETAT INTERNE
     // ══════════════════════════════════════════════════════════
     private File     selectedCV;
     private File     selectedLettre;
-    private String   iaCvFileName  = null;
-    private boolean  isRecording   = false;
-    private Timeline micBlink      = null;
+    private File     photoFile    = null;
+    private String   photoBase64  = null;
+    private String   iaCvFileName = null;
+    private boolean  isRecording  = false;
+    private Timeline micBlink     = null;
 
     private final DemandeService service = new DemandeService();
 
@@ -92,17 +93,17 @@ public class PostulerController implements Initializable {
             phoneF.setText(selectedDemandeForEdit.getPhone_number());
             cvLabel.setText(selectedDemandeForEdit.getCv());
             lettreLabel.setText(selectedDemandeForEdit.getLettre_motivation());
-            btnSubmit.setText("💾 Modifier ma candidature");
+            btnSubmit.setText("Modifier ma candidature");
         }
     }
 
     // ══════════════════════════════════════════════════════════
-    //  VALIDATION TEMPS RÉEL — code existant conservé
+    //  VALIDATION TEMPS REEL — code existant conserve
     // ══════════════════════════════════════════════════════════
     private void setupRealTimeValidation() {
         nomF.textProperty().addListener((obs, o, newVal) -> {
             if (newVal.trim().length() < 3) {
-                nomError.setText("Le nom doit avoir au moins 3 caractères");
+                nomError.setText("Le nom doit avoir au moins 3 caracteres");
                 nomF.setStyle("-fx-border-color: #e74c3c;");
             } else if (!newVal.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
                 nomError.setText("Lettres uniquement");
@@ -115,7 +116,7 @@ public class PostulerController implements Initializable {
 
         prenomF.textProperty().addListener((obs, o, newVal) -> {
             if (newVal.trim().length() < 3) {
-                prenomError.setText("Le prénom doit avoir au moins 3 caractères");
+                prenomError.setText("Le prenom doit avoir au moins 3 caracteres");
                 prenomF.setStyle("-fx-border-color: #e74c3c;");
             } else if (!newVal.matches("^[a-zA-Z\\sçéàâêîôûäëïöü]+$")) {
                 prenomError.setText("Lettres uniquement");
@@ -140,7 +141,7 @@ public class PostulerController implements Initializable {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  SUBMIT — code existant + accepte CV IA
+    //  SUBMIT — accepte CV classique OU CV IA
     // ══════════════════════════════════════════════════════════
     @FXML
     public void handleSubmit() {
@@ -152,13 +153,13 @@ public class PostulerController implements Initializable {
                         .anyMatch(d -> d.getUsers_id() == 2
                                 && d.getOffre_id() == (int) currentOffreId);
                 if (alreadyApplied) {
-                    showAlert("Attention", "Vous avez déjà postulé pour cette offre !");
+                    showAlert("Attention", "Vous avez deja postule pour cette offre !");
                     cancel();
                     return;
                 }
             }
 
-            // CV : priorité → upload classique > CV IA > edit existant
+            // CV : priorite upload classique > CV IA > ancien CV (mode edit)
             String cvFileName;
             if (selectedCV != null) {
                 cvFileName = saveFile(selectedCV, "src/main/resources/uploads/cv");
@@ -175,7 +176,6 @@ public class PostulerController implements Initializable {
                        ? selectedDemandeForEdit.getLettre_motivation() : "");
 
             if (selectedDemandeForEdit != null) {
-                // ✅ setters corrects de votre entité Demande existante
                 selectedDemandeForEdit.setNom(nomF.getText().trim());
                 selectedDemandeForEdit.setPrenom(prenomF.getText().trim());
                 selectedDemandeForEdit.setPhone_number(phoneF.getText().trim());
@@ -183,23 +183,22 @@ public class PostulerController implements Initializable {
                 selectedDemandeForEdit.setLettre_motivation(lettreFileName);
                 selectedDemandeForEdit.setDate_modification(LocalDateTime.now());
                 service.modifier(selectedDemandeForEdit);
-                showAlert("Succès", "Candidature modifiée !");
+                showAlert("Succes", "Candidature modifiee !");
                 selectedDemandeForEdit = null;
             } else {
                 Demande d = new Demande();
-                // ✅ setters corrects de votre entité Demande existante
                 d.setNom(nomF.getText().trim());
                 d.setPrenom(prenomF.getText().trim());
-                d.setPhone_number(phoneF.getText().trim());       // ✅ phone_number
-                d.setDate_postulation(LocalDateTime.now());        // ✅ date_postulation
-                d.setDate_modification(LocalDateTime.now());       // ✅ date_modification
+                d.setPhone_number(phoneF.getText().trim());
+                d.setDate_postulation(LocalDateTime.now());
+                d.setDate_modification(LocalDateTime.now());
                 d.setCv(cvFileName);
-                d.setLettre_motivation(lettreFileName);            // ✅ lettre_motivation
+                d.setLettre_motivation(lettreFileName);
                 d.setStatut("En cours");
                 d.setUsers_id(2);
                 d.setOffre_id((int) currentOffreId);
                 service.ajouter(d);
-                showAlert("Succès", "Candidature envoyée !");
+                showAlert("Succes", "Candidature envoyee !");
             }
             cancel();
         } catch (Exception e) {
@@ -208,7 +207,7 @@ public class PostulerController implements Initializable {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  VALIDATE — accepte aussi le CV IA
+    //  VALIDATE
     // ══════════════════════════════════════════════════════════
     private boolean validate() {
         boolean isValid = true;
@@ -240,16 +239,22 @@ public class PostulerController implements Initializable {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  UPLOAD CLASSIQUE — code existant conservé
+    //  UPLOAD CLASSIQUE — code existant conserve
     // ══════════════════════════════════════════════════════════
     @FXML public void uploadCV() {
         selectedCV = selectPDF();
-        if (selectedCV != null) { cvLabel.setText(selectedCV.getName()); cvError.setText(""); }
+        if (selectedCV != null) {
+            cvLabel.setText(selectedCV.getName());
+            cvError.setText("");
+        }
     }
 
     @FXML public void uploadLettre() {
         selectedLettre = selectPDF();
-        if (selectedLettre != null) { lettreLabel.setText(selectedLettre.getName()); lettreError.setText(""); }
+        if (selectedLettre != null) {
+            lettreLabel.setText(selectedLettre.getName());
+            lettreError.setText("");
+        }
     }
 
     private File selectPDF() {
@@ -273,24 +278,25 @@ public class PostulerController implements Initializable {
                     getClass().getResource("/Views/Offres/MesCandidaturesList.fxml"));
             StackPane contentArea = (StackPane) nomF.getScene().lookup("#contentArea");
             contentArea.getChildren().setAll(root);
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // ══════════════════════════════════════════════════════════
-    //  ████  ASSISTANT VOCAL IA  ████
+    //  ASSISTANT VOCAL IA
     //
-    //  AJOUT dans PostulerForm.fxml — AVANT le HBox nom/prenom :
+    //  A AJOUTER dans PostulerForm.fxml avant les champs nom/prenom :
     //
     //  <HBox alignment="CENTER_LEFT" spacing="15"
     //        style="-fx-background-color:white;-fx-background-radius:50;
     //               -fx-padding:12 25;-fx-border-color:#e0e0e0;
-    //               -fx-border-radius:50;-fx-margin-bottom:15;">
-    //      <Button fx:id="voiceBtn" onAction="#handleVoiceAssistant"
-    //              text="🎙"
+    //               -fx-border-radius:50;">
+    //      <Button fx:id="voiceBtn" onAction="#handleVoiceAssistant" text="🎙"
     //              style="-fx-background-color:#1a4331;-fx-background-radius:50;
-    //                     -fx-min-width:50;-fx-min-height:50;
-    //                     -fx-max-width:50;-fx-max-height:50;
-    //                     -fx-text-fill:white;-fx-font-size:18;-fx-cursor:hand;"/>
+    //                     -fx-min-width:50;-fx-min-height:50;-fx-max-width:50;
+    //                     -fx-max-height:50;-fx-text-fill:white;-fx-font-size:18;
+    //                     -fx-cursor:hand;"/>
     //      <VBox spacing="2">
     //          <Label fx:id="voiceStatusLabel" text="Assistant Vocal IA"
     //                 style="-fx-font-weight:bold;-fx-font-size:13;-fx-text-fill:#1a4331;"/>
@@ -302,9 +308,13 @@ public class PostulerController implements Initializable {
 
     @FXML
     public void handleVoiceAssistant() {
-        if (isRecording) { stopVoice(); return; }
-        speak("Bonjour ! Présentez-vous. Dites votre prénom, votre nom, "
-                + "puis votre numéro de téléphone.", this::startListening);
+        if (isRecording) {
+            stopVoice();
+            return;
+        }
+        // Pas d'apostrophe dans le texte TTS — important pour PowerShell
+        speak("Bonjour ! Presentez-vous. Dites votre prenom, votre nom, puis votre numero de telephone.",
+                this::startListening);
     }
 
     private void startListening() {
@@ -312,29 +322,35 @@ public class PostulerController implements Initializable {
         Platform.runLater(() -> {
             voiceBtn.setText("⏹");
             voiceBtn.setStyle(styleBtn("#dc3545"));
-            voiceStatusLabel.setText("🔴 Je vous écoute...");
-            voiceSubLabel.setText("Parlez clairement : Prénom, Nom, Numéro");
+            voiceStatusLabel.setText("Je vous ecoute...");
+            voiceSubLabel.setText("Parlez clairement : Prenom, Nom, Numero");
             startMicBlink();
         });
+
         new Thread(() -> {
-            // ── On tente la reconnaissance 2 fois pour maximiser la détection ──
+            // Premiere tentative — 12 secondes
             String transcript = captureVoice(12);
+            // Deuxieme tentative si rien detecte
             if (transcript == null || transcript.isBlank()) {
-                transcript = captureVoice(10); // 2ème tentative
+                transcript = captureVoice(10);
             }
             isRecording = false;
             final String finalT = transcript;
             Platform.runLater(this::stopVoiceUI);
+
             if (finalT != null && !finalT.isBlank()) {
                 analyzeVoice(finalT);
             } else {
-                speak("Je n'ai pas compris. Veuillez répéter lentement.", null);
-                Platform.runLater(() -> voiceStatusLabel.setText("❌ Rien détecté, réessayez"));
+                speak("Je nai pas compris. Veuillez repeter lentement.", null);
+                Platform.runLater(() -> voiceStatusLabel.setText("Rien detecte, reessayez"));
             }
         }).start();
     }
 
-    private void stopVoice() { isRecording = false; stopVoiceUI(); }
+    private void stopVoice() {
+        isRecording = false;
+        stopVoiceUI();
+    }
 
     private void stopVoiceUI() {
         if (voiceBtn == null) return;
@@ -346,31 +362,27 @@ public class PostulerController implements Initializable {
     }
 
     /**
-     * ════════════════════════════════════════════════════
-     *  DÉTECTION AMÉLIORÉE — Nom / Prénom / Téléphone
-     *
-     *  Gère les formules :
-     *   "je m'appelle Ahmed Ben Ali mon numéro est 55123456"
-     *   "bonjour je suis Sana Trabelsi 55 12 34 56"
-     *   "mon prénom est Mohamed mon nom est Chaabane 22334455"
+     * Analyse le texte capte et extrait nom, prenom, telephone.
+     * Gere les formules :
+     *   "bonjour je mappelle Ahmed Ben Ali mon numero est 55123456"
+     *   "je suis Sana Trabelsi 55 12 34 56"
+     *   "mon prenom est Mohamed mon nom est Chaabane 22334455"
      *   "Ahmed Chaabane 55123456"
-     * ════════════════════════════════════════════════════
      */
     private void analyzeVoice(String text) {
         String nom = "", prenom = "", phone = "";
         String t = text.toLowerCase().trim();
 
-        // ── 1. TÉLÉPHONE : 8 chiffres consécutifs (Tunisie) ──────────────────
-        // Accepte avec ou sans espaces entre les chiffres
+        // 1. TELEPHONE : 8 chiffres (Tunisie)
         String digitsOnly = t.replaceAll("[^0-9]", "");
         if (digitsOnly.length() >= 8) {
             phone = digitsOnly.substring(0, 8);
         }
 
-        // ── 2. PRÉNOM explicite : "mon prénom est X" / "je m'appelle X" ──────
+        // 2. PRENOM explicite
         String[] prenomTriggers = {
-                "mon prénom est ", "prénom est ", "je m'appelle ", "je mappelle ",
-                "je suis ", "m'appelle ", "appelle moi ", "prénom "
+                "mon prenom est ", "prenom est ", "je mappelle ", "je suis ",
+                "mappelle ", "appelle moi ", "prenom ", "je suis "
         };
         for (String trigger : prenomTriggers) {
             if (t.contains(trigger)) {
@@ -383,7 +395,7 @@ public class PostulerController implements Initializable {
             }
         }
 
-        // ── 3. NOM explicite : "mon nom est X" / "nom de famille X" ─────────
+        // 3. NOM explicite
         String[] nomTriggers = {
                 "mon nom est ", "nom est ", "nom de famille ", "famille ", "nom "
         };
@@ -398,41 +410,51 @@ public class PostulerController implements Initializable {
             }
         }
 
-        // ── 4. FALLBACK : extraction positionnelle ────────────────────────────
-        // Si pas de trigger trouvé, on nettoie et prend les 1er/2ème mot
+        // 4. FALLBACK positionnel si pas de trigger trouve
         if (prenom.isBlank() || nom.isBlank()) {
             String[] stopWords = {
-                    "bonjour", "bonsoir", "salut", "je", "suis", "suis", "mon",
-                    "ma", "prénom", "prenom", "nom", "est", "numéro", "numero",
-                    "téléphone", "telephone", "appelle", "mappelle", "monsieur",
-                    "madame", "mademoiselle", "famille", "de"
+                    "bonjour", "bonsoir", "salut", "je", "suis", "mon",
+                    "ma", "prenom", "nom", "est", "numero", "telephone",
+                    "monsieur", "madame", "famille", "de"
             };
             String clean = t;
             for (String w : stopWords) {
                 clean = clean.replaceAll("\\b" + w + "\\b", " ");
             }
-            clean = clean.replaceAll("[0-9]+", "").replaceAll("[^a-zA-Zçéàâêîôûäëïöü ]", "").trim();
+            clean = clean.replaceAll("[0-9]+", "")
+                    .replaceAll("[^a-zA-Zçéàâêîôûäëïöü ]", "").trim();
             String[] words = Arrays.stream(clean.split("\\s+"))
                     .filter(w -> w.length() > 1)
                     .toArray(String[]::new);
-
             if (prenom.isBlank() && words.length >= 1) prenom = cap(words[0]);
             if (nom.isBlank()    && words.length >= 2) nom    = cap(words[1]);
         }
 
         final String fP = prenom, fN = nom, fPh = phone;
         Platform.runLater(() -> {
-            if (!fP.isBlank())  { prenomF.setText(fP);  prenomError.setText(""); prenomF.setStyle("-fx-border-color:#2ecc71;"); }
-            if (!fN.isBlank())  { nomF.setText(fN);     nomError.setText("");    nomF.setStyle("-fx-border-color:#2ecc71;"); }
-            if (!fPh.isBlank()) { phoneF.setText(fPh);  phoneError.setText("");  phoneF.setStyle("-fx-border-color:#2ecc71;"); }
+            if (!fP.isBlank()) {
+                prenomF.setText(fP);
+                prenomError.setText("");
+                prenomF.setStyle("-fx-border-color:#2ecc71;");
+            }
+            if (!fN.isBlank()) {
+                nomF.setText(fN);
+                nomError.setText("");
+                nomF.setStyle("-fx-border-color:#2ecc71;");
+            }
+            if (!fPh.isBlank()) {
+                phoneF.setText(fPh);
+                phoneError.setText("");
+                phoneF.setStyle("-fx-border-color:#2ecc71;");
+            }
 
-            boolean extracted = !fP.isBlank() || !fN.isBlank() || !fPh.isBlank();
-            if (extracted) {
-                voiceStatusLabel.setText("✅ Données extraites !");
-                speak("Parfait ! J'ai rempli vos informations.", null);
+            boolean ok = !fP.isBlank() || !fN.isBlank() || !fPh.isBlank();
+            if (ok) {
+                voiceStatusLabel.setText("Donnees extraites !");
+                speak("Parfait ! Jai rempli vos informations.", null);
             } else {
-                voiceStatusLabel.setText("❌ Rien extrait, réessayez");
-                speak("Je n'ai pas pu extraire vos informations. Parlez plus lentement.", null);
+                voiceStatusLabel.setText("Rien extrait, reessayez");
+                speak("Je nai pas pu extraire vos informations. Parlez plus lentement.", null);
             }
             new Timeline(new KeyFrame(Duration.seconds(5),
                     e -> voiceStatusLabel.setText("Assistant Vocal IA"))).play();
@@ -440,23 +462,22 @@ public class PostulerController implements Initializable {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  ████  GÉNÉRATEUR CV IA — MODAL 4 ÉTAPES  ████
+    //  GENERATEUR CV IA — MODAL 4 ETAPES
     //
-    //  AJOUT dans PostulerForm.fxml — APRÈS votre bouton uploadCV :
+    //  A AJOUTER dans PostulerForm.fxml apres le bouton uploadCV :
     //
-    //  <Button onAction="#openIAModal" text="🤖  Générer avec IA"
-    //          style="-fx-background-color:white;-fx-text-fill:#00b37e;
-    //                 -fx-border-color:#00b37e;-fx-border-radius:8;
-    //                 -fx-padding:8 20;-fx-cursor:hand;"/>
+    //  <Button onAction="#openIAModal" text="Generer avec IA"
+    //          style="-fx-background-color:#00b37e;-fx-text-fill:white;
+    //                 -fx-background-radius:8;-fx-padding:8 20;-fx-cursor:hand;"/>
     //
     //  <VBox fx:id="iaZone" spacing="10">
     //    <VBox fx:id="iaPlaceholder" alignment="CENTER" spacing="10"
     //          style="-fx-background-color:#f0fdf8;-fx-background-radius:10;
     //                 -fx-border-color:#00b37e;-fx-border-radius:10;
     //                 -fx-border-style:dashed;-fx-padding:25;">
-    //      <Label text="Besoin d'un CV professionnel complet ?"
+    //      <Label text="Besoin d un CV professionnel complet ?"
     //             style="-fx-font-weight:bold;-fx-text-fill:#00b37e;"/>
-    //      <Button onAction="#openIAModal" text="✨  Créer mon CV avec l'IA"
+    //      <Button onAction="#openIAModal" text="Creer mon CV avec l IA"
     //              style="-fx-background-color:#00b37e;-fx-text-fill:white;
     //                     -fx-background-radius:20;-fx-padding:8 24;-fx-cursor:hand;"/>
     //    </VBox>
@@ -465,33 +486,22 @@ public class PostulerController implements Initializable {
     //                 -fx-border-color:#00b37e;-fx-border-radius:10;
     //                 -fx-border-width:2;-fx-padding:14;">
     //      <HBox spacing="10" alignment="CENTER_LEFT">
-    //        <Label text="✅" style="-fx-font-size:20;"/>
-    //        <VBox spacing="2">
-    //          <Label text="CV IA généré !"
-    //                 style="-fx-font-weight:bold;-fx-text-fill:#00b37e;"/>
-    //          <Label fx:id="iaFilenameLabel" text=""
-    //                 style="-fx-text-fill:#888;-fx-font-size:11;"/>
-    //        </VBox>
+    //        <Label text="CV IA genere !" style="-fx-font-weight:bold;-fx-text-fill:#00b37e;"/>
+    //        <Label fx:id="iaFilenameLabel" text="" style="-fx-text-fill:#888;-fx-font-size:11;"/>
     //      </HBox>
     //      <HBox spacing="10">
-    //        <Button onAction="#previewIACV" text="👁  Consulter"
+    //        <Button onAction="#previewIACV" text="Consulter"
     //                style="-fx-background-color:#00b37e;-fx-text-fill:white;
     //                       -fx-background-radius:15;-fx-padding:5 16;-fx-cursor:hand;"/>
-    //        <Button onAction="#resetIA" text="🗑 Supprimer"
-    //                style="-fx-background-color:transparent;-fx-text-fill:#e74c3c;
-    //                       -fx-cursor:hand;"/>
+    //        <Button onAction="#resetIA" text="Supprimer"
+    //                style="-fx-background-color:transparent;-fx-text-fill:#e74c3c;-fx-cursor:hand;"/>
     //      </HBox>
     //    </VBox>
     //  </VBox>
     // ══════════════════════════════════════════════════════════
 
-    // Photo sélectionnée pour le CV IA
-    private File   photoFile     = null;
-    private String photoBase64   = null;
-
     @FXML
     public void openIAModal() {
-        // Reset photo pour ce nouveau CV
         photoFile   = null;
         photoBase64 = null;
 
@@ -503,20 +513,21 @@ public class PostulerController implements Initializable {
         root.setStyle("-fx-background-color:white;-fx-background-radius:15;");
         root.setPrefWidth(620);
 
-        // En-tête vert
+        // En-tete vert
         HBox header = new HBox();
         header.setStyle("-fx-background-color:#1a4331;-fx-padding:14 20;"
                 + "-fx-background-radius:15 15 0 0;");
-        Label hTitle = new Label("🤖  Assistant CV Agricole IA");
+        Label hTitle = new Label("Assistant CV Agricole IA");
         hTitle.setStyle("-fx-text-fill:white;-fx-font-weight:bold;-fx-font-size:14;");
-        Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
-        Button closeBtn = new Button("✕");
+        Region sp = new Region();
+        HBox.setHgrow(sp, Priority.ALWAYS);
+        Button closeBtn = new Button("X");
         closeBtn.setStyle("-fx-background-color:transparent;-fx-text-fill:white;"
                 + "-fx-font-size:16;-fx-cursor:hand;");
         closeBtn.setOnAction(e -> modal.close());
         header.getChildren().addAll(hTitle, sp, closeBtn);
 
-        // Barre progression
+        // Barre de progression
         HBox progWrapper = new HBox();
         progWrapper.setStyle("-fx-background-color:#e0e0e0;");
         Region progBar = new Region();
@@ -524,7 +535,7 @@ public class PostulerController implements Initializable {
         progBar.setStyle("-fx-background-color:#1a4331;");
         progWrapper.getChildren().add(progBar);
 
-        // Contenu (étapes)
+        // Zone de contenu (etapes)
         ScrollPane scroll = new ScrollPane();
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color:white;-fx-background:white;"
@@ -536,14 +547,14 @@ public class PostulerController implements Initializable {
 
         root.getChildren().addAll(header, progWrapper, scroll);
 
-        // Données partagées entre étapes — tableau[21]
+        // Donnees partagees entre les 4 etapes
         String[] data = new String[21];
         Arrays.fill(data, "");
 
         int[] step = {1};
         renderStep(step, data, content, progBar, modal);
 
-        Scene scene = new Scene(root);
+        javafx.scene.Scene scene = new javafx.scene.Scene(root);
         scene.setFill(null);
         modal.setScene(scene);
         modal.showAndWait();
@@ -560,20 +571,20 @@ public class PostulerController implements Initializable {
         }
     }
 
-    // ── Étape 1 : Identité & Contact + PHOTO ─────────────────
+    // ── Etape 1 : Identite et Contact + PHOTO ────────────────
     private void buildStep1(int[] step, String[] data, VBox content, Region pb, Stage modal) {
-        content.getChildren().add(stepBadge("1", "Identité & Contact"));
+        content.getChildren().add(stepBadge("1", "Identite et Contact"));
 
         TextField fNom    = tf("Votre nom",       data[0]);
-        TextField fPrenom = tf("Votre prénom",    data[1]);
+        TextField fPrenom = tf("Votre prenom",    data[1]);
         TextField fVille  = tf("Ville / Adresse", data[2]);
         TextField fEmail  = tf("Email",           data[3]);
-        TextField fPhone  = tf("Téléphone",       data[4]);
+        TextField fPhone  = tf("Telephone",       data[4]);
 
-        ComboBox<String> cSexe   = combo("Homme", "Femme");
+        ComboBox<String> cSexe = combo("Homme", "Femme");
         cSexe.setValue(data[5].isBlank() ? "Homme" : data[5]);
 
-        ComboBox<String> cPermis = combo("Non", "Oui (Catégorie B)", "Oui (Tracteur / Agricole)");
+        ComboBox<String> cPermis = combo("Non", "Oui (Categorie B)", "Oui (Tracteur / Agricole)");
         cPermis.setValue(data[6].isBlank() ? "Non" : data[6]);
 
         DatePicker dp = new DatePicker();
@@ -582,31 +593,23 @@ public class PostulerController implements Initializable {
             try { dp.setValue(java.time.LocalDate.parse(data[7])); } catch (Exception ignored) {}
         }
 
-        // ── PHOTO DE PROFIL ───────────────────────────────────
-        // ════════════════════════════════════════════════════════
-        //  LIGNE ~380 — Zone de sélection de photo
-        //  C'est ici que l'upload photo est géré dans le modal IA
-        // ════════════════════════════════════════════════════════
+        // PHOTO DE PROFIL
         ImageView photoPreview = new ImageView();
         photoPreview.setFitWidth(80);
         photoPreview.setFitHeight(80);
-        photoPreview.setStyle("-fx-border-radius:50;");
 
-        Label photoLabel = new Label("Aucune photo");
+        Label photoLabel = new Label("Aucune photo selectionnee");
         photoLabel.setStyle("-fx-font-size:11;-fx-text-fill:#888;");
 
-        Button btnPhoto = new Button("📷  Choisir une photo");
+        Button btnPhoto = new Button("Choisir une photo de profil");
         btnPhoto.setStyle("-fx-background-color:#f0f0f0;-fx-background-radius:8;"
                 + "-fx-padding:7 14;-fx-cursor:hand;-fx-font-size:12;");
 
-        // Si une photo avait déjà été choisie avant, on ré-affiche l'aperçu
         if (photoFile != null) {
             photoLabel.setText(photoFile.getName());
             photoPreview.setImage(new Image(photoFile.toURI().toString()));
         }
 
-        // ══ ACTION : clic sur "Choisir une photo" ══════════════
-        // LIGNE ~400 — Handler upload photo
         btnPhoto.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             fc.setTitle("Choisir votre photo de profil");
@@ -617,12 +620,13 @@ public class PostulerController implements Initializable {
                 photoFile = chosen;
                 photoLabel.setText(chosen.getName());
                 photoPreview.setImage(new Image(chosen.toURI().toString()));
-                // Convertir en Base64 pour l'envoyer à l'API Symfony
                 try {
                     byte[] bytes = Files.readAllBytes(chosen.toPath());
-                    String ext   = chosen.getName().contains("png") ? "image/png" : "image/jpeg";
+                    String ext   = chosen.getName().toLowerCase().contains("png") ? "image/png" : "image/jpeg";
                     photoBase64  = "data:" + ext + ";base64," + Base64.getEncoder().encodeToString(bytes);
-                } catch (IOException ex) { ex.printStackTrace(); }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
 
@@ -631,24 +635,24 @@ public class PostulerController implements Initializable {
         photoBox.setStyle("-fx-background-color:#f9f9f9;-fx-background-radius:10;"
                 + "-fx-padding:12;-fx-border-color:#e0e0e0;-fx-border-radius:10;");
 
-        // Pré-remplissage depuis le formulaire principal
+        // Pre-remplissage depuis le formulaire principal
         if (fNom.getText().isBlank()    && nomF   != null && !nomF.getText().isBlank())    fNom.setText(nomF.getText());
         if (fPrenom.getText().isBlank() && prenomF != null && !prenomF.getText().isBlank()) fPrenom.setText(prenomF.getText());
         if (fPhone.getText().isBlank()  && phoneF  != null && !phoneF.getText().isBlank())  fPhone.setText(phoneF.getText());
 
         content.getChildren().addAll(
-                row(lbl("Nom *",     fNom),    lbl("Prénom *",           fPrenom)),
-                row(lbl("Sexe *",    cSexe),   lbl("Date de naissance",  dp)),
-                row(lbl("Ville *",   fVille),  lbl("Permis de conduire", cPermis)),
-                row(lbl("Email *",   fEmail),  lbl("Téléphone",          fPhone)),
-                lbl("📷 Photo de profil (optionnel)", photoBox)  // ← PHOTO ICI
+                row(lbl("Nom *",     fNom),    lbl("Prenom *",            fPrenom)),
+                row(lbl("Sexe *",    cSexe),   lbl("Date de naissance",   dp)),
+                row(lbl("Ville *",   fVille),  lbl("Permis de conduire",  cPermis)),
+                row(lbl("Email *",   fEmail),  lbl("Telephone",           fPhone)),
+                lbl("Photo de profil (optionnel)", photoBox)
         );
 
-        Button next = nextBtn("Suivant →");
+        Button next = nextBtn("Suivant");
         next.setOnAction(e -> {
             if (fNom.getText().isBlank() || fPrenom.getText().isBlank()
                     || fVille.getText().isBlank() || fEmail.getText().isBlank()) {
-                showAlert("Champs manquants", "Nom, Prénom, Ville et Email sont obligatoires.");
+                showAlert("Champs manquants", "Nom, Prenom, Ville et Email sont obligatoires.");
                 return;
             }
             data[0] = fNom.getText();    data[1] = fPrenom.getText();
@@ -656,94 +660,97 @@ public class PostulerController implements Initializable {
             data[4] = fPhone.getText();  data[5] = cSexe.getValue();
             data[6] = cPermis.getValue();
             data[7] = dp.getValue() != null ? dp.getValue().toString() : "";
-            step[0] = 2; renderStep(step, data, content, pb, modal);
+            step[0] = 2;
+            renderStep(step, data, content, pb, modal);
         });
         content.getChildren().add(navRow(null, next));
     }
 
-    // ── Étape 2 : Profil & Formation ─────────────────────────
+    // ── Etape 2 : Profil et Formation ────────────────────────
     private void buildStep2(int[] step, String[] data, VBox content, Region pb, Stage modal) {
-        content.getChildren().add(stepBadge("2", "Profil & Formation"));
+        content.getChildren().add(stepBadge("2", "Profil et Formation"));
 
-        TextField fPoste = tf("Ex: Technicien Agricole",   data[8]);
-        TextField fEtude = tf("Ex: Licence en Agronomie",  data[9]);
-        TextField fAnnee = tf("Ex: 2022",                  data[10]);
-        TextField fSpec  = tf("Établissement & Spécialité",data[11]);
+        TextField fPoste = tf("Ex: Technicien Agricole",    data[8]);
+        TextField fEtude = tf("Ex: Licence en Agronomie",   data[9]);
+        TextField fAnnee = tf("Ex: 2022",                   data[10]);
+        TextField fSpec  = tf("Etablissement et Specialite",data[11]);
 
         content.getChildren().addAll(
-                lbl("Titre du poste souhaité *", fPoste),
-                row(lbl("Dernier Diplôme *", fEtude), lbl("Année d'obtention", fAnnee)),
-                lbl("Établissement & Spécialité", fSpec)
+                lbl("Titre du poste souhaite *", fPoste),
+                row(lbl("Dernier Diplome *", fEtude), lbl("Annee d obtention", fAnnee)),
+                lbl("Etablissement et Specialite", fSpec)
         );
 
-        Button back = backBtn("← Retour");
-        Button next = nextBtn("Suivant →");
+        Button back = backBtn("Retour");
+        Button next = nextBtn("Suivant");
         back.setOnAction(e -> { step[0] = 1; renderStep(step, data, content, pb, modal); });
         next.setOnAction(e -> {
             if (fPoste.getText().isBlank() || fEtude.getText().isBlank()) {
-                showAlert("Champs manquants", "Poste et diplôme sont obligatoires.");
+                showAlert("Champs manquants", "Poste et diplome sont obligatoires.");
                 return;
             }
             data[8]  = fPoste.getText(); data[9]  = fEtude.getText();
             data[10] = fAnnee.getText(); data[11] = fSpec.getText();
-            step[0] = 3; renderStep(step, data, content, pb, modal);
+            step[0] = 3;
+            renderStep(step, data, content, pb, modal);
         });
         content.getChildren().add(navRow(back, next));
     }
 
-    // ── Étape 3 : Expériences & Outils ───────────────────────
+    // ── Etape 3 : Experiences et Outils ──────────────────────
     private void buildStep3(int[] step, String[] data, VBox content, Region pb, Stage modal) {
-        content.getChildren().add(stepBadge("3", "Expériences & Outils"));
+        content.getChildren().add(stepBadge("3", "Experiences et Outils"));
 
-        TextField fEnt    = tf("Dernière entreprise / ferme",          data[12]);
+        TextField fEnt    = tf("Derniere entreprise / ferme",          data[12]);
         TextField fDebut  = tf("Ex: 2021",                             data[13]);
-        TextField fFin    = tf("Ex: 2023 ou Présent",                  data[14]);
+        TextField fFin    = tf("Ex: 2023 ou Present",                  data[14]);
         TextArea  fDesc   = new TextArea(data[15]);
-        fDesc.setPromptText("Décrivez vos missions...");
+        fDesc.setPromptText("Decrivez vos missions...");
         fDesc.setPrefRowCount(3);
         fDesc.setStyle(tfStyle());
         TextField fInfo   = tf("Ex: Excel, GPS, Drones",               data[16]);
-        TextField fSkills = tf("Ex: Irrigation, Récolte, Pesticides",  data[17]);
+        TextField fSkills = tf("Ex: Irrigation, Recolte, Pesticides",  data[17]);
 
         content.getChildren().addAll(
-                lbl("Dernière entreprise / ferme", fEnt),
-                row(lbl("Début", fDebut), lbl("Fin", fFin)),
+                lbl("Derniere entreprise / ferme", fEnt),
+                row(lbl("Debut", fDebut), lbl("Fin", fFin)),
                 lbl("Description des missions", fDesc),
                 lbl("Outils informatiques", fInfo),
-                lbl("Compétences techniques *", fSkills)
+                lbl("Competences techniques *", fSkills)
         );
 
-        Button back = backBtn("← Retour");
-        Button next = nextBtn("Suivant →");
+        Button back = backBtn("Retour");
+        Button next = nextBtn("Suivant");
         back.setOnAction(e -> { step[0] = 2; renderStep(step, data, content, pb, modal); });
         next.setOnAction(e -> {
             if (fSkills.getText().isBlank()) {
-                showAlert("Champ manquant", "Les compétences techniques sont obligatoires.");
+                showAlert("Champ manquant", "Les competences techniques sont obligatoires.");
                 return;
             }
             data[12] = fEnt.getText();   data[13] = fDebut.getText();
             data[14] = fFin.getText();   data[15] = fDesc.getText();
             data[16] = fInfo.getText();  data[17] = fSkills.getText();
-            step[0] = 4; renderStep(step, data, content, pb, modal);
+            step[0] = 4;
+            renderStep(step, data, content, pb, modal);
         });
         content.getChildren().add(navRow(back, next));
     }
 
-    // ── Étape 4 : Langues & Loisirs ──────────────────────────
+    // ── Etape 4 : Langues et Loisirs ─────────────────────────
     private void buildStep4(int[] step, String[] data, VBox content, Region pb, Stage modal) {
-        content.getChildren().add(stepBadge("4", "Langues & Loisirs"));
+        content.getChildren().add(stepBadge("4", "Langues et Loisirs"));
 
-        TextField fFrench  = tf("Ex: Courant",           data[18]);
-        TextField fEnglish = tf("Ex: Bien",              data[19]);
-        TextField fLoisirs = tf("Ex: Jardinage, Lecture",data[20]);
+        TextField fFrench  = tf("Ex: Courant",            data[18]);
+        TextField fEnglish = tf("Ex: Bien",               data[19]);
+        TextField fLoisirs = tf("Ex: Jardinage, Lecture", data[20]);
 
         content.getChildren().addAll(
-                row(lbl("Français *", fFrench), lbl("Anglais *", fEnglish)),
+                row(lbl("Francais *", fFrench), lbl("Anglais *", fEnglish)),
                 lbl("Loisirs", fLoisirs)
         );
 
-        Button back   = backBtn("← Retour");
-        Button genBtn = nextBtn("✨  Générer mon CV");
+        Button back   = backBtn("Retour");
+        Button genBtn = nextBtn("Generer mon CV");
         genBtn.setStyle("-fx-background-color:#00b37e;-fx-text-fill:white;"
                 + "-fx-font-size:13;-fx-font-weight:bold;-fx-background-radius:25;"
                 + "-fx-padding:10;-fx-cursor:hand;");
@@ -758,16 +765,14 @@ public class PostulerController implements Initializable {
             data[19] = fEnglish.getText();
             data[20] = fLoisirs.getText();
             genBtn.setDisable(true);
-            genBtn.setText("⏳  Génération en cours...");
+            genBtn.setText("Generation en cours...");
             generateCVWithAPI(data, modal, genBtn);
         });
         content.getChildren().add(navRow(back, genBtn));
     }
 
     // ══════════════════════════════════════════════════════════
-    //  APPEL API SYMFONY — même endpoint que la version web
-    //  POST /candidature/generate-cv-ia
-    //  Envoie aussi la photo en Base64 (champ "photo_base64")
+    //  APPEL API SYMFONY — POST /candidature/generate-cv-ia
     // ══════════════════════════════════════════════════════════
     private void generateCVWithAPI(String[] data, Stage modal, Button genBtn) {
         new Thread(() -> {
@@ -775,7 +780,6 @@ public class PostulerController implements Initializable {
                 String boundary = "----JavaFXBoundary" + System.currentTimeMillis();
                 StringBuilder body = new StringBuilder();
 
-                // Champs texte (identiques au FormData JS de la version web)
                 String[][] fields = {
                         {"nom",        data[0]}, {"prenom",     data[1]},
                         {"ville",      data[2]}, {"email",      data[3]},
@@ -797,9 +801,7 @@ public class PostulerController implements Initializable {
                             .append(f[1] != null ? f[1] : "").append("\r\n");
                 }
 
-                // ══ PHOTO EN BASE64 ══════════════════════════════════
-                // LIGNE ~570 — Envoi de la photo à l'API Symfony
-                // Le serveur PHP reçoit "photo_base64" et l'intègre dans le CV
+                // Photo en Base64 si disponible
                 if (photoBase64 != null && !photoBase64.isBlank()) {
                     body.append("--").append(boundary).append("\r\n")
                             .append("Content-Disposition: form-data; name=\"photo_base64\"\r\n\r\n")
@@ -835,15 +837,15 @@ public class PostulerController implements Initializable {
                         Platform.runLater(() -> onCVReady(fileName, modal));
                     } else {
                         Platform.runLater(() -> {
-                            showAlert("Erreur", "La génération a échoué côté serveur.");
+                            showAlert("Erreur", "La generation a echoue cote serveur.");
                             genBtn.setDisable(false);
-                            genBtn.setText("✨  Générer mon CV");
+                            genBtn.setText("Generer mon CV");
                         });
                     }
                 } else {
-                    // Serveur non disponible → fallback HTML local
                     Platform.runLater(() -> generateCVLocally(data, modal));
                 }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Platform.runLater(() -> generateCVLocally(data, modal));
@@ -851,45 +853,74 @@ public class PostulerController implements Initializable {
         }).start();
     }
 
-    /** Fallback hors-ligne : génère un CV HTML en local */
+    // ── Fallback local si le serveur Symfony n'est pas lance ─
     private void generateCVLocally(String[] d, Stage modal) {
         try {
             String fileName = "CV_IA_AgriSmart_" + System.currentTimeMillis() + ".html";
             Path dir = Paths.get(System.getProperty("user.home"), "AgriSmart_CVs");
             Files.createDirectories(dir);
-            Files.writeString(dir.resolve(fileName), buildLocalCVHtml(d));
-            iaCvFileName = "LOCAL:" + dir.resolve(fileName).toString();
-            onCVReady("LOCAL:" + fileName, modal);
+            Path fullPath = dir.resolve(fileName);
+            Files.writeString(fullPath, buildLocalCVHtml(d));
+            // Stocker LOCAL: + chemin absolu complet
+            String localKey = "LOCAL:" + fullPath.toAbsolutePath().toString();
+            onCVReady(localKey, modal);
         } catch (IOException e) {
-            showAlert("Erreur", "Impossible de générer le CV : " + e.getMessage());
+            showAlert("Erreur", "Impossible de generer le CV : " + e.getMessage());
         }
     }
 
     private void onCVReady(String fileName, Stage modal) {
         iaCvFileName = fileName;
-        iaFilenameLabel.setText("Fichier : " + fileName.replace("LOCAL:", ""));
+        // Afficher seulement le nom court (pas tout le chemin absolu)
+        String displayName = fileName.replace("LOCAL:", "");
+        if (displayName.contains("\\") || displayName.contains("/")) {
+            displayName = new java.io.File(displayName).getName();
+        }
+        iaFilenameLabel.setText("Fichier : " + displayName);
         iaPlaceholder.setVisible(false); iaPlaceholder.setManaged(false);
         iaSuccessBox.setVisible(true);   iaSuccessBox.setManaged(true);
         cvError.setText("");
         modal.close();
-        showAlert("Succès !", "CV IA généré !\nVous pouvez soumettre votre candidature.");
+        showAlert("Succes !", "CV IA genere ! Vous pouvez soumettre votre candidature.");
     }
 
-    @FXML public void previewIACV() {
+    @FXML
+    public void previewIACV() {
         if (iaCvFileName == null) return;
         try {
             if (iaCvFileName.startsWith("LOCAL:")) {
-                String path = iaCvFileName.replace("LOCAL:", "");
-                Desktop.getDesktop().open(new File(path).getParentFile());
+                String fileNameOnly = iaCvFileName.replace("LOCAL:", "");
+                File fileToOpen;
+                if (fileNameOnly.contains(File.separator) || fileNameOnly.contains("/")) {
+                    fileToOpen = new File(fileNameOnly);
+                } else {
+                    Path dir = Paths.get(System.getProperty("user.home"), "AgriSmart_CVs");
+                    fileToOpen = dir.resolve(fileNameOnly).toFile();
+                }
+                if (fileToOpen.exists()) {
+                    Desktop.getDesktop().open(fileToOpen);
+                } else {
+                    Path dir = Paths.get(System.getProperty("user.home"), "AgriSmart_CVs");
+                    if (dir.toFile().exists()) {
+                        Desktop.getDesktop().open(dir.toFile());
+                    } else {
+                        showAlert("Introuvable", "Le fichier CV est introuvable.");
+                    }
+                }
             } else {
                 Desktop.getDesktop().browse(
                         new java.net.URI(API_BASE + "/uploads/cv/" + iaCvFileName));
             }
-        } catch (Exception e) { showAlert("Erreur", e.getMessage()); }
+        } catch (Exception e) {
+            showAlert("Erreur ouverture CV", e.getMessage());
+        }
     }
 
-    @FXML public void resetIA() {
-        iaCvFileName = null; photoFile = null; photoBase64 = null;
+    @FXML
+    public void resetIA() {
+        iaCvFileName = null;
+        photoFile    = null;
+        photoBase64  = null;
         iaFilenameLabel.setText("");
         iaSuccessBox.setVisible(false); iaSuccessBox.setManaged(false);
         iaPlaceholder.setVisible(true); iaPlaceholder.setManaged(true);
@@ -899,8 +930,8 @@ public class PostulerController implements Initializable {
     //  CV HTML LOCAL — FALLBACK HORS LIGNE
     // ══════════════════════════════════════════════════════════
     private String buildLocalCVHtml(String[] d) {
-        String name   = (d[1] + " " + d[0]).trim().toUpperCase();
-        String photo  = (photoBase64 != null)
+        String name  = (d[1] + " " + d[0]).trim().toUpperCase();
+        String photo = (photoBase64 != null)
                 ? "<img src='" + photoBase64 + "' style='width:100px;height:100px;"
                   + "border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.3);'>"
                 : "<div style='width:100px;height:100px;background:rgba(255,255,255,.1);"
@@ -911,6 +942,7 @@ public class PostulerController implements Initializable {
                         + "padding:4px 10px;border-radius:15px;font-size:11px;margin:3px;"
                         + "border:1px solid #d1e7dd'>" + s.trim() + "</span>")
                 .reduce("", String::concat);
+
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
                 + "<style>body{font-family:Arial,sans-serif;margin:0;color:#2c3e50;}"
                 + ".sidebar{width:30%;background:#1a4331;color:white;position:absolute;"
@@ -924,13 +956,13 @@ public class PostulerController implements Initializable {
                 + "display:block;margin-top:10px;}</style></head><body>"
                 + "<div class='sidebar'>"
                 + "<div style='text-align:center;margin-bottom:20px'>" + photo + "</div>"
-                + "<span class='lbl'>Téléphone</span>" + d[4]
+                + "<span class='lbl'>Telephone</span>" + d[4]
                 + "<span class='lbl'>Email</span>" + d[3]
                 + "<span class='lbl'>Localisation</span>" + d[2]
                 + "<span class='lbl'>Sexe</span>" + d[5]
                 + "<div style='margin-top:18px;font-weight:bold;font-size:12px;"
                 + "border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:5px'>LANGUES</div>"
-                + "<div style='font-size:11px;margin-top:6px'><b>Français :</b> " + d[18]
+                + "<div style='font-size:11px;margin-top:6px'><b>Francais :</b> " + d[18]
                 + "<br><b>Anglais :</b> " + d[19] + "</div>"
                 + "<div style='margin-top:18px;font-weight:bold;font-size:12px;"
                 + "border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:5px'>LOISIRS</div>"
@@ -939,30 +971,37 @@ public class PostulerController implements Initializable {
                 + "<div class='main'>"
                 + "<div class='name'>" + name + "</div>"
                 + "<div class='job'>" + d[8] + "</div>"
-                + "<div style='font-size:12px;color:#666;margin-top:3px'>Spécialité : " + d[11] + "</div>"
-                + "<div class='sec'>Formation & Études</div>"
+                + "<div style='font-size:12px;color:#666;margin-top:3px'>Specialite : " + d[11] + "</div>"
+                + "<div class='sec'>Formation et Etudes</div>"
                 + "<div style='font-weight:bold;margin-top:8px'>" + d[9] + "</div>"
                 + "<div style='font-size:11px;color:#666;font-style:italic'>Promotion " + d[10] + "</div>"
-                + "<div class='sec'>Expérience Professionnelle</div>"
+                + "<div class='sec'>Experience Professionnelle</div>"
                 + "<div style='font-weight:bold;margin-top:8px'>" + d[12] + "</div>"
                 + "<div style='font-size:11px;color:#666;font-style:italic'>"
-                + d[13] + " — " + (d[14].isBlank() ? "Présent" : d[14]) + "</div>"
+                + d[13] + " - " + (d[14].isBlank() ? "Present" : d[14]) + "</div>"
                 + "<div style='font-size:12px;margin-top:6px;color:#444'>" + d[15] + "</div>"
                 + "<div class='sec'>Outils Informatiques</div>"
                 + "<div style='font-size:12px;background:#fcfcfc;padding:8px;"
                 + "border-left:3px solid #1a4331;margin-top:8px'>" + d[16] + "</div>"
-                + "<div class='sec'>Compétences Techniques</div>"
+                + "<div class='sec'>Competences Techniques</div>"
                 + "<div style='margin-top:8px'>" + skills + "</div>"
                 + "</div></body></html>";
     }
 
     // ══════════════════════════════════════════════════════════
-    //  TTS + STT POWERSHELL (Windows)
+    //  TTS + STT POWERSHELL (Windows uniquement)
     // ══════════════════════════════════════════════════════════
+
+    /**
+     * Fait parler l'IA via PowerShell System.Speech.Synthesis.
+     * IMPORTANT : le texte ne doit PAS contenir d'apostrophes
+     * car elles cassent la commande PowerShell.
+     */
     private void speak(String text, Runnable onDone) {
         new Thread(() -> {
             try {
-                String clean = text.replace("'", " ").replace("\"", " ");
+                // Securite supplementaire : supprimer les apostrophes restantes
+                String clean = text.replace("'", "").replace("\"", "");
                 String cmd = "Add-Type -AssemblyName System.Speech; "
                         + "(New-Object System.Speech.Synthesis.SpeechSynthesizer)"
                         + ".Speak('" + clean + "')";
@@ -994,12 +1033,15 @@ public class PostulerController implements Initializable {
             while ((line = br.readLine()) != null) out.append(line).append(" ");
             p.waitFor();
             return out.toString().trim();
-        } catch (Exception e) { return null; }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // ══════════════════════════════════════════════════════════
-    //  HELPERS UI
+    //  HELPERS UI DU MODAL
     // ══════════════════════════════════════════════════════════
+
     private HBox stepBadge(String num, String title) {
         Label badge = new Label(" " + num + " ");
         badge.setStyle("-fx-background-color:#1a4331;-fx-text-fill:white;"
@@ -1101,7 +1143,9 @@ public class PostulerController implements Initializable {
 
     private void showAlert(String title, String content) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(title); a.setHeaderText(null); a.setContentText(content);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(content);
         a.showAndWait();
     }
 }
