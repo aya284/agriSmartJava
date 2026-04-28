@@ -19,6 +19,8 @@ import services.MarketplaceConversationService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
 import services.UserService;
+import services.WebSocketClient;
+import services.WebSocketServer;
 import utils.SessionManager;
 
 import java.sql.SQLException;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -58,6 +61,8 @@ public class MarketplaceMessagingFeature {
     private final Consumer<SQLException> showSqlAlert;
     private final BiConsumer<String, Boolean> showToast;
     private final java.util.function.Function<String, String> normalizeText;
+    private final WebSocketClient webSocketClient = new WebSocketClient();
+    private int websocketConversationId = -1;
 
     public MarketplaceMessagingFeature(
             MarketplaceMessagingState state,
@@ -100,6 +105,58 @@ public class MarketplaceMessagingFeature {
         this.showSqlAlert = showSqlAlert;
         this.showToast = showToast;
         this.normalizeText = normalizeText;
+        initializeRealtimeMessaging();
+    }
+
+    private void initializeRealtimeMessaging() {
+        webSocketClient.addMessageListener(message -> {
+            String type = message.optString("type", "");
+            if ("message".equals(type)) {
+                Platform.runLater(() -> handleRealtimeMessage(message.optInt("conversationId", -1)));
+            } else if ("conversation_read".equals(type)) {
+                Platform.runLater(() -> {
+                    int selectedConversationId = getSelectedConversationId();
+                    if (selectedConversationId > 0) {
+                        loadConversationsAndRender(selectedConversationId);
+                    } else {
+                        refreshMessagingBadge();
+                    }
+                });
+            }
+        });
+
+        webSocketClient.addErrorListener(error -> {
+            if (error != null && !error.isBlank()) {
+                Platform.runLater(() -> showToast.accept("Temps reel indisponible", false));
+            }
+        });
+    }
+
+    private void handleRealtimeMessage(int conversationId) {
+        refreshMessagingBadge();
+        if (conversationId > 0 && state.selectedConversation != null && state.selectedConversation.getId() == conversationId) {
+            loadConversationsAndRender(conversationId);
+        }
+    }
+
+    private void connectRealtimeIfNeeded(entities.MarketplaceConversation conversation) {
+        if (conversation == null || conversation.getId() <= 0) {
+            return;
+        }
+
+        if (webSocketClient.isConnected() && websocketConversationId == conversation.getId()) {
+            return;
+        }
+
+        webSocketClient.disconnect();
+        websocketConversationId = conversation.getId();
+
+        webSocketClient.connect(
+                WebSocketServer.getInstance().getConnectionUrl(),
+                currentUserIdSupplier.getAsInt(),
+                conversation.getId(),
+                new CountDownLatch(1)
+        );
     }
 
     public void refreshMessagingBadge() {
@@ -151,6 +208,17 @@ public class MarketplaceMessagingFeature {
                         currentUserIdSupplier.getAsInt(),
                         state.pendingSellerId
                 );
+            }
+
+            connectRealtimeIfNeeded(state.selectedConversation);
+
+            if (webSocketClient.isConnected()) {
+                webSocketClient.sendMessage(content, "");
+                messageInputArea.clear();
+                refreshMessagingBadge();
+                clearPendingMessageContext();
+                showToast.accept("Message envoye.", true);
+                return;
             }
 
             MarketplaceMessage message = new MarketplaceMessage();
@@ -266,6 +334,7 @@ public class MarketplaceMessagingFeature {
 
     public void selectConversation(entities.MarketplaceConversation conversation) {
         state.selectedConversation = conversation;
+        connectRealtimeIfNeeded(conversation);
         renderMessages(conversation);
 
         if (messagingTitleLabel != null) {

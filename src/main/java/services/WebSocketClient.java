@@ -205,7 +205,6 @@ public class WebSocketClient {
     private void onConnectionClose() {
         connected = false;
         logger.info("WebSocket connection closed");
-        notifyError("Connection closed");
     }
     
     /**

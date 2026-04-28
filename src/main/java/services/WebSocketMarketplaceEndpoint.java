@@ -144,6 +144,7 @@ public class WebSocketMarketplaceEndpoint {
             message.setRead(false);
             
             messageService.ajouter(message);
+            new MarketplaceConversationService().touchLastMessage(conversationId);
             
             // Broadcast to all users in the conversation
             broadcastToConversation(conversationId, message);
