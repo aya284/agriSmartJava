@@ -64,10 +64,9 @@ public class CandidatOffreController implements Initializable {
     // ══ ETAT CHATBOT ════════════════════════════════════════
     private boolean isFirstOpen   = true;
     private boolean isLoading     = false;
-    private String  contenuCV     = "";   // texte extrait du PDF
-    private String  nomFichier    = "";   // nom du fichier CV
-    // Historique court pour garder le contexte de la conversation
-    private final List<String[]>  historique = new ArrayList<>(); // [role, message]
+    private String  contenuCV     = "";
+    private String  nomFichier    = "";
+    private final List<String[]>  historique = new ArrayList<>();
     private Demande offreSelPourChat          = null;
 
     // ══ ETAT SIMULATEUR ══════════════════════════════════════
@@ -163,18 +162,14 @@ public class CandidatOffreController implements Initializable {
         chatContainer.setManaged(!v);
         if (!v && isFirstOpen) {
             isFirstOpen = false;
-            // Message accueil professionnel orienté vers les candidatures
-            dormirPuisBot(0, "👋 Bienvenue sur AgriSmart Recrutement !\n\n" +
-                    "Je suis votre assistant personnel pour explorer et postuler aux offres d'emploi agricoles.\n\n" +
-                    "🎯 Voici comment je peux vous aider :\n" +
-                    "• Consulter les offres disponibles et trouver celle qui vous convient\n" +
-                    "• Analyser votre CV et recevoir des conseils personnalisés\n" +
-                    "• Vous guider dans le processus de candidature étape par étape\n\n" +
-                    "💡 Comment procéder :\n" +
-                    "1. Importez votre CV pour une analyse détaillée\n" +
-                    "2. Consultez les offres disponibles\n" +
-                    "3. Postulez aux offres qui vous correspondent\n\n" +
-                    "📌 Cliquez sur \"Voir les offres\" ou \"Comment postuler\" pour commencer !");
+            // ✅ Message d'accueil orienté CANDIDATURE uniquement
+            dormirPuisBot(0, "👋 Bonjour ! Je suis votre assistant candidature AgriSmart.\n\n" +
+                    "Je peux vous aider à :\n" +
+                    "• Trouver l offre qui correspond à votre profil\n" +
+                    "• Comprendre comment postuler étape par étape\n" +
+                    "• Analyser votre CV et vous donner des conseils\n" +
+                    "• Préparer votre lettre de motivation\n\n" +
+                    "💡 Pour un entretien simulé, utilisez le bouton \"Lancer le test\" en haut de la page !");
         }
     }
 
@@ -242,21 +237,17 @@ public class CandidatOffreController implements Initializable {
         nomFichier   = file.getName();
         contenuCV    = extrairePDF(file);
 
-        // Preview barre
         filePreviewIcon.setText("CV");
         filePreviewName.setText(nomFichier);
         filePreviewBar.setVisible(true); filePreviewBar.setManaged(true);
 
-        // Afficher dans chat
         userMsg("Voici mon CV : " + nomFichier);
 
-        // Image si c est une image
         String ext = nomFichier.toLowerCase();
         if (ext.endsWith(".png") || ext.endsWith(".jpg") || ext.endsWith(".jpeg")) {
             afficherImage(file);
         }
 
-        // Analyse + conseil
         analyserEtConseiller();
     }
 
@@ -276,7 +267,6 @@ public class CandidatOffreController implements Initializable {
             try {
                 List<Offre> offres = offreService.afficher();
 
-                // Liste des offres ouvertes
                 StringBuilder listeOffres = new StringBuilder();
                 for (Offre o : offres) {
                     if (estOuverte(o)) {
@@ -286,7 +276,6 @@ public class CandidatOffreController implements Initializable {
                     }
                 }
 
-                // Prompt analyse CV — concis et direct
                 String prompt =
                         "Tu es un conseiller RH senior pour AgriSmart Tunisie.\n" +
                                 "Analyse ce CV et reponds en 6 lignes maximum :\n" +
@@ -294,7 +283,8 @@ public class CandidatOffreController implements Initializable {
                                 "2. Pourquoi cette offre lui convient (1 phrase)\n" +
                                 "3. Ce qui manque dans son profil pour cette offre (1 phrase)\n" +
                                 "4. Un conseil concret pour ameliorer sa candidature (1 phrase)\n" +
-                                "Tutoie le candidat. Sois direct, honnete, pas de bavardage.\n\n" +
+                                "Tutoie le candidat. Sois direct, honnete, pas de bavardage.\n" +
+                                "NE pose PAS de questions d entretien. Tu aides uniquement a postuler.\n\n" +
                                 "OFFRES DISPONIBLES :\n" + listeOffres + "\n" +
                                 "NOM DU CV : " + nomFichier + "\n" +
                                 (contenuCV.isEmpty()
@@ -305,7 +295,6 @@ public class CandidatOffreController implements Initializable {
                 if (rep == null || rep.isBlank() || rep.contains("specialise uniquement"))
                     rep = conseilSansIA(offres);
 
-                // Sauvegarde dans l historique
                 historique.add(new String[]{"assistant", rep});
 
                 final String finalRep = rep;
@@ -324,6 +313,33 @@ public class CandidatOffreController implements Initializable {
         return sb.toString();
     }
 
+    @FXML
+    private void handleShowNews() {
+        try {
+            URL url = getClass().getResource("/Views/Offres/NewsView.fxml");
+
+            if (url == null) {
+                System.err.println("ERREUR : Le fichier NewsView.fxml est introuvable !");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+
+            javafx.scene.layout.StackPane area = (javafx.scene.layout.StackPane) searchField.getScene().lookup("#contentArea");
+
+            if (area != null) {
+                area.getChildren().setAll(root);
+            } else {
+                searchField.getScene().setRoot(root);
+            }
+
+        } catch (IOException e) {
+            System.err.println("ERREUR IO : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     // ════════════════════════════════════════════════════════
     //  CHATBOT — ENVOYER MESSAGE TEXTE
     // ════════════════════════════════════════════════════════
@@ -337,15 +353,25 @@ public class CandidatOffreController implements Initializable {
         chatInputField.clear();
         historique.add(new String[]{"user", txt});
 
-        // Filtre hors-sujet
+        String tl = txt.toLowerCase();
+
+        // ✅ Filtre hors-sujet
         if (estHorsSujet(txt)) {
-            String refus = "Je suis specialise uniquement dans le recrutement agricole AgriSmart. " +
-                    "Posez-moi une question sur les offres, votre CV ou comment postuler.";
-            botMsg(refus);
+            botMsg("Je suis specialise uniquement dans l aide a la candidature AgriSmart. " +
+                    "Posez-moi une question sur les offres, votre CV ou comment postuler.");
             return;
         }
 
-        // Gestion des demandes de modification
+        // ✅ Rediriger vers simulateur si entretien demande dans le chat
+        if (tl.contains("entretien") || tl.contains("simulat") || tl.contains("test vocal")
+                || tl.contains("question d entretien") || tl.contains("preparer entretien")) {
+            botMsg("Pour pratiquer un entretien complet avec notre IA, utilisez le bouton \"Lancer le test\" en haut de la page.\n\n" +
+                    "Ici je suis specialise pour vous aider a postuler : trouver une offre, analyser votre CV, " +
+                    "rediger une lettre de motivation. Puis-je vous aider avec cela ?");
+            return;
+        }
+
+        // Gestion des demandes de modification de candidature existante
         try {
             if (offreSelPourChat == null) {
                 List<Demande> mes = demandeService.afficher().stream()
@@ -373,16 +399,59 @@ public class CandidatOffreController implements Initializable {
         } catch (SQLException ex) { ex.printStackTrace(); }
 
         // Cas rapides sans IA
-        String tl = txt.toLowerCase();
         if (tl.contains("offre") && (tl.contains("voir") || tl.contains("liste") || tl.contains("disponible"))) {
             voirOffres(); return;
         }
-        if (tl.contains("postuler") || tl.contains("comment") && tl.contains("candidat")) {
+        if (tl.contains("postuler") || (tl.contains("comment") && tl.contains("candidat"))) {
             expliquerPostuler(); return;
+        }
+        if (tl.contains("lettre") || tl.contains("motivation")) {
+            conseilLettreMotivation(); return;
+        }
+        if (tl.contains("cv") && (tl.contains("conseil") || tl.contains("ameliorer") || tl.contains("améliorer"))) {
+            if (!contenuCV.isEmpty()) { analyserEtConseiller(); } else { botMsg("Importez votre CV en cliquant sur 'Analyser mon CV' pour que je puisse vous donner des conseils personnalises."); }
+            return;
         }
 
         // Envoie a l IA avec contexte complet
         envoyerIA(txt);
+    }
+
+    // ════════════════════════════════════════════════════════
+    //  CONSEIL LETTRE DE MOTIVATION
+    // ════════════════════════════════════════════════════════
+    private void conseilLettreMotivation() {
+        userMsg("Comment rediger une lettre de motivation ?");
+        if (isLoading) return;
+        setLoading(true);
+        new Thread(() -> {
+            try {
+                List<Offre> offres = offreService.afficher();
+                String offreCtx = "";
+                if (!contenuCV.isEmpty() && !offres.isEmpty()) {
+                    offreCtx = " pour le poste de " + offres.stream().filter(this::estOuverte).findFirst().map(Offre::getTitle).orElse("ce poste");
+                }
+                String prompt =
+                        "Tu es un conseiller RH AgriSmart Tunisie.\n" +
+                                "Donne 4 conseils courts et concrets pour rediger une lettre de motivation" + offreCtx + " dans le secteur agricole.\n" +
+                                "Format : conseils numerotes, 1 phrase chacun. Tutoie le candidat.\n" +
+                                "NE redige PAS la lettre complete. NE pose PAS de questions d entretien.\n" +
+                                (contenuCV.isEmpty() ? "" : "CV du candidat :\n" + contenuCV.substring(0, Math.min(contenuCV.length(), 800)));
+                String rep = iaService.obtenirConseilRecrutement(prompt, nomFichier, offres);
+                if (rep == null || rep.isBlank()) {
+                    rep = "Pour une bonne lettre de motivation agricole :\n\n" +
+                            "1. Commence par mentionner l offre exacte et comment tu l as trouvee\n" +
+                            "2. Parle de ton experience concrete en agriculture (machines, cultures, elevage)\n" +
+                            "3. Explique pourquoi tu veux rejoindre AgriSmart specifiquement\n" +
+                            "4. Termine par une disponibilite claire pour un entretien\n\n" +
+                            "Voulez-vous que je vous aide a choisir l offre la plus adaptee a votre profil ?";
+                }
+                final String finalRep = rep;
+                Platform.runLater(() -> { setLoading(false); botMsg(finalRep); });
+            } catch (Exception e) {
+                Platform.runLater(() -> { setLoading(false); botMsg("Erreur. Reessayez."); });
+            }
+        }).start();
     }
 
     // ════════════════════════════════════════════════════════
@@ -394,7 +463,6 @@ public class CandidatOffreController implements Initializable {
             try {
                 List<Offre> offres = offreService.afficher();
 
-                // Contexte offres
                 StringBuilder ctx = new StringBuilder("OFFRES AGRISMART EN BASE :\n");
                 for (Offre o : offres) {
                     ctx.append(estOuverte(o) ? "[OUVERTE] " : "[CLOTUREE] ")
@@ -402,7 +470,6 @@ public class CandidatOffreController implements Initializable {
                             .append(" | ").append(o.getSalaire()).append(" TND\n");
                 }
 
-                // Historique conversation (3 derniers tours)
                 StringBuilder hist = new StringBuilder();
                 int debut = Math.max(0, historique.size() - 6);
                 for (int i = debut; i < historique.size(); i++) {
@@ -410,16 +477,19 @@ public class CandidatOffreController implements Initializable {
                     hist.append(h[0].equals("user") ? "Candidat: " : "Conseiller: ").append(h[1]).append("\n");
                 }
 
-                // Prompt système complet
+                // ✅ Prompt système orienté CANDIDATURE uniquement — pas d'entretien
                 String systeme =
-                        "Tu es un conseiller emploi senior pour AgriSmart Tunisie.\n" +
+                        "Tu es un assistant candidature pour AgriSmart Tunisie.\n" +
                                 "REGLES ABSOLUES :\n" +
-                                "1. Reponds UNIQUEMENT sur : offres emploi, agriculture, candidature, CV, entretien\n" +
-                                "2. Si hors-sujet : 'Je suis specialise recrutement agricole. Posez une question sur les offres.'\n" +
-                                "3. COURT : 4-6 lignes max par reponse\n" +
-                                "4. HONNETE : si le profil ne correspond pas a une offre, dis-le clairement\n" +
-                                "5. PERSONNALISE : utilise le contexte de la conversation et le CV si disponible\n" +
-                                "6. Tutoie le candidat, sois chaleureux mais professionnel\n\n" +
+                                "1. Tu aides UNIQUEMENT avec : trouver une offre adaptee, comprendre comment postuler, " +
+                                "ameliorer un CV, rediger une lettre de motivation, comprendre les conditions d un poste\n" +
+                                "2. Tu ne poses JAMAIS de questions d entretien dans ce chat\n" +
+                                "3. Si le candidat demande un entretien ou une simulation : redis-lui d utiliser le bouton " +
+                                "'Lancer le test' en haut de la page\n" +
+                                "4. Si hors-sujet (sport, politique, etc.) : reponds 'Je suis specialise dans l aide a la candidature AgriSmart.'\n" +
+                                "5. COURT : 3-5 lignes max par reponse\n" +
+                                "6. HONNETE : si le profil ne correspond pas a une offre, dis-le clairement\n" +
+                                "7. Tutoie le candidat, sois chaleureux et direct\n\n" +
                                 ctx + "\n" +
                                 (contenuCV.isEmpty() ? "" : "CV DU CANDIDAT :\n" +
                                         contenuCV.substring(0, Math.min(contenuCV.length(), 1800)) + "\n\n") +
@@ -455,11 +525,9 @@ public class CandidatOffreController implements Initializable {
     }
 
     private void botMsg(String texte) {
-        // Avatar + bulle
         HBox row = new HBox(8); row.setAlignment(Pos.TOP_LEFT);
         row.setPadding(new Insets(1, 55, 1, 0));
 
-        // Mini avatar
         StackPane av = new StackPane();
         av.setStyle("-fx-background-color:#1a4331;-fx-background-radius:50;-fx-min-width:28;-fx-min-height:28;-fx-max-width:28;-fx-max-height:28;");
         Label avLbl = new Label("AI"); avLbl.setStyle("-fx-text-fill:white;-fx-font-size:9;-fx-font-weight:bold;");
@@ -541,9 +609,11 @@ public class CandidatOffreController implements Initializable {
 
     private boolean estHorsSujet(String msg) {
         String m = msg.toLowerCase();
+        // ✅ Mots-clés hors-sujet — entretien/simulation exclus car gérés séparément avec redirection
         String[] hors = {"football","sport","musique","film","cinema","recette","meteo","blague",
                 "politique","guerre","jeux video","bitcoin","crypto","bourse","tu vas bien",
-                "comment tu","qui est ton","quel age","chatgpt","programme"};
+                "comment tu","qui est ton","quel age","chatgpt","programme",
+                "entretien blanc","jeu de role","roleplay"};
         for (String h : hors) if (m.contains(h)) return true;
         return false;
     }
@@ -671,7 +741,6 @@ public class CandidatOffreController implements Initializable {
         String col = score>=85?"#1a7a43":score>=70?"#27ae60":score>=55?"#2980b9":score>=40?"#e67e22":"#e74c3c";
         String lab = score>=85?"Exceptionnel":score>=70?"Tres bon":score>=55?"Bon":score>=40?"Moyen":"A ameliorer";
 
-        // Header
         VBox hdr = new VBox(8); hdr.setAlignment(Pos.CENTER);
         hdr.setStyle("-fx-background-color:"+col+";-fx-background-radius:16;-fx-padding:20 30;");
         Label sl = new Label(score+" / 100"); sl.setStyle("-fx-font-size:34;-fx-font-weight:bold;-fx-text-fill:white;");
@@ -681,7 +750,6 @@ public class CandidatOffreController implements Initializable {
         if (niv!=null&&!niv.isBlank()){Label nl=new Label("Niveau : "+niv);nl.setStyle("-fx-font-size:12;-fx-text-fill:rgba(255,255,255,0.8);");hdr.getChildren().add(nl);}
         bilanContent.getChildren().add(hdr);
 
-        // Barre
         StackPane bw = new StackPane(); bw.setMaxWidth(400); bw.setPrefWidth(400);
         Rectangle bg = new Rectangle(400,14); bg.setArcWidth(14); bg.setArcHeight(14); bg.setFill(Color.web("#ecf0f1"));
         Rectangle br = new Rectangle(Math.max(14,(score/100.0)*400),14); br.setArcWidth(14); br.setArcHeight(14); br.setFill(Color.web(col));
@@ -827,4 +895,3 @@ public class CandidatOffreController implements Initializable {
     private void navTo(String path){try{Parent r=FXMLLoader.load(getClass().getResource(path));if(btnPostuler!=null&&btnPostuler.getScene()!=null){StackPane ca=(StackPane)btnPostuler.getScene().lookup("#contentArea");if(ca!=null)ca.getChildren().setAll(r);}}catch(IOException e){e.printStackTrace();}}
     private void switchView(String path){try{Parent r=FXMLLoader.load(getClass().getResource(path));Scene sc=cardsContainer!=null&&cardsContainer.getScene()!=null?cardsContainer.getScene():detailTitle!=null?detailTitle.getScene():null;if(sc!=null){StackPane ca=(StackPane)sc.lookup("#contentArea");if(ca!=null)ca.getChildren().setAll(r);else sc.setRoot(r);}}catch(IOException e){e.printStackTrace();}}
 }
-
