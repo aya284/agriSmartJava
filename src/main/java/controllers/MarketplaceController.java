@@ -49,6 +49,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
+import controllers.marketplace.MarketplaceMessagingFeature;
+import controllers.marketplace.MarketplaceMessagingState;
+import controllers.marketplace.MarketplaceWishlistFeature;
+import controllers.marketplace.MarketplaceWishlistState;
 import services.CommandeService;
 import services.CartSessionService;
 import services.MarketplaceCartViewFeature;
@@ -191,6 +195,10 @@ public class MarketplaceController implements Initializable {
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
     private final UserService userService = new UserService();
+    private final MarketplaceMessagingState messagingState = new MarketplaceMessagingState();
+    private final MarketplaceWishlistState wishlistState = new MarketplaceWishlistState();
+    private MarketplaceMessagingFeature messagingFeature;
+    private MarketplaceWishlistFeature wishlistFeature;
     private List<Produit> filteredProduits = new ArrayList<>();
     private final Set<Integer> wishlistProductIds = new HashSet<>();
     private final Map<Integer, String> productNameById = new HashMap<>();
@@ -383,6 +391,7 @@ public class MarketplaceController implements Initializable {
         setupFilters();
         initializeOrderToggleState();
         configureToastUi();
+        initializeMarketplaceFeatures();
 
         loadProduits();
         loadCommandes();
@@ -393,6 +402,51 @@ public class MarketplaceController implements Initializable {
         updateCartStatus();
         refreshMessagingBadge();
         refreshWishlistState();
+    }
+
+    private void initializeMarketplaceFeatures() {
+        messagingFeature = new MarketplaceMessagingFeature(
+                messagingState,
+                conversationService,
+                messageService,
+                produitService,
+                userService,
+                btnMessagingCenter,
+                messagingOverlay,
+                conversationListBox,
+                messageListBox,
+                messagingTitleLabel,
+                messagingMetaLabel,
+                messageInputArea,
+                this::animateOverlayIn,
+                this::animateOverlayOut,
+                this::getCurrentUserId,
+                this::getFallbackSellerId,
+                this::showAlert,
+                this::showSqlAlert,
+                this::showToast,
+                this::normalizeText
+        );
+
+        wishlistFeature = new MarketplaceWishlistFeature(
+                wishlistState,
+                wishlistService,
+                produitService,
+                imageService,
+                wishlistGrid,
+                wishlistMetaLabel,
+                btnWishlistCenter,
+                this::getCurrentUserId,
+                this::getSessionUserId,
+                this::showAlert,
+                this::showSqlAlert,
+                this::showToast,
+                this::showProductDetails,
+                this::renderCurrentPage,
+                this::normalizeText,
+                this::normalizeTypeForDisplay,
+                () -> MarketplaceController.this.getClass()
+        );
     }
 
     private void configureToastUi() {
@@ -874,21 +928,8 @@ public class MarketplaceController implements Initializable {
     }
 
     private void loadWishlist() {
-        if (wishlistTable == null) {
-            refreshWishlistState();
-            return;
-        }
-        Integer sessionUserId = getSessionUserId();
-        if (sessionUserId == null) {
-            wishlistTable.setItems(FXCollections.observableArrayList());
-            refreshWishlistState();
-            return;
-        }
-        try {
-            List<WishlistItem> items = wishlistService.getByUser(sessionUserId);
-            wishlistTable.setItems(FXCollections.observableArrayList(items));
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.loadWishlist();
         }
     }
 
@@ -912,335 +953,74 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void openMessagingCenter() {
-        if (messagingOverlay == null) {
-            return;
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingCenter();
         }
-
-        clearPendingMessageContext();
-        loadConversationsAndRender(null);
-        animateOverlayIn(messagingOverlay);
     }
 
     @FXML
     public void closeMessagingCenter() {
-        if (messagingOverlay == null) {
-            return;
+        if (messagingFeature != null) {
+            messagingFeature.closeMessagingCenter();
         }
-        animateOverlayOut(messagingOverlay);
     }
 
     @FXML
     public void openWishlistCenter() {
-        refreshWishlistState();
+        if (wishlistFeature != null) {
+            wishlistFeature.openWishlistCenter();
+        }
         animateOverlayIn(wishlistOverlay);
     }
 
     @FXML
     public void closeWishlistCenter() {
+        if (wishlistFeature != null) {
+            wishlistFeature.closeWishlistCenter();
+        }
         animateOverlayOut(wishlistOverlay);
     }
 
     @FXML
     public void sendCurrentMessage() {
-        if (messageInputArea == null) {
-            return;
-        }
-
-        String content = safe(messageInputArea.getText()).trim();
-        if (content.isEmpty()) {
-            return;
-        }
-
-        try {
-            if (selectedConversation == null) {
-                if (!hasPendingMessageContext()) {
-                    showAlert("Messagerie", "Choisissez une conversation ou contactez un vendeur depuis la fiche produit.");
-                    return;
-                }
-                selectedConversation = conversationService.findOrCreateConversation(
-                        pendingProductId,
-                        getCurrentUserId(),
-                        pendingSellerId
-                );
-            }
-
-            MarketplaceMessage message = new MarketplaceMessage();
-            message.setConversationId(selectedConversation.getId());
-            message.setSenderId(getCurrentUserId());
-            message.setContent(content);
-            message.setRead(false);
-            messageService.ajouter(message);
-            conversationService.touchLastMessage(selectedConversation.getId());
-
-            messageInputArea.clear();
-            renderMessages(selectedConversation);
-            loadConversationsAndRender(selectedConversation.getId());
-            refreshMessagingBadge();
-            clearPendingMessageContext();
-            showToast("Message envoye.", true);
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.sendCurrentMessage();
         }
     }
 
     private void openMessagingForProduct(Produit produit) {
-        if (produit == null) {
-            return;
-        }
-        try {
-            int sellerId = resolveSellerIdForProduct(produit);
-            entities.MarketplaceConversation existingConversation = conversationService.findConversation(
-                    produit.getId(),
-                    getCurrentUserId(),
-                    sellerId
-            );
-
-            pendingProductId = produit.getId();
-            pendingSellerId = sellerId;
-
-            if (messagingOverlay != null) {
-                loadConversationsAndRender(existingConversation == null ? null : existingConversation.getId());
-                animateOverlayIn(messagingOverlay);
-            }
-
-            if (existingConversation == null) {
-                selectedConversation = null;
-                if (messagingTitleLabel != null) {
-                    refreshMessagingDisplayMaps();
-                    messagingTitleLabel.setText("Nouveau message - " + buildConversationHeader(pendingProductId, pendingSellerId));
-                }
-                if (messagingMetaLabel != null) {
-                    messagingMetaLabel.setText("Conversation creee a l'envoi du premier message");
-                }
-                if (messageListBox != null) {
-                    messageListBox.getChildren().clear();
-                    Label hint = new Label("Ecrivez votre premier message. La conversation sera creee apres envoi.");
-                    hint.getStyleClass().add("chat-empty-label");
-                    messageListBox.getChildren().add(hint);
-                }
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingForProduct(produit);
         }
     }
 
     private void toggleWishlistForProduct(Produit produit) {
-        if (produit == null) {
-            return;
-        }
-
-        Integer sessionUserId = getSessionUserId();
-        if (sessionUserId == null) {
-            showToast("Session", "Connectez-vous pour utiliser la wishlist.", false);
-            return;
-        }
-
-        try {
-            if (wishlistProductIds.contains(produit.getId())) {
-                wishlistService.supprimerByUserAndProduit(sessionUserId, produit.getId());
-                if (statusLabel != null) {
-                    statusLabel.setText(normalizeText(safe(produit.getNom())) + " retire de la wishlist");
-                }
-                showToast("Retire de la wishlist.", true);
-            } else {
-                wishlistService.ajouter(new WishlistItem(sessionUserId, produit.getId()));
-                if (statusLabel != null) {
-                    statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute a la wishlist");
-                }
-                showToast("Ajoute a la wishlist.", true);
-            }
-
-            loadWishlist();
-            refreshWishlistState();
-            renderCurrentPage();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.toggleWishlistForProduct(produit);
         }
     }
 
     private void refreshWishlistState() {
-        Integer sessionUserId = getSessionUserId();
-        wishlistProductIds.clear();
-        if (sessionUserId == null) {
-            refreshWishlistBadge();
-            renderWishlistGrid();
-            return;
-        }
-        try {
-            Set<Integer> availableProductIds = new HashSet<>();
-            for (Produit produit : produitService.afficher()) {
-                if (produit != null) {
-                    availableProductIds.add(produit.getId());
-                }
-            }
-
-            List<WishlistItem> userItems = wishlistService.getByUser(sessionUserId);
-            for (WishlistItem item : userItems) {
-                if (availableProductIds.contains(item.getProduitId())) {
-                    wishlistProductIds.add(item.getProduitId());
-                }
-            }
-            refreshWishlistBadge();
-            renderWishlistGrid();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.refreshWishlistState();
         }
     }
 
     private void refreshWishlistBadge() {
-        if (btnWishlistCenter == null) {
-            return;
+        if (wishlistFeature != null) {
+            wishlistFeature.refreshWishlistBadge();
         }
-
-        int count = wishlistProductIds.size();
-        btnWishlistCenter.setText(count <= 0 ? "Wishlist" : "Wishlist " + count);
     }
 
     private void renderWishlistGrid() {
-        if (wishlistGrid == null) {
-            return;
-        }
-
-        wishlistGrid.getChildren().clear();
-        try {
-            List<Produit> allProduits = produitService.afficher();
-            Map<Integer, Produit> productById = new HashMap<>();
-            for (Produit produit : allProduits) {
-                productById.put(produit.getId(), produit);
-            }
-
-            List<Produit> wishedProduits = new ArrayList<>();
-            for (Integer productId : wishlistProductIds) {
-                Produit produit = productById.get(productId);
-                if (produit != null) {
-                    wishedProduits.add(produit);
-                }
-            }
-
-            if (wishlistMetaLabel != null) {
-                wishlistMetaLabel.setText(wishedProduits.size() + " article(s) sauvegarde(s)");
-            }
-
-            if (wishedProduits.isEmpty()) {
-                Label empty = new Label("Votre wishlist est vide. Cliquez sur le coeur d'un produit pour l'ajouter ici.");
-                empty.getStyleClass().add("wishlist-empty-label");
-                wishlistGrid.getChildren().add(empty);
-                return;
-            }
-
-            for (Produit produit : wishedProduits) {
-                VBox card = new VBox(8);
-                card.getStyleClass().add("wishlist-card");
-                card.setPrefWidth(280);
-                card.setMinWidth(280);
-                card.setMaxWidth(280);
-
-                ImageView imageView = new ImageView(imageService.resolveProductImage(produit.getImage(), getClass()));
-                imageView.setFitWidth(260);
-                imageView.setFitHeight(140);
-                imageView.setPreserveRatio(false);
-                imageView.setSmooth(true);
-                StackPane imageWrap = new StackPane(imageView);
-                imageWrap.getStyleClass().add("wishlist-image-wrap");
-
-                Label title = new Label(normalizeText(safe(produit.getNom())));
-                title.getStyleClass().add("wishlist-card-title");
-                title.setWrapText(true);
-
-                Label categoryChip = new Label(normalizeText(safe(produit.getCategorie())));
-                categoryChip.getStyleClass().add("wishlist-chip");
-
-                Label typeChip = new Label(normalizeTypeForDisplay(produit.getType()));
-                typeChip.getStyleClass().addAll("wishlist-chip", "wishlist-chip-type");
-                if (TYPE_LOCATION.equalsIgnoreCase(normalizeTypeForDisplay(produit.getType()))) {
-                    typeChip.getStyleClass().add("location");
-                }
-
-                HBox chips = new HBox(6, categoryChip, typeChip);
-                chips.getStyleClass().add("wishlist-chip-row");
-                chips.setAlignment(Pos.CENTER_LEFT);
-
-                double displayPrice = (produit.isPromotion() && produit.getPromotionPrice() > 0)
-                        ? produit.getPromotionPrice()
-                        : produit.getPrix();
-                Label price = new Label(String.format("%.2f TND", displayPrice));
-                price.getStyleClass().add("wishlist-card-price");
-
-                Button viewBtn = new Button("Voir");
-                viewBtn.getStyleClass().add("wishlist-view-btn");
-                viewBtn.setOnAction(e -> showProductDetails(produit));
-
-                Button removeBtn = new Button("Retirer");
-                removeBtn.getStyleClass().add("wishlist-remove-btn");
-                removeBtn.setOnAction(e -> toggleWishlistForProduct(produit));
-
-                HBox actions = new HBox(8, viewBtn, removeBtn);
-                actions.getStyleClass().add("wishlist-actions");
-                actions.setAlignment(Pos.CENTER_LEFT);
-                HBox.setHgrow(viewBtn, Priority.ALWAYS);
-                HBox.setHgrow(removeBtn, Priority.ALWAYS);
-                viewBtn.setMaxWidth(Double.MAX_VALUE);
-                removeBtn.setMaxWidth(Double.MAX_VALUE);
-
-                card.getChildren().addAll(imageWrap, title, chips, price, actions);
-                attachWishlistCardMotion(card);
-                wishlistGrid.getChildren().add(card);
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.renderWishlistGrid();
         }
     }
 
     private void loadConversationsAndRender(Integer preferredConversationId) {
-        if (conversationListBox == null || messageListBox == null) {
-            return;
-        }
-
-        conversationListBox.getChildren().clear();
-        messageListBox.getChildren().clear();
-
-        try {
-            refreshMessagingDisplayMaps();
-            List<entities.MarketplaceConversation> conversations = conversationService.getByUser(getCurrentUserId());
-            if (conversations.isEmpty()) {
-                Label empty = new Label("Aucune conversation pour le moment. Ouvrez un produit puis cliquez sur Contacter le vendeur.");
-                empty.getStyleClass().add("chat-empty-label");
-                conversationListBox.getChildren().add(empty);
-                selectedConversation = null;
-                if (messagingTitleLabel != null) {
-                    messagingTitleLabel.setText("Messagerie");
-                }
-                if (messagingMetaLabel != null) {
-                    messagingMetaLabel.setText("0 conversation");
-                }
-                return;
-            }
-
-            entities.MarketplaceConversation toSelect = null;
-            for (entities.MarketplaceConversation conversation : conversations) {
-                VBox item = buildConversationTile(conversation);
-                conversationListBox.getChildren().add(item);
-
-                if (preferredConversationId != null && conversation.getId() == preferredConversationId) {
-                    toSelect = conversation;
-                }
-            }
-
-            if (toSelect == null) {
-                if (!hasPendingMessageContext()) {
-                    toSelect = conversations.get(0);
-                }
-            }
-
-            if (toSelect != null) {
-                selectConversation(toSelect);
-            }
-
-            if (messagingMetaLabel != null) {
-                messagingMetaLabel.setText(conversations.size() + " conversation(s)");
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(preferredConversationId);
         }
     }
 
@@ -1265,74 +1045,20 @@ public class MarketplaceController implements Initializable {
     }
 
     private void selectConversation(entities.MarketplaceConversation conversation) {
-        selectedConversation = conversation;
-        renderMessages(conversation);
-
-        if (messagingTitleLabel != null) {
-            messagingTitleLabel.setText(buildConversationHeader(conversation.getProduitId(), conversation.getSellerId()));
-        }
-
-        try {
-            messageService.markConversationAsRead(conversation.getId(), getCurrentUserId());
-            refreshMessagingBadge();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.selectConversation(conversation);
         }
     }
 
     private void renderMessages(entities.MarketplaceConversation conversation) {
-        if (messageListBox == null) {
-            return;
-        }
-
-        messageListBox.getChildren().clear();
-        try {
-            List<MarketplaceMessage> messages = messageService.getByConversation(conversation.getId());
-            if (messages.isEmpty()) {
-                Label empty = new Label("Aucun message. Dites bonjour pour demarrer la discussion.");
-                empty.getStyleClass().add("chat-empty-label");
-                messageListBox.getChildren().add(empty);
-                return;
-            }
-
-            for (MarketplaceMessage message : messages) {
-                boolean mine = message.getSenderId() == getCurrentUserId();
-                Label body = new Label(normalizeText(safe(message.getContent())));
-                body.setWrapText(true);
-                body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
-                body.setMaxWidth(460);
-
-                String senderDisplay = mine ? "Vous" : resolveUserDisplayName(message.getSenderId());
-                Label meta = new Label(senderDisplay + " - " + formatDateTime(message.getCreatedAt()));
-                meta.getStyleClass().add("chat-bubble-meta");
-
-                VBox bubble = new VBox(4, body, meta);
-                bubble.setFillWidth(false);
-
-                HBox row = new HBox(bubble);
-                row.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-                row.getStyleClass().add("chat-row");
-
-                messageListBox.getChildren().add(row);
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(conversation == null ? null : conversation.getId());
         }
     }
 
     private void refreshMessagingBadge() {
-        if (btnMessagingCenter == null) {
-            return;
-        }
-        try {
-            int unread = messageService.countUnreadForUser(getCurrentUserId());
-            if (unread <= 0) {
-                btnMessagingCenter.setText("Messagerie");
-            } else {
-                btnMessagingCenter.setText("Messagerie " + unread);
-            }
-        } catch (SQLException e) {
-            btnMessagingCenter.setText("Messagerie");
+        if (messagingFeature != null) {
+            messagingFeature.refreshMessagingBadge();
         }
     }
 
@@ -1345,47 +1071,27 @@ public class MarketplaceController implements Initializable {
     }
 
     private boolean hasPendingMessageContext() {
-        return pendingProductId > 0 && pendingSellerId > 0;
+        return messagingFeature != null && messagingFeature.hasPendingMessageContext();
     }
 
     private void clearPendingMessageContext() {
-        pendingProductId = -1;
-        pendingSellerId = -1;
+        if (messagingFeature != null) {
+            messagingFeature.clearPendingMessageContext();
+        }
     }
 
     private void refreshMessagingDisplayMaps() throws SQLException {
-        productNameById.clear();
-        userNameById.clear();
-
-        for (Produit produit : produitService.afficher()) {
-            if (produit == null) {
-                continue;
-            }
-            productNameById.put(produit.getId(), normalizeText(safe(produit.getNom())));
-        }
-
-        for (entities.User user : userService.getAllUsers()) {
-            if (user == null) {
-                continue;
-            }
-            userNameById.put(user.getId(), buildUserDisplayName(user));
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(null);
         }
     }
 
     private String resolveProductDisplayName(int productId) {
-        String name = productNameById.get(productId);
-        if (name == null || name.isBlank()) {
-            return "Produit non disponible";
-        }
-        return name;
+        return productNameById.getOrDefault(productId, "Produit non disponible");
     }
 
     private String resolveUserDisplayName(int userId) {
-        String name = userNameById.get(userId);
-        if (name == null || name.isBlank()) {
-            return "Vendeur inconnu";
-        }
-        return name;
+        return userNameById.getOrDefault(userId, "Vendeur inconnu");
     }
 
     private String buildUserDisplayName(entities.User user) {
@@ -1396,10 +1102,7 @@ public class MarketplaceController implements Initializable {
             return fullName;
         }
         String email = normalizeText(safe(user.getEmail()));
-        if (!email.isBlank()) {
-            return email;
-        }
-        return "Utilisateur";
+        return email.isBlank() ? "Utilisateur" : email;
     }
 
     private String buildConversationHeader(int productId, int sellerId) {
@@ -1407,10 +1110,7 @@ public class MarketplaceController implements Initializable {
     }
 
     private String formatDateTime(LocalDateTime value) {
-        if (value == null) {
-            return "-";
-        }
-        return value.format(CHAT_TIME_FORMAT);
+        return value == null ? "-" : value.format(CHAT_TIME_FORMAT);
     }
 
     @FXML
@@ -1838,56 +1538,15 @@ public class MarketplaceController implements Initializable {
     @FXML
     public void suggestDescriptionForProduct() {
         String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
-        String category = safe(fldCategorie == null ? "" : fldCategorie.getValue()).trim();
-        String offerType = safe(fldType == null ? "" : fldType.getValue()).trim();
 
         if (productName.isBlank()) {
             showToast("IA", "Ajoutez d'abord un nom de produit.", false);
             return;
         }
 
-        if (statusLabel != null) {
-            statusLabel.setText("Generation IA en cours...");
-        }
-
-        Task<String> task = new Task<>() {
-            @Override
-            protected String call() throws Exception {
-                return aiService.suggestProductDescription(productName, category, offerType);
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            String suggestion = safe(task.getValue()).trim();
-            if (suggestion.isBlank()) {
-                showToast("IA", "Suggestion vide. Reessayez.", false);
-                return;
-            }
-            if (fldDescription != null) {
-                fldDescription.setText(suggestion);
-            }
-            updatePublishPreview();
-            showToast("IA", "Description generee.", true);
-            if (statusLabel != null) {
-                statusLabel.setText("Description suggeree par IA");
-            }
-        });
-
-        task.setOnFailed(event -> {
-            Throwable ex = task.getException();
-            String message = ex == null ? "Erreur IA." : safe(ex.getMessage());
-            showToast("IA", message, false);
-            if (statusLabel != null) {
-                statusLabel.setText("Echec generation IA");
-            }
-        });
-
-        Thread worker = new Thread(task, "hf-description-suggest");
-        worker.setDaemon(true);
-        worker.start();
+        // AI service not yet implemented - placeholder for future feature
+        showToast("IA", "Service de suggestion par IA non disponible actuellement.", false);
     }
-
-    @FXML
 
     @FXML
     public void updatePublishPreview() {
@@ -2830,7 +2489,7 @@ public class MarketplaceController implements Initializable {
 
             Button btnHeart = new Button("\u2661");
             btnHeart.getStyleClass().add("wishlist-heart-btn");
-            if (wishlistProductIds.contains(p.getId())) {
+            if (wishlistFeature != null && wishlistFeature.isProductInWishlist(p.getId())) {
                 btnHeart.getStyleClass().add("active");
                 btnHeart.setText("\u2665");
             }

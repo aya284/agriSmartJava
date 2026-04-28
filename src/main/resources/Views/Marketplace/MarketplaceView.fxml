@@ -24,7 +24,6 @@
                         <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
                         <Button text="Publier une annonce" styleClass="action-chip,primary" onAction="#openAjouterProduit"/>
                         <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
-                        <Button text="Assistant IA" styleClass="action-chip" onAction="#openChatbotAssistant"/>
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">

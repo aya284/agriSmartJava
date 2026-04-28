@@ -3,6 +3,7 @@ package services;
 import org.glassfish.tyrus.client.ClientManager;
 import org.json.JSONObject;
 
+import javax.websocket.ClientEndpointConfig;
 import javax.websocket.Session;
 import java.net.URI;
 import java.util.*;
@@ -39,6 +40,7 @@ public class WebSocketClient {
         new Thread(() -> {
             try {
                 ClientManager client = ClientManager.createClient();
+                ClientEndpointConfig config = ClientEndpointConfig.Builder.create().build();
                 
                 // Create endpoint instance with callback handlers
                 WebSocketClientEndpoint endpoint = new WebSocketClientEndpoint(
@@ -48,7 +50,7 @@ public class WebSocketClient {
                         this::onError
                 );
                 
-                session = client.connectToServer(endpoint, new URI(wsUrl));
+                session = client.connectToServer(endpoint, config, new URI(wsUrl));
                 connected = true;
                 
                 // Authenticate with server

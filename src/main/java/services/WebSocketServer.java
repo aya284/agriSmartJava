@@ -1,7 +1,6 @@
 package services;
 
-import org.glassfish.tyrus.server.Server;
-
+import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,10 +11,10 @@ import java.util.logging.Logger;
 public class WebSocketServer {
     private static final Logger logger = Logger.getLogger(WebSocketServer.class.getName());
     private static final String WEBSOCKET_HOST = "localhost";
-    private static final int WEBSOCKET_PORT = 8080;
+    private static final int WEBSOCKET_PORT = 8888;
     
     private static WebSocketServer instance;
-    private Server server;
+    private Object server;
     private boolean isRunning = false;
     
     private WebSocketServer() {}
@@ -40,30 +39,27 @@ public class WebSocketServer {
         }
         
         try {
-            // Create Tyrus server
-            server = new Server(
-                    WEBSOCKET_HOST,
-                    WEBSOCKET_PORT,
-                    "/ws",
-                    null,
-                    WebSocketMarketplaceEndpoint.class
-            );
+            Class<?> serverClass = Class.forName("org.glassfish.tyrus.server.Server");
+            server = serverClass
+                    .getConstructor(String.class, int.class, String.class, java.util.Map.class, Class[].class)
+                    .newInstance(WEBSOCKET_HOST, WEBSOCKET_PORT, "/ws", null, new Class<?>[] { WebSocketMarketplaceEndpoint.class });
             
             // Start server in a separate thread
             new Thread(() -> {
                 try {
                     logger.info("Starting WebSocket server on ws://" + WEBSOCKET_HOST + ":" + WEBSOCKET_PORT + "/ws");
-                    server.start();
+                    Method startMethod = server.getClass().getMethod("start");
+                    startMethod.invoke(server);
                     isRunning = true;
                     logger.info("WebSocket server started successfully");
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Failed to start WebSocket server", e);
+                    logger.log(Level.SEVERE, "WebSocket server failed to start", e);
                     isRunning = false;
                 }
             }, "WebSocketServerThread").start();
             
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error creating WebSocket server", e);
+            logger.log(Level.SEVERE, "Failed to initialize WebSocket server", e);
             isRunning = false;
         }
     }
@@ -77,7 +73,8 @@ public class WebSocketServer {
         }
         
         try {
-            server.stop();
+            Method stopMethod = server.getClass().getMethod("stop");
+            stopMethod.invoke(server);
             isRunning = false;
             logger.info("WebSocket server stopped");
             
