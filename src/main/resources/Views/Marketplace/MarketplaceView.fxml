@@ -24,6 +24,8 @@
                         <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
                         <Button text="Publier une annonce" styleClass="action-chip,primary" onAction="#openAjouterProduit"/>
                         <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
+                        <Button text="&#x2728; Recommandations" styleClass="action-chip,primary" onAction="#openRecommendations"/>
+                        <Button fx:id="btnNotifications" text="&#x1F514; Alertes" styleClass="action-chip" onAction="#openNotifications"/>
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">
@@ -232,7 +234,7 @@
     </StackPane>
 
     <StackPane fx:id="detailsOverlay" style="-fx-background-color: rgba(0,0,0,0.45); -fx-padding: 12;" visible="false">
-        <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="invisible-scrollpane">
+        <ScrollPane fitToWidth="true" fitToHeight="false" styleClass="invisible-scrollpane">
         <VBox maxWidth="1.7976931348623157E308" styleClass="details-shell" spacing="0">
             <HBox alignment="CENTER_LEFT" styleClass="details-topbar" spacing="12">
                 <Label fx:id="detailsTitle" text="Nom produit" styleClass="details-page-title"/>
@@ -297,6 +299,37 @@
                     </VBox>
                 </VBox>
             </HBox>
+
+            <!-- Similar Products Section -->
+            <VBox fx:id="similarProductsSection" spacing="12" style="-fx-padding: 14 14 20 14;">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="&#x2728; Produits similaires" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #2c3e50;"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="similarProductsMetaLabel" text="" style="-fx-text-fill: #888; -fx-font-size: 13px;"/>
+                </HBox>
+                <FlowPane fx:id="similarProductsGrid" hgap="16" vgap="16"/>
+            </VBox>
+
+            <!-- Reviews Section -->
+            <VBox fx:id="reviewsSection" spacing="12" style="-fx-padding: 14 14 20 14;">
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="&#x2B50; Avis clients" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #2c3e50;"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="reviewsAvgLabel" text="" style="-fx-text-fill: #f59e0b; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <Label fx:id="reviewsCountLabel" text="" style="-fx-text-fill: #888; -fx-font-size: 13px;"/>
+                </HBox>
+
+                <!-- Review form (visible if user can review) -->
+                <VBox fx:id="reviewFormBox" spacing="8" style="-fx-padding: 12; -fx-background-color: #f8f9fa; -fx-background-radius: 10;" managed="false" visible="false">
+                    <Label text="Donnez votre avis" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <HBox fx:id="reviewStarsBox" spacing="4" alignment="CENTER_LEFT"/>
+                    <TextArea fx:id="reviewCommentField" promptText="Votre commentaire (optionnel)..." prefRowCount="2" maxHeight="60"/>
+                    <Button text="Publier l'avis" styleClass="details-primary-button" onAction="#submitReview" style="-fx-max-width: 200;"/>
+                </VBox>
+
+                <!-- Reviews list -->
+                <VBox fx:id="reviewsListBox" spacing="10"/>
+            </VBox>
         </VBox>
         </ScrollPane>
     </StackPane>
@@ -376,6 +409,40 @@
                     </VBox>
                 </VBox>
             </HBox>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="notificationOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
+        <VBox styleClass="wishlist-shell" spacing="0" maxWidth="700" maxHeight="1.7976931348623157E308" StackPane.alignment="CENTER_RIGHT">
+            <HBox styleClass="wishlist-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="&#x1F514; Alertes Stock" styleClass="wishlist-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="notificationCountLabel" text="" styleClass="wishlist-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeNotifications"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                <content>
+                    <VBox fx:id="notificationListBox" spacing="10" style="-fx-padding: 14;"/>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </StackPane>
+
+    <StackPane fx:id="recommendationOverlay" style="-fx-background-color: rgba(15,23,42,0.58); -fx-padding: 12;" visible="false">
+        <VBox styleClass="wishlist-shell" spacing="0" maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+            <HBox styleClass="wishlist-header" alignment="CENTER_LEFT" spacing="10">
+                <Label text="&#x2728; Recommandations pour vous" styleClass="wishlist-title"/>
+                <HBox HBox.hgrow="ALWAYS"/>
+                <Label fx:id="recommendationMetaLabel" text="Analyse de vos preferences..." styleClass="wishlist-header-meta"/>
+                <Button text="Fermer" styleClass="publish-header-btn" onAction="#closeRecommendations"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
+                <content>
+                    <FlowPane fx:id="recommendationGrid" hgap="16" vgap="16" styleClass="wishlist-grid"/>
+                </content>
+            </ScrollPane>
         </VBox>
     </StackPane>
 

@@ -16,8 +16,8 @@ public class ProduitService implements IService<Produit> {
     public void ajouter(Produit p) throws SQLException {
         String req = "INSERT INTO produit (nom, description, type, prix, categorie, " +
                 "quantite_stock, image, is_promotion, promotion_price, " +
-                "location_address, location_start, location_end, created_at, updated_at, banned, vendeur_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?)";
+                "location_address, location_start, location_end, created_at, updated_at, banned, vendeur_id, latitude, longitude) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setString(1, p.getNom());
             ps.setString(2, p.getDescription());
@@ -33,6 +33,8 @@ public class ProduitService implements IService<Produit> {
             ps.setTimestamp(12, toTimestamp(p.getLocationEnd()));
             ps.setBoolean(13, p.isBanned());
             ps.setInt(14, p.getVendeurId());
+            if (p.getLatitude() != null) { ps.setDouble(15, p.getLatitude()); } else { ps.setNull(15, java.sql.Types.DOUBLE); }
+            if (p.getLongitude() != null) { ps.setDouble(16, p.getLongitude()); } else { ps.setNull(16, java.sql.Types.DOUBLE); }
             ps.executeUpdate();
         }
     }
@@ -53,7 +55,8 @@ public class ProduitService implements IService<Produit> {
     public void modifier(Produit p) throws SQLException {
         String req = "UPDATE produit SET nom=?, description=?, type=?, prix=?, " +
                 "categorie=?, quantite_stock=?, image=?, is_promotion=?, " +
-                "promotion_price=?, location_address=?, location_start=?, location_end=?, updated_at=NOW() WHERE id=?";
+                "promotion_price=?, location_address=?, location_start=?, location_end=?, " +
+                "latitude=?, longitude=?, updated_at=NOW() WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setString(1, p.getNom());
             ps.setString(2, p.getDescription());
@@ -67,7 +70,9 @@ public class ProduitService implements IService<Produit> {
             ps.setString(10, p.getLocationAddress());
             ps.setTimestamp(11, toTimestamp(p.getLocationStart()));
             ps.setTimestamp(12, toTimestamp(p.getLocationEnd()));
-            ps.setInt(13, p.getId());
+            if (p.getLatitude() != null) { ps.setDouble(13, p.getLatitude()); } else { ps.setNull(13, java.sql.Types.DOUBLE); }
+            if (p.getLongitude() != null) { ps.setDouble(14, p.getLongitude()); } else { ps.setNull(14, java.sql.Types.DOUBLE); }
+            ps.setInt(15, p.getId());
             ps.executeUpdate();
         }
     }
@@ -172,6 +177,10 @@ public class ProduitService implements IService<Produit> {
         }
         p.setBanned(rs.getBoolean("banned"));
         p.setVendeurId(rs.getInt("vendeur_id"));
+        double lat = rs.getDouble("latitude");
+        p.setLatitude(rs.wasNull() ? null : lat);
+        double lon = rs.getDouble("longitude");
+        p.setLongitude(rs.wasNull() ? null : lon);
         return p;
     }
 
