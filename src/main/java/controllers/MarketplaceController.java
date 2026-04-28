@@ -10,7 +10,9 @@ import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -1832,6 +1834,60 @@ public class MarketplaceController implements Initializable {
         updatePublishPreview();
         clearProductFieldErrors();
     }
+
+    @FXML
+    public void suggestDescriptionForProduct() {
+        String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
+        String category = safe(fldCategorie == null ? "" : fldCategorie.getValue()).trim();
+        String offerType = safe(fldType == null ? "" : fldType.getValue()).trim();
+
+        if (productName.isBlank()) {
+            showToast("IA", "Ajoutez d'abord un nom de produit.", false);
+            return;
+        }
+
+        if (statusLabel != null) {
+            statusLabel.setText("Generation IA en cours...");
+        }
+
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                return aiService.suggestProductDescription(productName, category, offerType);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            String suggestion = safe(task.getValue()).trim();
+            if (suggestion.isBlank()) {
+                showToast("IA", "Suggestion vide. Reessayez.", false);
+                return;
+            }
+            if (fldDescription != null) {
+                fldDescription.setText(suggestion);
+            }
+            updatePublishPreview();
+            showToast("IA", "Description generee.", true);
+            if (statusLabel != null) {
+                statusLabel.setText("Description suggeree par IA");
+            }
+        });
+
+        task.setOnFailed(event -> {
+            Throwable ex = task.getException();
+            String message = ex == null ? "Erreur IA." : safe(ex.getMessage());
+            showToast("IA", message, false);
+            if (statusLabel != null) {
+                statusLabel.setText("Echec generation IA");
+            }
+        });
+
+        Thread worker = new Thread(task, "hf-description-suggest");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    @FXML
 
     @FXML
     public void updatePublishPreview() {

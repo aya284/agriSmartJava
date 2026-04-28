@@ -9,7 +9,7 @@
     
     <BorderPane fx:id="mainContent" style="-fx-background-color: #F8F9FA;">
 
-        <!-- CENTER CONTENT: PRODUCT GRID -->
+  
         <center>
             <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #F8F9FA; -fx-border-color: transparent;">
                 <padding><Insets top="0" right="0" bottom="0" left="0"/></padding>
@@ -24,6 +24,7 @@
                         <Button fx:id="btnWishlistCenter" text="Wishlist" styleClass="action-chip" onAction="#openWishlistCenter"/>
                         <Button text="Publier une annonce" styleClass="action-chip,primary" onAction="#openAjouterProduit"/>
                         <Button text="Panier" styleClass="action-chip" onAction="#openPanier"/>
+                        <Button text="Assistant IA" styleClass="action-chip" onAction="#openChatbotAssistant"/>
                     </HBox>
 
                     <HBox spacing="10" styleClass="module-chip-row">
@@ -191,6 +192,9 @@
 
                         <Label text="Description" styleClass="publish-field-label"/>
                         <TextArea fx:id="fldDescription" promptText="Decrivez votre produit..." wrapText="true" prefRowCount="5" onKeyReleased="#handleProductFormInput"/>
+                        <HBox alignment="CENTER_RIGHT">
+                            <Button text="Suggere par IA" styleClass="action-chip" onAction="#suggestDescriptionForProduct"/>
+                        </HBox>
                         <Label fx:id="errDescription" styleClass="form-error-label" text=" " managed="false" visible="false"/>
 
                         <VBox spacing="8" styleClass="publish-promo-box">

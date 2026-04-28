@@ -123,6 +123,31 @@ public class MarketplaceValidator {
         return null;
     }
 
+    public static String validateCardFields(String cardNumber, String expMonth, String expYear, String cvc) {
+        String digits = cardNumber == null ? "" : cardNumber.replaceAll("\\D", "");
+        if (digits.length() < 13 || digits.length() > 19) {
+            return "Numero de carte invalide.";
+        }
+
+        if (expMonth == null || !expMonth.trim().matches("\\d{1,2}")) {
+            return "Mois expiration invalide.";
+        }
+        int month = Integer.parseInt(expMonth.trim());
+        if (month < 1 || month > 12) {
+            return "Mois expiration doit etre entre 1 et 12.";
+        }
+
+        if (expYear == null || !expYear.trim().matches("\\d{2,4}")) {
+            return "Annee expiration invalide.";
+        }
+
+        if (cvc == null || !cvc.trim().matches("\\d{3,4}")) {
+            return "CVC invalide.";
+        }
+
+        return null;
+    }
+
     public static String validateCommande(String statut, String modePaiement, String adresse, String montant, String clientId) {
         if (statut == null || statut.trim().isEmpty()) {
             return "Statut obligatoire pour la commande.";

@@ -41,3 +41,7 @@ src/main/client_secret.json
 
 # intelij
 .idea/workspace.xml
+
+# Local runtime secrets
+local.secrets.properties
+config/local.secrets.properties
