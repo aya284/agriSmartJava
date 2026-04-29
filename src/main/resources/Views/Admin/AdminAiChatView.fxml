@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox styleClass="chat-root"
+      stylesheets="@../../css/admin-chat.css"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="controllers.admin.AdminAiChatController">
+
+    <HBox styleClass="chat-header" alignment="CENTER_LEFT" spacing="14">
+        <padding><Insets top="18" right="24" bottom="18" left="24"/></padding>
+
+        <!-- AI Badge -->
+        <VBox styleClass="header-badge" alignment="CENTER" minWidth="40" minHeight="40"
+              maxWidth="40" maxHeight="40">
+            <Label text="AI" styleClass="header-badge-label"/>
+        </VBox>
+
+        <!-- Title Block -->
+        <VBox spacing="2" HBox.hgrow="ALWAYS">
+            <Label text="Assistant AgriSmart" styleClass="chat-title"/>
+            <Label text="Analyse intelligente de vos données en temps réel" styleClass="chat-subtitle"/>
+        </VBox>
+
+        <!-- Online Status -->
+        <HBox styleClass="status-badge" alignment="CENTER" spacing="6">
+            <VBox styleClass="pulse-dot" minWidth="8" minHeight="8"
+                  maxWidth="8" maxHeight="8"/>
+            <Label text="Actif" styleClass="status-label"/>
+        </HBox>
+    </HBox>
+
+    <!-- Divider -->
+    <Region styleClass="header-rule" minHeight="1" maxHeight="1"/>
+
+    <ScrollPane fx:id="chatScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS"
+                styleClass="chat-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+        <content>
+            <VBox fx:id="chatContainer" spacing="20" styleClass="chat-container">
+                <padding><Insets top="28" right="24" bottom="28" left="24"/></padding>
+
+                <!-- ── Welcome Message ── -->
+                <HBox spacing="12" alignment="TOP_LEFT">
+                    <VBox styleClass="ai-avatar" alignment="CENTER"
+                          minWidth="36" minHeight="36" maxWidth="36" maxHeight="36">
+                        <Label text="AI" styleClass="ai-avatar-label"/>
+                    </VBox>
+                    <VBox spacing="6" HBox.hgrow="ALWAYS" maxWidth="580">
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Assistant AgriSmart" styleClass="sender-name"/>
+                            <Label text="maintenant" styleClass="msg-time"/>
+                        </HBox>
+                        <VBox styleClass="ai-bubble">
+                            <Label wrapText="true" styleClass="msg-text"
+                                   text="Bonjour Admin 👋  Je suis votre assistant IA AgriSmart. Je peux analyser vos utilisateurs, générer des statistiques, détecter des anomalies, et bien plus encore. Comment puis-je vous aider ?"/>
+                        </VBox>
+                        <!-- Suggestion chips -->
+                        <HBox spacing="8" style="-fx-padding: 4 0 0 0;">
+                            <Button text="Utilisateurs suspects"
+                                    styleClass="suggestion-chip"
+                                    userData="utilisateurs suspects"
+                                    onAction="#handleSuggestion"/>
+                            <Button text="Stats générales"
+                                    styleClass="suggestion-chip"
+                                    userData="statistiques générales"
+                                    onAction="#handleSuggestion"/>
+                            <Button text="Dossiers en attente"
+                                    styleClass="suggestion-chip"
+                                    userData="dossiers en attente"
+                                    onAction="#handleSuggestion"/>
+                            <Button text="Inscriptions du jour"
+                                    styleClass="suggestion-chip"
+                                    userData="inscriptions aujourd'hui"
+                                    onAction="#handleSuggestion"/>
+                        </HBox>
+                    </VBox>
+                </HBox>
+
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <VBox styleClass="input-panel" spacing="12">
+        <padding><Insets top="14" right="24" bottom="18" left="24"/></padding>
+
+        <!-- Quick Action Row -->
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Accès rapide" styleClass="quick-label"/>
+            <Button text="👥  Suspects"    styleClass="quick-chip"
+                    userData="utilisateurs suspects"    onAction="#handleSuggestion"/>
+            <Button text="🕐  En attente"  styleClass="quick-chip"
+                    userData="en attente"               onAction="#handleSuggestion"/>
+            <Button text="❌  Rejetés"     styleClass="quick-chip"
+                    userData="rejected"                 onAction="#handleSuggestion"/>
+            <Button text="📊  Statistiques" styleClass="quick-chip"
+                    userData="statistiques"             onAction="#handleSuggestion"/>
+        </HBox>
+
+        <!-- Text Field Row -->
+        <HBox spacing="10" alignment="CENTER">
+            <TextField fx:id="queryField"
+                       promptText="Posez votre question ou tapez un email / nom d'utilisateur…"
+                       HBox.hgrow="ALWAYS"
+                       styleClass="chat-field"
+                       onAction="#handleSend"/>
+            <Button fx:id="sendBtn" text="Envoyer →"
+                    onAction="#handleSend"
+                    styleClass="send-btn"/>
+        </HBox>
+
+        <!-- Hint -->
+        <Label styleClass="input-hint"
+               text="Tip : Tapez directement un email comme user@example.com pour analyser ce compte."/>
+    </VBox>
+
+</VBox>

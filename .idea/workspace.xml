@@ -5,29 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/OcrService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/tessdata/ara.traineddata" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/entities/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ClaudeService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/EmailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/AiVerificationService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/ClaudeService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/OcrService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/utils/Validator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/Validator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/632f8134-eeb1-43f6-ba00-f9b69c04061c.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/705f1b01-aa16-4691-958e-a22419ac1bb3.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/7687a114-7632-42e5-80e5-61a510ba8980.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/9fc17c74-fc46-4572-8c1d-0a2fba993928.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/a8e66fe7-72e8-44f0-9585-1198631084b0.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/c7cfc7a9-23fa-455a-a21b-eec97ff72ca8.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/d0fda7de-8a60-4679-86e7-43b53474e276.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/d5816e89-d29c-4cdf-a777-d7aaa14e5e0c.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/documents/f2671d84-949f-4112-bac4-ca63cf82b656.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="207" />
+    <option name="cachedIndexableFilesCount" value="137" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -174,7 +155,7 @@
       <workItem from="1777137751717" duration="10466000" />
       <workItem from="1777372690193" duration="4271000" />
       <workItem from="1777402877936" duration="11434000" />
-      <workItem from="1777468981115" duration="4369000" />
+      <workItem from="1777468981115" duration="9893000" />
     </task>
     <task id="LOCAL-00001" summary="login and register">
       <option name="closed" value="true" />

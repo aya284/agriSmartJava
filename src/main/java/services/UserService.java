@@ -8,7 +8,9 @@ import utils.Validator;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class UserService {
@@ -408,6 +410,154 @@ public class UserService {
         }
     }
 
+    public User getUserByEmail(String email) throws SQLException {
+        return findByEmail(email).orElse(null);
+    }
+
+    // ── ADMIN AI QUERIES ──────────────────────────────────────
+    public List<User> getTodayUsers() throws SQLException {
+        String sql = "SELECT * FROM users WHERE DATE(created_at) = CURDATE() ORDER BY created_at DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) users.add(mapUser(rs));
+            return users;
+        }
+    }
+
+    public List<User> getPendingUsers() throws SQLException {
+        String sql = "SELECT * FROM users WHERE status = 'pending' ORDER BY created_at DESC";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) users.add(mapUser(rs));
+            return users;
+        }
+    }
+
+    public List<User> getSuspiciousUsers() throws SQLException {
+        // Basic logic: inactive status OR duplicate CIN
+        String sql = """
+            SELECT * FROM users u1
+            WHERE status = 'inactive'
+            OR (
+                cin_number IS NOT NULL 
+                AND cin_number != '' 
+                AND cin_number IN (
+                    SELECT cin_number FROM users 
+                    GROUP BY cin_number 
+                    HAVING COUNT(*) > 1
+                )
+            )
+            ORDER BY created_at DESC
+            """;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) users.add(mapUser(rs));
+            return users;
+        }
+    }
+// ── ADMIN AI — NEW QUERIES ────────────────────────────────────
+
+public List<User> getFlaggedUsers() throws SQLException {
+    String sql = "SELECT * FROM users WHERE status = 'flagged' ORDER BY created_at DESC";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ResultSet rs = ps.executeQuery();
+        List<User> users = new ArrayList<>();
+        while (rs.next()) users.add(mapUser(rs));
+        return users;
+    }
+}
+
+public List<User> getRejectedUsers() throws SQLException {
+    String sql = "SELECT * FROM users WHERE status IN ('rejected','inactive','banned') ORDER BY created_at DESC";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ResultSet rs = ps.executeQuery();
+        List<User> users = new ArrayList<>();
+        while (rs.next()) users.add(mapUser(rs));
+        return users;
+    }
+}
+
+public List<User> getActiveUsers() throws SQLException {
+    String sql = "SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ResultSet rs = ps.executeQuery();
+        List<User> users = new ArrayList<>();
+        while (rs.next()) users.add(mapUser(rs));
+        return users;
+    }
+}
+
+public List<User> getRecentUsers(int limit) throws SQLException {
+    String sql = "SELECT * FROM users ORDER BY created_at DESC LIMIT ?";
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, limit);
+        ResultSet rs = ps.executeQuery();
+        List<User> users = new ArrayList<>();
+        while (rs.next()) users.add(mapUser(rs));
+        return users;
+    }
+}
+
+/**
+ * Returns a full platform snapshot used by the "stats" intent
+ * and as fallback context for general questions.
+ */
+public Map<String, Object> getAdminStats() throws SQLException {
+    Map<String, Object> stats = new LinkedHashMap<>();
+
+    String sql = """
+        SELECT
+            COUNT(*)                                            AS total,
+            SUM(status = 'active')                             AS active,
+            SUM(status = 'pending')                            AS pending,
+            SUM(status = 'flagged')                            AS flagged,
+            SUM(status = 'rejected')                           AS rejected,
+            SUM(status = 'inactive')                           AS inactive,
+            SUM(DATE(created_at) = CURDATE())                  AS today,
+            SUM(created_at >= NOW() - INTERVAL 7 DAY)          AS last_7_days,
+            SUM(role = 'agriculteur')                          AS agriculteurs,
+            SUM(role = 'admin')                                AS admins,
+            COUNT(DISTINCT cin_number)                         AS unique_cins,
+            SUM(cin_number IS NOT NULL AND cin_number != '')   AS with_cin
+        FROM users
+        """;
+
+    try (PreparedStatement ps = conn.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            stats.put("total_users",     rs.getInt("total"));
+            stats.put("active",          rs.getInt("active"));
+            stats.put("pending",         rs.getInt("pending"));
+            stats.put("flagged",         rs.getInt("flagged"));
+            stats.put("rejected",        rs.getInt("rejected"));
+            stats.put("inactive",        rs.getInt("inactive"));
+            stats.put("registered_today",rs.getInt("today"));
+            stats.put("last_7_days",     rs.getInt("last_7_days"));
+            stats.put("agriculteurs",    rs.getInt("agriculteurs"));
+            stats.put("admins",          rs.getInt("admins"));
+            stats.put("unique_cins",     rs.getInt("unique_cins"));
+            stats.put("users_with_cin",  rs.getInt("with_cin"));
+        }
+    }
+
+    // Duplicate CIN count (suspicious indicator)
+    String dupSql = """
+        SELECT COUNT(*) FROM (
+            SELECT cin_number FROM users
+            WHERE cin_number IS NOT NULL AND cin_number != ''
+            GROUP BY cin_number HAVING COUNT(*) > 1
+        ) AS dups
+        """;
+    try (PreparedStatement ps = conn.prepareStatement(dupSql);
+         ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) stats.put("duplicate_cin_groups", rs.getInt(1));
+    }
+
+    return stats;
+}
     // ── RESET PASSWORD (no current password needed) ───────────
     public void resetPassword(int userId, String newPassword) throws Exception {
         String error = Validator.validatePassword(newPassword);

@@ -1,0 +1,291 @@
+/* ═══════════════════════════════════════════════════════════════
+   admin-chat.css  —  AgriSmart AI Chat  (Modern SaaS)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Palette ────────────────────────────────────────────────── */
+/*
+   bg-page     : #f1f5f9
+   bg-surface  : #ffffff
+   bg-field    : #f8fafc
+   border      : #e2e8f0
+   border-focus: #6366f1
+   accent      : #6366f1  (indigo-500)
+   accent-dark : #4f46e5
+   accent-light: #eef2ff
+   accent-muted: #c7d2fe
+   text-primary: #0f172a
+   text-body   : #334155
+   text-muted  : #64748b
+   text-faint  : #94a3b8
+   green-bg    : #f0fdf4
+   green-border: #bbf7d0
+   green-text  : #16a34a
+*/
+
+/* ── Root ──────────────────────────────────────────────────── */
+.chat-root {
+    -fx-background-color: #f1f5f9;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.chat-header {
+    -fx-background-color: #ffffff;
+}
+
+.header-rule {
+    -fx-background-color: #e2e8f0;
+}
+
+.header-badge {
+    -fx-background-color: #E6BF4A;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 10, 0, 0, 3);
+}
+
+.header-badge-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.chat-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.chat-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #E6BF4A;
+}
+
+/* ── Status Badge ───────────────────────────────────────────── */
+.status-badge {
+    -fx-background-color: #f0fdf4;
+    -fx-background-radius: 20;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-padding: 5 12 5 12;
+}
+
+.pulse-dot {
+    -fx-background-color: #22c55e;
+    -fx-background-radius: 20;
+}
+
+.status-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #16a34a;
+}
+
+/* ── Chat Scroll Area ───────────────────────────────────────── */
+.chat-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.chat-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Hide ugly default scroll-pane background ring */
+.chat-scroll > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 6px;
+}
+
+.chat-scroll > .scroll-bar:vertical .thumb {
+    -fx-background-color: #cbd5e1;
+    -fx-background-radius: 10;
+}
+
+.chat-container {
+    -fx-background-color: transparent;
+}
+
+/* ── AI Avatar ──────────────────────────────────────────────── */
+.ai-avatar {
+    -fx-background-color: #6366f1;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.3), 8, 0, 0, 2);
+}
+
+.ai-avatar-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* ── User Avatar ────────────────────────────────────────────── */
+.user-avatar {
+    -fx-background-color: #0f172a;
+    -fx-background-radius: 10;
+}
+
+.user-avatar-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* ── Message Meta ───────────────────────────────────────────── */
+.sender-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.msg-time {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+}
+
+/* ── AI Bubble ──────────────────────────────────────────────── */
+.ai-bubble {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 2 14 14 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 2 14 14 14;
+    -fx-border-width: 1;
+    -fx-padding: 14 18 14 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0, 0, 2);
+}
+
+/* ── User Bubble ────────────────────────────────────────────── */
+.user-bubble {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 14 2 14 14;
+    -fx-padding: 14 18 14 18;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);
+}
+
+/* ── Message Text ───────────────────────────────────────────── */
+.msg-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #334155;
+    -fx-line-spacing: 3;
+}
+
+.user-msg-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #000000;
+    -fx-line-spacing: 3;
+}
+
+/* ── Typing Indicator ───────────────────────────────────────── */
+.typing-bubble {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 2 14 14 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 2 14 14 14;
+    -fx-border-width: 1;
+    -fx-padding: 14 18 14 18;
+}
+
+.typing-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #94a3b8;
+}
+
+/* ── Suggestion Chips (inside welcome message) ──────────────── */
+.suggestion-chip {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 20;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-padding: 6 14 6 14;
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-cursor: hand;
+}
+
+.suggestion-chip:hover {
+    -fx-background-color: #eef2ff;
+    -fx-border-color: #a5b4fc;
+    -fx-text-fill: #6366f1;
+}
+
+/* ── Input Panel ────────────────────────────────────────────── */
+.input-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ── Quick Chips (shortcut bar) ─────────────────────────────── */
+.quick-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+    -fx-padding: 0 4 0 0;
+}
+
+.quick-chip {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 6 12 6 12;
+    -fx-font-size: 12px;
+    -fx-text-fill: #475569;
+    -fx-cursor: hand;
+}
+
+.quick-chip:hover {
+    -fx-background-color: #eef2ff;
+    -fx-border-color: #a5b4fc;
+    -fx-text-fill: #4f46e5;
+}
+
+/* ── Text Field ─────────────────────────────────────────────── */
+.chat-field {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 10;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.5;
+    -fx-padding: 12 16 12 16;
+    -fx-font-size: 14px;
+    -fx-text-fill: #00010b;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+.chat-field:focused {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #6366f1;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.18), 12, 0, 0, 0);
+}
+
+/* ── Send Button ────────────────────────────────────────────── */
+.send-btn {
+    -fx-background-color: #E6BF4A;
+    -fx-background-radius: 10;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 22 12 22;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.35), 10, 0, 0, 2);
+}
+
+.send-btn:hover {
+    -fx-background-color: #E6BF4A;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.45), 14, 0, 0, 3);
+}
+
+.send-btn:disabled {
+    -fx-background-color: #E6BF4A;
+    -fx-text-fill: #a5b4fc;
+    -fx-effect: none;
+    -fx-cursor: default;
+}
+
+/* ── Hint ───────────────────────────────────────────────────── */
+.input-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #94a3b8;
+}

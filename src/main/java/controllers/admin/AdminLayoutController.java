@@ -161,6 +161,11 @@ public class AdminLayoutController {
                 "Gestion des Ressources", "Admin / Ressources");
     }
 
+    @FXML public void openAiChat() {
+        loadContent("/Views/Admin/AdminAiChatView.fxml",
+                "Assistant AI AgriSmart", "Admin / Assistant AI");
+    }
+
     @FXML
     public void handleLogout() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);

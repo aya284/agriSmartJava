@@ -61,6 +61,13 @@
                         onAction="#openRessources"
                         maxWidth="Infinity" alignment="CENTER_LEFT"
                         styleClass="sidebar-btn"/>
+
+                <Label text="AI ASSISTANT" styleClass="admin-sidebar-section-label"/>
+
+                <Button text="🤖  Assistant AI"
+                        onAction="#openAiChat"
+                        maxWidth="Infinity" alignment="CENTER_LEFT"
+                        styleClass="sidebar-btn"/>
             </VBox>
 
             <!-- Spacer -->
@@ -75,7 +82,7 @@
                                           <Label text="Administrateur" styleClass="admin-profile-role"/>
                     </VBox>
                 </HBox>
-                <Button text="🚪  Déconnexion"
+                <Button text="Déconnexion"
                         onAction="#handleLogout"
                         maxWidth="Infinity" alignment="CENTER_LEFT"
                                           styleClass="admin-logout-btn"/>
@@ -109,7 +116,7 @@
             </HBox>
 
                         <!-- Contenu dynamique (scrollable) -->
-                        <ScrollPane fitToWidth="true" fitToHeight="false" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="admin-content-scroll">
+                        <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS" styleClass="admin-content-scroll">
                                 <content>
                                         <StackPane fx:id="adminContentArea" styleClass="admin-content-area"/>
                                 </content>
