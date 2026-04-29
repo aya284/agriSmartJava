@@ -28,9 +28,6 @@ public class AdminOffreController implements Initializable {
     @FXML private TableColumn<Offre, Void> colActions;
 
     @FXML private Label statAttente, statApprouvee, statRefusee;
-    @FXML private javafx.scene.shape.Circle statusDot;
-    // Admin Detail Labels
-    @FXML private Label adminDetailTitle, adminDetailDesc, adminDetailLieu, adminDetailStatus;
 
     private final OffreService service = new OffreService();
     private ObservableList<Offre> masterData = FXCollections.observableArrayList();
@@ -44,10 +41,6 @@ public class AdminOffreController implements Initializable {
         if (tableOffres != null) {
             setupTable();
             loadData();
-        }
-        // Mode 2: Detail View
-        else if (adminDetailTitle != null && currentSelectedOffre != null) {
-            setupAdminDetailPage();
         }
     }
 
@@ -113,6 +106,7 @@ public class AdminOffreController implements Initializable {
                 btnRefuse.setOnAction(e -> updateStatus(getTableView().getItems().get(getIndex()), "refusée"));
                 btnDetails.setOnAction(e -> {
                     currentSelectedOffre = getTableView().getItems().get(getIndex());
+                    AdminOffreDetailController.setCurrentOffre(currentSelectedOffre);
                     switchView("/Views/Offres/AdminOffreDetail.fxml");
                 });
             }
@@ -162,51 +156,14 @@ public class AdminOffreController implements Initializable {
         statRefusee.setText(String.valueOf(masterData.stream().filter(o -> "refusée".equalsIgnoreCase(o.getStatut_validation())).count()));
     }
 
-    private void setupAdminDetailPage() {
-        adminDetailTitle.setText(currentSelectedOffre.getTitle());
-        adminDetailDesc.setText(currentSelectedOffre.getDescription());
-        adminDetailLieu.setText("📍 " + currentSelectedOffre.getLieu());
-
-        String rawStatus = currentSelectedOffre.getStatut_validation();
-        String formattedStatus;
-        String color;
-
-        // Consistency with your Table logic
-        switch (rawStatus.toLowerCase()) {
-            case "en_attente":
-            case "en attente":
-                formattedStatus = "En attente";
-                color = "#f39c12"; // Orange
-                break;
-            case "approuvée":
-                formattedStatus = "Approuvée";
-                color = "#27ae60"; // Green
-                break;
-            case "refusée":
-                formattedStatus = "Refusée";
-                color = "#e74c3c"; // Red
-                break;
-            default:
-                formattedStatus = rawStatus.substring(0, 1).toUpperCase() + rawStatus.substring(1);
-                color = "#2c3e50";
-        }
-
-        adminDetailStatus.setText(formattedStatus);
-        adminDetailStatus.setStyle("-fx-text-fill: " + color + ";");
-        statusDot.setStyle("-fx-fill: " + color + ";");
-    }
-
-    @FXML
-    public void goBackToTable() {
-        switchView("/Views/Offres/AdminOffreList.fxml");
-    }
-
     private void switchView(String path) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(path));
-            // Ensure the scene lookup matches your shell ID
-            StackPane contentArea = (StackPane) (tableOffres != null ? tableOffres : adminDetailTitle).getScene().lookup("#contentArea");
-            contentArea.getChildren().setAll(root);
+            // Get the root scene and find the contentArea StackPane
+            StackPane contentArea = (StackPane) tableOffres.getScene().getRoot().lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(root);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,61 +1,255 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="20.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PostulerController">
-    <padding><Insets bottom="40.0" left="40.0" right="40.0" top="40.0" /></padding>
+<!--
+    PostulerForm.fxml
+    Remplace votre fichier existant : src/main/resources/Views/Offres/PostulerForm.fxml
 
-    <Label text="Formulaire de Candidature" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #1a3323;" />
+    Nouveautés ajoutées par rapport à l'ancienne version :
+      1. Bouton 🎙 Assistant Vocal IA   → remplit Nom/Prénom/Téléphone automatiquement
+      2. Bouton 🤖 Générer avec IA      → ouvre le modal 4 étapes pour générer le CV
+      3. Zone iaZone / iaSuccessBox     → affiche le CV généré et permet de le consulter
 
-    <GridPane hgap="20" vgap="15">
-        <columnConstraints>
-            <ColumnConstraints percentWidth="50" />
-            <ColumnConstraints percentWidth="50" />
-        </columnConstraints>
+    Tous les fx:id et onAction correspondent EXACTEMENT aux champs du PostulerController.java
+-->
 
-        <VBox GridPane.columnIndex="0" GridPane.rowIndex="0">
-            <Label text="Nom *" style="-fx-font-weight: bold;" />
-            <TextField fx:id="nomF" prefHeight="40" promptText="Votre nom" />
-            <Label fx:id="nomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
+<ScrollPane fitToWidth="true"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="controllers.PostulerController"
+            style="-fx-background-color:#f4f7f6; -fx-background:#f4f7f6;">
+
+    <VBox spacing="0" style="-fx-background-color:#f4f7f6;">
+        <padding><Insets top="30" right="50" bottom="40" left="50"/></padding>
+
+        <!-- ══════════════════════════════════════════════════
+             TITRE
+             ══════════════════════════════════════════════════ -->
+        <Label text="Formulaire de Candidature"
+               style="-fx-font-size:22;-fx-font-weight:bold;-fx-text-fill:#1a3323;"/>
+        <Label text="Remplissez le formulaire pour postuler."
+               style="-fx-font-size:13;-fx-text-fill:#4a7c59;-fx-padding:2 0 20 0;"/>
+
+        <!-- ══════════════════════════════════════════════════
+             ASSISTANT VOCAL IA
+             Même apparence que la version web (bouton rond vert + texte)
+             onAction="#handleVoiceAssistant" → remplit nom/prénom/phone auto
+             ══════════════════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" spacing="15"
+              style="-fx-background-color:white;-fx-background-radius:50;
+                     -fx-padding:12 25;
+                     -fx-border-color:#e0e0e0;-fx-border-radius:50;
+                     -fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.06),8,0,0,2);">
+            <Button fx:id="voiceBtn"
+                    onAction="#handleVoiceAssistant"
+                    text="🎙"
+                    style="-fx-background-color:#1a4331;-fx-background-radius:50;
+                           -fx-min-width:50;-fx-min-height:50;
+                           -fx-max-width:50;-fx-max-height:50;
+                           -fx-text-fill:white;-fx-font-size:18;-fx-cursor:hand;"/>
+            <VBox spacing="3">
+                <Label fx:id="voiceStatusLabel"
+                       text="Assistant Vocal IA"
+                       style="-fx-font-weight:bold;-fx-font-size:13;-fx-text-fill:#1a4331;"/>
+                <Label fx:id="voiceSubLabel"
+                       text="Cliquez pour parler librement"
+                       style="-fx-font-size:11;-fx-text-fill:#95a5a6;"/>
+            </VBox>
+        </HBox>
+
+        <VBox.margin><Insets bottom="20"/></VBox.margin>
+
+        <!-- ══════════════════════════════════════════════════
+             NOM + PRÉNOM
+             ══════════════════════════════════════════════════ -->
+        <HBox spacing="20">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Nom *"
+                       style="-fx-font-weight:bold;-fx-font-size:12;-fx-text-fill:#333;"/>
+                <TextField fx:id="nomF"
+                           promptText="Votre nom"
+                           style="-fx-background-radius:8;-fx-border-color:#ddd;
+                                  -fx-border-radius:8;-fx-padding:10;-fx-font-size:13;"/>
+                <Label fx:id="nomError" text=""
+                       style="-fx-text-fill:#e74c3c;-fx-font-size:11;"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Prénom *"
+                       style="-fx-font-weight:bold;-fx-font-size:12;-fx-text-fill:#333;"/>
+                <TextField fx:id="prenomF"
+                           promptText="Votre prénom"
+                           style="-fx-background-radius:8;-fx-border-color:#ddd;
+                                  -fx-border-radius:8;-fx-padding:10;-fx-font-size:13;"/>
+                <Label fx:id="prenomError" text=""
+                       style="-fx-text-fill:#e74c3c;-fx-font-size:11;"/>
+            </VBox>
+        </HBox>
+
+        <VBox.margin><Insets bottom="15"/></VBox.margin>
+
+        <!-- ══════════════════════════════════════════════════
+             TÉLÉPHONE
+             ══════════════════════════════════════════════════ -->
+        <VBox spacing="4">
+            <Label text="Numéro de téléphone *"
+                   style="-fx-font-weight:bold;-fx-font-size:12;-fx-text-fill:#333;"/>
+            <TextField fx:id="phoneF"
+                       promptText="Ex: 55123456"
+                       style="-fx-background-radius:8;-fx-border-color:#ddd;
+                              -fx-border-radius:8;-fx-padding:10;-fx-font-size:13;"/>
+            <Label fx:id="phoneError" text=""
+                   style="-fx-text-fill:#e74c3c;-fx-font-size:11;"/>
         </VBox>
 
-        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0">
-            <Label text="Prénom *" style="-fx-font-weight: bold;" />
-            <TextField fx:id="prenomF" prefHeight="40" promptText="Votre prénom" />
-            <Label fx:id="prenomError" textFill="#e74c3c" style="-fx-font-size: 11;" />
-        </VBox>
+        <VBox.margin><Insets bottom="22"/></VBox.margin>
 
-        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2">
-            <Label text="Numéro de téléphone *" style="-fx-font-weight: bold;" />
-            <TextField fx:id="phoneF" prefHeight="40" promptText="Ex: 55123456" />
-            <Label fx:id="phoneError" textFill="#e74c3c" style="-fx-font-size: 11;" />
-        </VBox>
+        <!-- ══════════════════════════════════════════════════
+             SÉPARATEUR + TITRE PIÈCES JOINTES
+             ══════════════════════════════════════════════════ -->
+        <Separator style="-fx-background-color:#e0e0e0;"/>
+        <Label text="PIÈCES JOINTES (PDF)"
+               style="-fx-font-size:11;-fx-font-weight:bold;
+                      -fx-text-fill:#95a5a6;-fx-padding:12 0 8 0;"/>
 
-        <VBox GridPane.columnIndex="0" GridPane.rowIndex="2">
-            <Label text="CV (PDF) *" style="-fx-font-weight: bold;" />
+        <!-- ══════════════════════════════════════════════════
+             BOUTONS UPLOAD / GÉNÉRER AVEC IA
+             (même apparence que la version web)
+             ══════════════════════════════════════════════════ -->
+        <HBox spacing="12">
+            <!-- Bouton Upload PDF (classique) -->
+            <Button onAction="#uploadCV"
+                    text="📄  Upload PDF"
+                    HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                    style="-fx-background-color:#555;-fx-text-fill:white;
+                           -fx-background-radius:8;-fx-padding:9 20;
+                           -fx-cursor:hand;-fx-font-size:12;"/>
+            <!-- Bouton Générer avec IA -->
+            <Button onAction="#openIAModal"
+                    text="🤖  Générer avec IA"
+                    HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                    style="-fx-background-color:#00b37e;-fx-text-fill:white;
+                           -fx-background-radius:8;-fx-padding:9 20;
+                           -fx-cursor:hand;-fx-font-size:12;-fx-font-weight:bold;"/>
+        </HBox>
+
+        <VBox.margin><Insets bottom="12"/></VBox.margin>
+
+        <!-- ══════════════════════════════════════════════════
+             CV CLASSIQUE (upload fichier)
+             ══════════════════════════════════════════════════ -->
+        <VBox spacing="4">
+            <Label text="Curriculum Vitae (PDF) *"
+                   style="-fx-font-weight:bold;-fx-font-size:12;-fx-text-fill:#333;"/>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button onAction="#uploadCV" text="📁 Choisir CV" />
-                <Label fx:id="cvLabel" text="Aucun fichier" textFill="#7f8c8d" />
+                <Button onAction="#uploadCV"
+                        text="📎  Choisir CV"
+                        style="-fx-background-color:#f0f0f0;-fx-background-radius:8;
+                               -fx-padding:8 16;-fx-cursor:hand;-fx-font-size:12;"/>
+                <Label fx:id="cvLabel" text="Aucun fichier choisi"
+                       style="-fx-text-fill:#888;-fx-font-size:12;"/>
             </HBox>
-            <Label fx:id="cvError" textFill="RED" style="-fx-font-size: 10;" />
+            <Label fx:id="cvError" text=""
+                   style="-fx-text-fill:#e74c3c;-fx-font-size:11;"/>
         </VBox>
 
-        <VBox GridPane.columnIndex="1" GridPane.rowIndex="2">
-            <Label text="Lettre de Motivation (PDF) *" style="-fx-font-weight: bold;" />
+        <VBox.margin><Insets bottom="10"/></VBox.margin>
+
+        <!-- ══════════════════════════════════════════════════
+             ZONE CV IA
+             → iaPlaceholder : affiché quand aucun CV IA généré
+             → iaSuccessBox  : affiché après génération réussie
+             ══════════════════════════════════════════════════ -->
+        <VBox fx:id="iaZone" spacing="10">
+
+            <!-- Placeholder (invitation à générer) -->
+            <VBox fx:id="iaPlaceholder"
+                  alignment="CENTER" spacing="12"
+                  style="-fx-background-color:#f0fdf8;-fx-background-radius:10;
+                         -fx-border-color:#00b37e;-fx-border-radius:10;
+                         -fx-border-style:dashed;-fx-padding:28;">
+                <Label text="💡 Besoin d'un CV professionnel complet ?"
+                       style="-fx-font-weight:bold;-fx-text-fill:#00b37e;-fx-font-size:13;"/>
+                <Label text="Notre IA génère votre CV en 4 étapes simples."
+                       style="-fx-text-fill:#888;-fx-font-size:11;"/>
+                <Button onAction="#openIAModal"
+                        text="✨  Créer mon CV avec l'IA"
+                        style="-fx-background-color:#00b37e;-fx-text-fill:white;
+                               -fx-background-radius:20;-fx-padding:9 26;
+                               -fx-cursor:hand;-fx-font-weight:bold;-fx-font-size:12;"/>
+            </VBox>
+
+            <!-- Success box (CV prêt — caché par défaut) -->
+            <VBox fx:id="iaSuccessBox"
+                  spacing="10" visible="false" managed="false"
+                  style="-fx-background-color:white;-fx-background-radius:10;
+                         -fx-border-color:#00b37e;-fx-border-radius:10;
+                         -fx-border-width:2;-fx-padding:16;">
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <Label text="✅" style="-fx-font-size:26;"/>
+                    <VBox spacing="3">
+                        <Label text="CV IA généré et prêt à envoyer !"
+                               style="-fx-font-weight:bold;-fx-text-fill:#00b37e;-fx-font-size:13;"/>
+                        <Label fx:id="iaFilenameLabel" text=""
+                               style="-fx-text-fill:#888;-fx-font-size:11;"/>
+                    </VBox>
+                </HBox>
+                <HBox spacing="10">
+                    <Button onAction="#previewIACV"
+                            text="👁  Consulter le CV"
+                            style="-fx-background-color:#00b37e;-fx-text-fill:white;
+                                   -fx-background-radius:18;-fx-padding:7 18;
+                                   -fx-cursor:hand;-fx-font-size:12;"/>
+                    <Button onAction="#resetIA"
+                            text="🗑  Supprimer"
+                            style="-fx-background-color:transparent;-fx-text-fill:#e74c3c;
+                                   -fx-cursor:hand;-fx-font-size:12;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+
+        <VBox.margin><Insets bottom="16"/></VBox.margin>
+
+        <!-- ══════════════════════════════════════════════════
+             LETTRE DE MOTIVATION
+             ══════════════════════════════════════════════════ -->
+        <VBox spacing="4">
+            <Label text="Lettre de Motivation (PDF) *"
+                   style="-fx-font-weight:bold;-fx-font-size:12;-fx-text-fill:#333;"/>
             <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button onAction="#uploadLettre" text="📁 Choisir Lettre" />
-                <Label fx:id="lettreLabel" text="Aucun fichier" textFill="#7f8c8d" />
+                <Button onAction="#uploadLettre"
+                        text="📎  Choisir Lettre"
+                        style="-fx-background-color:#f0f0f0;-fx-background-radius:8;
+                               -fx-padding:8 16;-fx-cursor:hand;-fx-font-size:12;"/>
+                <Label fx:id="lettreLabel" text="Aucun fichier choisi"
+                       style="-fx-text-fill:#888;-fx-font-size:12;"/>
             </HBox>
-            <Label fx:id="lettreError" textFill="RED" style="-fx-font-size: 10;" />
+            <Label fx:id="lettreError" text=""
+                   style="-fx-text-fill:#e74c3c;-fx-font-size:11;"/>
         </VBox>
-    </GridPane>
 
-    <VBox spacing="10" alignment="CENTER">
-        <Button fx:id="btnSubmit" onAction="#handleSubmit" maxWidth="Infinity" prefHeight="50"
-                style="-fx-background-color: #1a3323; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand;" text="🚀 Envoyer ma candidature" />
+        <VBox.margin><Insets bottom="28"/></VBox.margin>
 
-        <Button onAction="#cancel" text="Annuler"
-                style="-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-cursor: hand; -fx-font-weight: bold;" />
+        <!-- ══════════════════════════════════════════════════
+             BOUTONS SOUMETTRE / ANNULER
+             ══════════════════════════════════════════════════ -->
+        <Button fx:id="btnSubmit"
+                onAction="#handleSubmit"
+                text="🚀  Envoyer ma candidature"
+                maxWidth="Infinity"
+                style="-fx-background-color:#1a3323;-fx-text-fill:white;
+                       -fx-font-size:14;-fx-font-weight:bold;
+                       -fx-background-radius:30;-fx-padding:14;-fx-cursor:hand;"/>
+
+        <VBox.margin><Insets bottom="8"/></VBox.margin>
+
+        <Button onAction="#cancel"
+                text="Annuler"
+                maxWidth="Infinity"
+                style="-fx-background-color:transparent;-fx-text-fill:#e74c3c;
+                       -fx-font-size:13;-fx-cursor:hand;-fx-padding:8;"/>
+
     </VBox>
-</VBox>
+</ScrollPane>
