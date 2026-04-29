@@ -52,18 +52,11 @@
                 <Tab text="Cultures">
                     <VBox spacing="10" style="-fx-padding: 15 0 0 0;">
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="Historiques des cultures" styleClass="panel-title" style="-fx-font-size: 14px;"/>
+                            <Label text="Cultures" styleClass="panel-title" style="-fx-font-size: 14px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button text="🪄 Recommander Culture IA" onAction="#recommanderCultureIA" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #8e44ad;"/>
-                            <Button text="+ Ajouter Culture" onAction="#openAddCultureModal" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
+                            <Button text="🪄 Recommander (IA)" onAction="#recommanderCultureIA" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #8e44ad;"/>
+                            <Button text="➕ Ajouter" onAction="#openAddCultureModal" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
                         </HBox>
-                        
-                        <VBox fx:id="recommendationContainer" spacing="10" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-border-color: #d1d8e0; -fx-border-radius: 8; -fx-background-radius: 8;" visible="false" managed="false" prefHeight="180" minHeight="180">
-                            <Label text="🪄 Recommandations de l'IA :" style="-fx-font-weight: bold; -fx-text-fill: #8e44ad; -fx-font-size: 13px;"/>
-                            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
-                                <Label fx:id="lblRecommendation" text="..." wrapText="true" minHeight="-Infinity" style="-fx-text-fill: #2c3e50; -fx-font-size: 13px; -fx-line-spacing: 4px;"/>
-                            </ScrollPane>
-                        </VBox>
                         
                         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
                             <VBox fx:id="cultureListContainer" spacing="12"/>

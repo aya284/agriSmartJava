@@ -53,15 +53,9 @@ public class ParcelleController {
     private VBox soilAnalysisContainer;
     @FXML
     private Label lblSoilType, lblSoilPh, lblSoilHumidity, lblSoilFertility, lblSoilResult, lblSoilRecommendation;
-    
-    @FXML
-    private VBox recommendationContainer;
-    @FXML
-    private Label lblRecommendation;
 
     private WeatherService weatherS = new WeatherService();
     private SoilService soilS = new SoilService();
-    private services.GeminiService geminiService = new services.GeminiService();
 
     private ParcelleService ps = new ParcelleService();
     private CultureService cs = new CultureService();
@@ -902,36 +896,23 @@ public class ParcelleController {
             return;
         }
 
-        recommendationContainer.setVisible(true);
-        recommendationContainer.setManaged(true);
-        lblRecommendation.setText("Analyse IA en cours... Réflexion de l'Agronome Virtuel ⏳");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/RecommendationModal.fxml"));
+            Parent root = loader.load();
+            RecommendationModalController controller = loader.getController();
+            controller.setParcelle(selected);
+            controller.setOnCultureAdded(() -> loadCultures(selected.getId()));
 
-        Thread thread = new Thread(() -> {
-            try {
-                String prompt = String.format(
-                    "Tu es un expert agronome en Tunisie. " +
-                    "J'ai une parcelle agricole de %.2f hectares. Le sol est de type : %s. " +
-                    "Les coordonnées sont Latitude: %s, Longitude: %s. " +
-                    "En te basant sur le climat méditerranéen de ces coordonnées et ce type de sol, " +
-                    "quelles sont les 3 meilleures cultures à planter ? " +
-                    "Donne une réponse courte, avec des puces (•). Pour chaque culture, " +
-                    "indique un pourcentage de réussite estimé et une brève justification (1 phrase).",
-                    selected.getSurface(), selected.getTypeSol(), selected.getLatitude(), selected.getLongitude()
-                );
-
-                String resultat = geminiService.generateRecommendation(prompt);
-
-                javafx.application.Platform.runLater(() -> {
-                    lblRecommendation.setText(resultat);
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                javafx.application.Platform.runLater(() -> {
-                    lblRecommendation.setText("❌ Erreur lors de la recommandation IA : " + e.getMessage());
-                });
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Agronome Virtuel (IA)");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Erreur", "Impossible d'ouvrir l'assistant IA.");
+        }
     }
 }

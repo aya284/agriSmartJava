@@ -31,6 +31,15 @@ public class FormulaireCultureController {
         this.parcelleId = parcelleId;
     }
 
+    public void prefillCultureName(String nom, String variete) {
+        if (txtType != null && nom != null) {
+            txtType.setText(nom);
+        }
+        if (txtVariete != null && variete != null) {
+            txtVariete.setText(variete);
+        }
+    }
+
     public void setCultureData(Culture c) {
         this.currentId = c.getId();
         this.parcelleId = c.getParcelleId();

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.RecommendationModalController" spacing="15" prefWidth="500" prefHeight="400" style="-fx-background-color: white; -fx-padding: 20; -fx-border-radius: 10; -fx-background-radius: 10;">
+    
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="🪄 Agronome Virtuel : Recommandations" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <Separator/>
+    
+    <Label fx:id="lblContext" text="Analyse pour la parcelle..." style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d; -fx-font-style: italic;"/>
+
+    <VBox fx:id="loadingBox" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+        <ProgressIndicator prefWidth="40" prefHeight="40" style="-fx-progress-color: #8e44ad;"/>
+        <Label fx:id="lblLoadingText" text="Analyse IA en cours... Réflexion de l'Agronome Virtuel ⏳" style="-fx-font-size: 13px; -fx-text-fill: #8e44ad;"/>
+    </VBox>
+
+    <VBox fx:id="resultsBox" spacing="10" VBox.vgrow="ALWAYS" visible="false" managed="false">
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" VBox.vgrow="ALWAYS">
+            <VBox fx:id="cardsContainer" spacing="10" style="-fx-padding: 5;"/>
+        </ScrollPane>
+    </VBox>
+
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button text="Fermer" onAction="#closeModal" styleClass="btn-secondary" style="-fx-font-size: 12px; -fx-padding: 6 15;"/>
+    </HBox>
+
+</VBox>
