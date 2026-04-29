@@ -394,7 +394,11 @@
                 </VBox>
 
                 <VBox styleClass="chat-main" HBox.hgrow="ALWAYS" spacing="10">
-                    <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="Appel vocal" styleClass="action-chip,primary" onAction="#startVoiceCall"/>
+                    </HBox>
                     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
                         <content>
                             <VBox fx:id="messageListBox" spacing="10" styleClass="chat-thread-list"/>

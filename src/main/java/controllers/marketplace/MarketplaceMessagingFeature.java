@@ -3,16 +3,21 @@ package controllers.marketplace;
 import entities.MarketplaceMessage;
 import entities.Produit;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import services.MarketplaceConversationService;
@@ -21,25 +26,23 @@ import services.ProduitService;
 import services.UserService;
 import services.WebSocketClient;
 import services.WebSocketServer;
-import utils.SessionManager;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.net.URI;
+import java.awt.Desktop;
 import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 public class MarketplaceMessagingFeature {
     private static final DateTimeFormatter CHAT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
+    private static final String CALL_INVITE_PREFIX = "CALL_INVITE|";
+    private static final String DEFAULT_JITSI_BASE_URL = "https://meet.jit.si/";
 
     private final MarketplaceMessagingState state;
     private final MarketplaceConversationService conversationService;
@@ -63,6 +66,11 @@ public class MarketplaceMessagingFeature {
     private final java.util.function.Function<String, String> normalizeText;
     private final WebSocketClient webSocketClient = new WebSocketClient();
     private int websocketConversationId = -1;
+
+    /** Full-screen overlay on top of the messaging dialog; hosts embedded Jitsi (WebView). */
+    private StackPane jitsiEmbeddedOverlayRoot;
+    private WebEngine jitsiEmbeddedEngine;
+    private String lastEmbeddedJitsiUrl;
 
     public MarketplaceMessagingFeature(
             MarketplaceMessagingState state,
@@ -175,6 +183,7 @@ public class MarketplaceMessagingFeature {
         if (messagingOverlay == null) {
             return;
         }
+        closeEmbeddedJitsiCall();
         clearPendingMessageContext();
         loadConversationsAndRender(null);
         animateOverlayIn.accept(messagingOverlay);
@@ -184,6 +193,7 @@ public class MarketplaceMessagingFeature {
         if (messagingOverlay == null) {
             return;
         }
+        closeEmbeddedJitsiCall();
         animateOverlayOut.accept(messagingOverlay);
     }
 
@@ -235,6 +245,54 @@ public class MarketplaceMessagingFeature {
             refreshMessagingBadge();
             clearPendingMessageContext();
             showToast.accept("Message envoye.", true);
+        } catch (SQLException e) {
+            showSqlAlert.accept(e);
+        }
+    }
+
+    public void sendCallInvite() {
+        try {
+            if (state.selectedConversation == null) {
+                if (!state.hasPendingMessageContext()) {
+                    showAlert.accept("Appel vocal", "Choisissez une conversation ou contactez un vendeur depuis la fiche produit.");
+                    return;
+                }
+                state.selectedConversation = conversationService.findOrCreateConversation(
+                        state.pendingProductId,
+                        currentUserIdSupplier.getAsInt(),
+                        state.pendingSellerId
+                );
+            }
+
+            connectRealtimeIfNeeded(state.selectedConversation);
+
+            String roomName = buildJitsiRoomName(state.selectedConversation.getId());
+            String roomUrl = DEFAULT_JITSI_BASE_URL + roomName;
+            String payload = CALL_INVITE_PREFIX + roomUrl + "|" + roomName;
+
+            if (webSocketClient.isConnected()) {
+                webSocketClient.sendMessage(payload, "");
+                refreshMessagingBadge();
+                clearPendingMessageContext();
+                showToast.accept("Invitation d'appel envoyee.", true);
+                openEmbeddedJitsiCall(roomUrl);
+                return;
+            }
+
+            MarketplaceMessage message = new MarketplaceMessage();
+            message.setConversationId(state.selectedConversation.getId());
+            message.setSenderId(currentUserIdSupplier.getAsInt());
+            message.setContent(payload);
+            message.setRead(false);
+            messageService.ajouter(message);
+            conversationService.touchLastMessage(state.selectedConversation.getId());
+
+            renderMessages(state.selectedConversation);
+            loadConversationsAndRender(state.selectedConversation.getId());
+            refreshMessagingBadge();
+            clearPendingMessageContext();
+            showToast.accept("Invitation d'appel envoyee.", true);
+            openEmbeddedJitsiCall(roomUrl);
         } catch (SQLException e) {
             showSqlAlert.accept(e);
         }
@@ -378,17 +436,23 @@ public class MarketplaceMessagingFeature {
 
             for (MarketplaceMessage message : messages) {
                 boolean mine = message.getSenderId() == currentUserIdSupplier.getAsInt();
-                Label body = new Label(normalizeText.apply(safe(message.getContent())));
-                body.setWrapText(true);
-                body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
-                body.setMaxWidth(460);
+                String rawContent = safe(message.getContent());
+                VBox bubble;
+                if (isCallInviteMessage(rawContent)) {
+                    bubble = buildCallInviteBubble(rawContent, mine);
+                } else {
+                    Label body = new Label(normalizeText.apply(rawContent));
+                    body.setWrapText(true);
+                    body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
+                    body.setMaxWidth(460);
+                    bubble = new VBox(4, body);
+                    bubble.setFillWidth(false);
+                }
 
                 String senderDisplay = mine ? "Vous" : resolveUserDisplayName(message.getSenderId());
                 Label meta = new Label(senderDisplay + " - " + formatDateTime(message.getCreatedAt()));
                 meta.getStyleClass().add("chat-bubble-meta");
-
-                VBox bubble = new VBox(4, body, meta);
-                bubble.setFillWidth(false);
+                bubble.getChildren().add(meta);
 
                 HBox row = new HBox(bubble);
                 row.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
@@ -399,6 +463,191 @@ public class MarketplaceMessagingFeature {
         } catch (SQLException e) {
             showSqlAlert.accept(e);
         }
+    }
+
+    private boolean isCallInviteMessage(String content) {
+        return content != null && content.startsWith(CALL_INVITE_PREFIX);
+    }
+
+    private VBox buildCallInviteBubble(String rawContent, boolean mine) {
+        CallInvite invite = parseCallInvite(rawContent);
+
+        Label title = new Label("Appel vocal");
+        title.setStyle("-fx-font-weight: 800;");
+
+        Label subtitle = new Label(invite.roomName == null || invite.roomName.isBlank() ? "Invitation d'appel" : invite.roomName);
+        subtitle.setWrapText(true);
+        subtitle.setStyle("-fx-opacity: 0.9;");
+
+        Button join = new Button("Rejoindre dans l'app");
+        join.getStyleClass().add(mine ? "chat-send-btn" : "action-chip");
+        join.setOnAction(e -> openEmbeddedJitsiCall(invite.roomUrl));
+
+        Button browser = new Button("Navigateur");
+        browser.getStyleClass().add("action-chip");
+        browser.setOnAction(e -> openBrowserForCall(invite.roomUrl));
+
+        Button copy = new Button("Copier lien");
+        copy.getStyleClass().add("action-chip");
+        copy.setOnAction(e -> copyToClipboard(invite.roomUrl));
+
+        HBox actions = new HBox(8, join, browser, copy);
+        actions.setAlignment(Pos.CENTER_LEFT);
+
+        VBox card = new VBox(8, title, subtitle, actions);
+        card.setMaxWidth(460);
+        card.setStyle(
+                "-fx-padding: 12; " +
+                "-fx-background-radius: 12; " +
+                "-fx-border-radius: 12; " +
+                "-fx-border-color: rgba(148,163,184,0.55); " +
+                "-fx-background-color: " + (mine ? "rgba(59,130,246,0.12)" : "rgba(15,23,42,0.04)") + ";"
+        );
+        return card;
+    }
+
+    private CallInvite parseCallInvite(String rawContent) {
+        // Format: CALL_INVITE|<url>|<roomName>
+        String payload = rawContent == null ? "" : rawContent;
+        String rest = payload.startsWith(CALL_INVITE_PREFIX) ? payload.substring(CALL_INVITE_PREFIX.length()) : payload;
+        String[] parts = rest.split("\\|", 2);
+        String url = parts.length >= 1 ? parts[0] : "";
+        String room = parts.length == 2 ? parts[1] : "";
+        CallInvite invite = new CallInvite();
+        invite.roomUrl = url;
+        invite.roomName = room;
+        return invite;
+    }
+
+    private void openEmbeddedJitsiCall(String url) {
+        String safeUrl = safe(url).trim();
+        if (safeUrl.isEmpty()) {
+            showToast.accept("Lien d'appel invalide.", false);
+            return;
+        }
+
+        ensureJitsiEmbeddedOverlayUi();
+        if (jitsiEmbeddedEngine == null || jitsiEmbeddedOverlayRoot == null) {
+            copyToClipboard(safeUrl);
+            showToast.accept("Embedded call UI indisponible. Lien copie.", false);
+            return;
+        }
+
+        lastEmbeddedJitsiUrl = safeUrl;
+        jitsiEmbeddedEngine.load(safeUrl);
+        jitsiEmbeddedOverlayRoot.setManaged(true);
+        jitsiEmbeddedOverlayRoot.setVisible(true);
+        jitsiEmbeddedOverlayRoot.toFront();
+    }
+
+    private void closeEmbeddedJitsiCall() {
+        lastEmbeddedJitsiUrl = null;
+        if (jitsiEmbeddedEngine != null) {
+            try {
+                jitsiEmbeddedEngine.load("about:blank");
+            } catch (Exception ignored) {
+            }
+        }
+        if (jitsiEmbeddedOverlayRoot != null) {
+            jitsiEmbeddedOverlayRoot.setManaged(false);
+            jitsiEmbeddedOverlayRoot.setVisible(false);
+        }
+    }
+
+    private void ensureJitsiEmbeddedOverlayUi() {
+        if (messagingOverlay == null || jitsiEmbeddedOverlayRoot != null) {
+            return;
+        }
+
+        StackPane backdrop = new StackPane();
+        backdrop.setPickOnBounds(true);
+        StackPane.setAlignment(backdrop, Pos.CENTER);
+
+        BorderPane shell = new BorderPane();
+        shell.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
+        shell.setPrefSize(860, 580);
+        shell.setMaxWidth(960);
+        shell.setMaxHeight(720);
+
+        Label titleLbl = new Label("Appel vocal");
+        titleLbl.setStyle("-fx-font-size: 16px; -fx-font-weight: 700;");
+
+        Button closeBtn = new Button("Fermer");
+        closeBtn.getStyleClass().add("publish-header-btn");
+        closeBtn.setOnAction(e -> closeEmbeddedJitsiCall());
+
+        Button browserBtn = new Button("Navigateur");
+        browserBtn.getStyleClass().add("action-chip");
+        browserBtn.setOnAction(e -> {
+            String u = lastEmbeddedJitsiUrl;
+            if (u == null || u.isBlank()) {
+                showToast.accept("Aucun lien disponible.", false);
+                return;
+            }
+            openBrowserForCall(u);
+        });
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox header = new HBox(10, titleLbl, spacer, browserBtn, closeBtn);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(12, 14, 8, 14));
+
+        WebView webView = new WebView();
+        WebEngine engine = webView.getEngine();
+        webView.setPrefSize(860, 520);
+
+        BorderPane.setMargin(webView, new Insets(0, 14, 14, 14));
+        shell.setTop(header);
+        shell.setCenter(webView);
+
+        backdrop.getChildren().add(shell);
+        StackPane.setAlignment(shell, Pos.CENTER);
+
+        jitsiEmbeddedOverlayRoot = backdrop;
+        jitsiEmbeddedEngine = engine;
+        jitsiEmbeddedOverlayRoot.setVisible(false);
+        jitsiEmbeddedOverlayRoot.setManaged(false);
+
+        messagingOverlay.getChildren().add(jitsiEmbeddedOverlayRoot);
+    }
+
+    private void openBrowserForCall(String url) {
+        String safeUrl = safe(url).trim();
+        if (safeUrl.isEmpty()) {
+            showToast.accept("Lien d'appel invalide.", false);
+            return;
+        }
+
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(URI.create(safeUrl));
+                return;
+            }
+        } catch (Exception ignored) {
+            // fallthrough to clipboard copy
+        }
+
+        copyToClipboard(safeUrl);
+        showToast.accept("Lien copie. Ouvrez-le dans votre navigateur.", true);
+    }
+
+    private void copyToClipboard(String text) {
+        String value = safe(text);
+        ClipboardContent content = new ClipboardContent();
+        content.putString(value);
+        Clipboard.getSystemClipboard().setContent(content);
+        showToast.accept("Lien copie.", true);
+    }
+
+    private String buildJitsiRoomName(int conversationId) {
+        String random = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        return "agriSmart-" + conversationId + "-" + random;
+    }
+
+    private static class CallInvite {
+        String roomUrl;
+        String roomName;
     }
 
     private void refreshMessagingDisplayMaps() throws SQLException {

@@ -17,6 +17,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import services.HuggingFaceAiService;
 import services.MarketplaceImageService;
 import services.ProduitService;
 
@@ -76,6 +77,7 @@ public class MarketplaceProductManagementFeature {
     private final java.util.function.Function<String, String> normalizeTypeForDisplay;
     private final java.util.function.Function<String, String> normalizeTypeForStorage;
     private final Runnable onProductSaved;
+    private final HuggingFaceAiService huggingFaceService = new HuggingFaceAiService();
 
     private Produit currentEditProduit = null;
 
@@ -263,6 +265,44 @@ public class MarketplaceProductManagementFeature {
     public void handleProductFormInput() {
         updatePublishPreview();
         clearProductFieldErrors();
+    }
+
+    public void generateDescriptionWithAI() {
+        String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
+        String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+        String offerType = fldType == null ? "Vente" : safe(fldType.getValue()).trim();
+
+        if (productName.isEmpty()) {
+            showToast.accept("Entrez un nom de produit d'abord.", false);
+            return;
+        }
+
+        if (category.isEmpty() || CATEGORY_PLACEHOLDER.equals(category)) {
+            showToast.accept("Selectionnez une categorie d'abord.", false);
+            return;
+        }
+
+        showToast.accept("Génération de description avec IA...", true);
+
+        new Thread(() -> {
+            try {
+                String generatedDesc = huggingFaceService.suggestProductDescription(productName, category, offerType);
+                javafx.application.Platform.runLater(() -> {
+                    fldDescription.setText(generatedDesc);
+                    updatePublishPreview();
+                    showToast.accept("Description générée avec succès!", true);
+                });
+            } catch (IOException ex) {
+                javafx.application.Platform.runLater(() -> {
+                    showToast.accept("Erreur: " + ex.getMessage(), false);
+                });
+            } catch (InterruptedException ex) {
+                javafx.application.Platform.runLater(() -> {
+                    showToast.accept("Génération annulée.", false);
+                });
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     public void chooseImageFile() {

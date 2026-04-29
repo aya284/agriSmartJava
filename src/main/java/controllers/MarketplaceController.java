@@ -65,7 +65,7 @@ import services.RecommendationService;
 import services.ReviewService;
 import services.StockAlertService;
 import services.GeocodingService;
-import services.SmsService;
+import services.HuggingFaceAiService;
 import services.UserService;
 import services.WishlistService;
 import entities.Review;
@@ -222,7 +222,7 @@ public class MarketplaceController implements Initializable {
     private final ReviewService reviewService = new ReviewService();
     private final StockAlertService stockAlertService = new StockAlertService();
     private final GeocodingService geocodingService = new GeocodingService();
-    private final SmsService smsService = new SmsService();
+    private final HuggingFaceAiService huggingFaceService = new HuggingFaceAiService();
     private final UserService userService = new UserService();
     private final MarketplaceMessagingState messagingState = new MarketplaceMessagingState();
     private final MarketplaceWishlistState wishlistState = new MarketplaceWishlistState();
@@ -1043,6 +1043,13 @@ public class MarketplaceController implements Initializable {
         }
     }
 
+    @FXML
+    public void startVoiceCall() {
+        if (messagingFeature != null) {
+            messagingFeature.sendCallInvite();
+        }
+    }
+
     private void openMessagingForProduct(Produit produit) {
         if (messagingFeature != null) {
             messagingFeature.openMessagingForProduct(produit);
@@ -1598,14 +1605,42 @@ public class MarketplaceController implements Initializable {
     @FXML
     public void suggestDescriptionForProduct() {
         String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
+        String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+        String offerType = fldType == null ? "Vente" : safe(fldType.getValue()).trim();
 
         if (productName.isBlank()) {
             showToast("IA", "Ajoutez d'abord un nom de produit.", false);
             return;
         }
 
-        // AI service not yet implemented - placeholder for future feature
-        showToast("IA", "Service de suggestion par IA non disponible actuellement.", false);
+        if (category.isEmpty() || "Choisir...".equals(category)) {
+            showToast("IA", "Selectionnez une categorie d'abord.", false);
+            return;
+        }
+
+        showToast("IA HuggingFace", "Generation de description en cours...", true);
+
+        new Thread(() -> {
+            try {
+                String generatedDesc = huggingFaceService.suggestProductDescription(productName, category, offerType);
+                Platform.runLater(() -> {
+                    if (fldDescription != null) {
+                        fldDescription.setText(generatedDesc);
+                        updatePublishPreview();
+                        showToast("IA HuggingFace", "Description generee avec succes!", true);
+                    }
+                });
+            } catch (IOException ex) {
+                Platform.runLater(() -> {
+                    showToast("IA Erreur", "Erreur API: " + ex.getMessage(), false);
+                });
+            } catch (InterruptedException ex) {
+                Platform.runLater(() -> {
+                    showToast("IA Erreur", "Generation annulee.", false);
+                });
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     @FXML
