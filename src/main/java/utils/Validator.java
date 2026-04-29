@@ -76,18 +76,27 @@ public class Validator {
         return null;
     }
 
+    public static String validateCin(String cin) {
+        if (cin == null || cin.trim().isEmpty())
+            return "Le numéro CIN est obligatoire.";
+        if (!cin.matches("^\\d{8}$"))
+            return "Le numéro CIN doit comporter exactement 8 chiffres.";
+        return null;
+    }
+
     // ── Validation complète du formulaire Register ────────────
     // Retourne null si tout est valide, sinon le premier message d'erreur
 
     public static String validateRegisterForm(
             String firstName, String lastName, String email,
             String password,  String confirm,  String phone,
-            String address,   String role) {
+            String address,   String role,     String cin) {
 
         String err;
         if ((err = validateFirstName(firstName)) != null)  return err;
         if ((err = validateLastName(lastName))   != null)  return err;
         if ((err = validateEmail(email))         != null)  return err;
+        if ((err = validateCin(cin))             != null)  return err;
         if ((err = validateRole(role))           != null)  return err;
         if ((err = validatePassword(password))   != null)  return err;
         if ((err = validateConfirmPassword(password, confirm)) != null) return err;

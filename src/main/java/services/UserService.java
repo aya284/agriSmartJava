@@ -20,7 +20,8 @@ public class UserService {
         String error = Validator.validateRegisterForm(
                 user.getFirstName(), user.getLastName(), user.getEmail(),
                 user.getPassword(), user.getPassword(),
-                user.getPhone(), user.getAddress(), user.getRole()
+                user.getPhone(), user.getAddress(), user.getRole(),
+                user.getCinNumber()
         );
         if (error != null) throw new Exception(error);
 
@@ -31,8 +32,8 @@ public class UserService {
             INSERT INTO users
               (first_name, last_name, email, role, password,
                phone, address, document_file, image,
-               status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               status, cin_number, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -46,8 +47,9 @@ public class UserService {
             ps.setString(8,  user.getDocumentFile());  // ← document_file
             ps.setString(9,  user.getImage());          // ← image
             ps.setString(10, "pending");
-            ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(11, user.getCinNumber());
             ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
             ps.executeUpdate();
 
             ResultSet keys = ps.getGeneratedKeys();
@@ -172,6 +174,7 @@ public class UserService {
         u.setImage(rs.getString("image"));
         u.setDocumentFile(rs.getString("document_file"));
         u.setStatus(rs.getString("status"));
+        u.setCinNumber(rs.getString("cin_number"));
         u.setGoogleId(rs.getString("google_id"));
         // ── Dates ── ← c'était manquant
         Timestamp createdAt = rs.getTimestamp("created_at");

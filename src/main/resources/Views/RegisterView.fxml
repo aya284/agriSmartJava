@@ -87,6 +87,13 @@
                         <Label fx:id="errEmail" style="-fx-text-fill:#e74c3c; -fx-font-size:12px;" visible="false" />
                     </VBox>
 
+                    <!-- CIN Number -->
+                    <VBox spacing="6">
+                        <Label style="-fx-font-weight: bold; -fx-text-fill: #2a5438; -fx-font-size: 13.5px;" text="Numéro CIN (8 chiffres) *" />
+                        <TextField fx:id="cinField" promptText="Ex: 01234567" style="-fx-background-radius: 12; -fx-padding: 13 16; -fx-font-size: 15px;" />
+                        <Label fx:id="errCin" style="-fx-text-fill:#e74c3c; -fx-font-size:12px;" visible="false" />
+                    </VBox>
+
                     <!-- Role -->
                     <VBox spacing="6">
                         <Label style="-fx-font-weight: bold; -fx-text-fill: #2a5438; -fx-font-size: 13.5px;" text="Type de compte *" />

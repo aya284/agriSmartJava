@@ -5,20 +5,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="487e53af-3b15-43a4-8451-3ea6273cb44f" name="Changes" comment="login and register">
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/ocr/AiVerificationService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/services/ocr/OcrService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/services/OcrService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/tessdata/ara.traineddata" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/ForgotPasswordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ForgotPasswordController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/ResetPasswordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ResetPasswordController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/entities/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/services/ClaudeService.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/services/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/EmailService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/PasswordResetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/PasswordResetService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/services/RecaptchaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/RecaptchaService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/LoginView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/ResetPasswordView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/ResetPasswordView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/AiVerificationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/ClaudeService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/services/ocr/OcrService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/utils/Validator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/Validator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/RegisterView.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/632f8134-eeb1-43f6-ba00-f9b69c04061c.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/705f1b01-aa16-4691-958e-a22419ac1bb3.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/7687a114-7632-42e5-80e5-61a510ba8980.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/9fc17c74-fc46-4572-8c1d-0a2fba993928.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/a8e66fe7-72e8-44f0-9585-1198631084b0.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/c7cfc7a9-23fa-455a-a21b-eec97ff72ca8.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/d0fda7de-8a60-4679-86e7-43b53474e276.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/d5816e89-d29c-4cdf-a777-d7aaa14e5e0c.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/documents/f2671d84-949f-4112-bac4-ca63cf82b656.pdf" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,7 +35,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="135" />
+    <option name="cachedIndexableFilesCount" value="207" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -53,12 +62,12 @@
     &quot;assignee&quot;: &quot;SoumayaDrydi&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/aya284/agriSmartJava.git",
-    "accountId": "b4b76326-bb64-485c-859a-78929fc22fd0"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/aya284/agriSmartJava.git&quot;,
+    &quot;accountId&quot;: &quot;b4b76326-bb64-485c-859a-78929fc22fd0&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -90,7 +99,7 @@
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;.&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/User/IdeaProjects/agriSmartJava/src/main/resources/tessdata&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -108,6 +117,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\User\IdeaProjects\agriSmartJava\src\main\resources\tessdata" />
       <recent name="src/main" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -161,7 +171,10 @@
       <workItem from="1776122212647" duration="56000" />
       <workItem from="1776162058484" duration="432000" />
       <workItem from="1776273162684" duration="1731000" />
-      <workItem from="1777137751717" duration="8607000" />
+      <workItem from="1777137751717" duration="10466000" />
+      <workItem from="1777372690193" duration="4271000" />
+      <workItem from="1777402877936" duration="11434000" />
+      <workItem from="1777468981115" duration="4369000" />
     </task>
     <task id="LOCAL-00001" summary="login and register">
       <option name="closed" value="true" />
@@ -207,6 +220,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/org/example/Main.java</url>
           <line>13</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/services/OcrService.java</url>
+          <line>132</line>
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
