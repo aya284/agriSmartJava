@@ -20,7 +20,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import services.DemandeService;
-
+import utils.SessionManager;
 import java.awt.Desktop;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -150,7 +150,7 @@ public class PostulerController implements Initializable {
         try {
             if (selectedDemandeForEdit == null) {
                 boolean alreadyApplied = service.afficher().stream()
-                        .anyMatch(d -> d.getUsers_id() == 2
+                        .anyMatch(d -> d.getUsers_id() == SessionManager.getInstance().getCurrentUser().getId()
                                 && d.getOffre_id() == (int) currentOffreId);
                 if (alreadyApplied) {
                     showAlert("Attention", "Vous avez deja postule pour cette offre !");
@@ -195,7 +195,7 @@ public class PostulerController implements Initializable {
                 d.setCv(cvFileName);
                 d.setLettre_motivation(lettreFileName);
                 d.setStatut("En cours");
-                d.setUsers_id(2);
+                d.setUsers_id(SessionManager.getInstance().getCurrentUser().getId());
                 d.setOffre_id((int) currentOffreId);
                 service.ajouter(d);
                 showAlert("Succes", "Candidature envoyee !");

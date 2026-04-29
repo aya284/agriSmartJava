@@ -18,7 +18,7 @@ public class OffreService implements IService<Offre> {
         String sql = "INSERT INTO offre (title, type_poste, type_contrat, description, lieu, statut, date_debut, date_fin, salaire, is_active, statut_validation, agriculteur_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, offre.getTitle());
             ps.setString(2, offre.getType_poste());
             ps.setString(3, offre.getType_contrat());
@@ -33,7 +33,14 @@ public class OffreService implements IService<Offre> {
             ps.setInt(12, offre.getAgriculteur_id());
 
             ps.executeUpdate();
-            System.out.println("Offre ajoutée avec succès !");
+            
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    offre.setId(rs.getLong(1));
+                }
+            }
+            
+            System.out.println("Offre ajoutée avec succès ! (ID: " + offre.getId() + ")");
         }
     }
 

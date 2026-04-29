@@ -10,6 +10,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -24,6 +26,7 @@ import services.DemandeService;
 import services.OffreService;
 import services.ChatbotUpdateService;
 import services.RecrutementIAService;
+import utils.SessionManager;
 
 import java.io.*;
 import java.net.URL;
@@ -83,7 +86,7 @@ public class CandidatOffreController implements Initializable {
     private final ChatbotUpdateService updateService = new ChatbotUpdateService();
     private final RecrutementIAService iaService     = new RecrutementIAService();
 
-    public static Offre selectedOffreForView = null;
+    private Offre currentOffreForView = null;
 
     // ════════════════════════════════════════════════════════
     //  INIT
@@ -96,8 +99,25 @@ public class CandidatOffreController implements Initializable {
             statutFilter.setValue("Toutes les offres");
             statutFilter.setOnAction(e -> handleSearch());
         }
+        if (overlay != null) {
+            overlay.setManaged(false);
+            overlay.setMouseTransparent(true);
+        }
+        if (simulatorModal != null) {
+            simulatorModal.setManaged(false);
+        }
         if (cardsContainer != null) loadData();
-        if (detailTitle    != null && selectedOffreForView != null) setupDetail();
+    }
+    
+    public void setData(Offre o) {
+        initData(o);
+    }
+
+    public void initData(Offre o) {
+        this.currentOffreForView = o;
+        if (detailTitle != null) {
+            setupDetail();
+        }
     }
 
     // ════════════════════════════════════════════════════════
@@ -105,10 +125,14 @@ public class CandidatOffreController implements Initializable {
     // ════════════════════════════════════════════════════════
     private void loadData() {
         try {
-            List<Offre> list = offreService.afficher();
+            List<Offre> list = offreService.afficher().stream()
+                    .filter(this::isVisibleForCandidate)
+                    .toList();
             cardsContainer.getChildren().clear();
             list.forEach(o -> cardsContainer.getChildren().add(buildCard(o)));
-            countLabel.setText(list.size() + " offre(s) disponible(s)");
+            if (countLabel != null) {
+                countLabel.setText(list.size() + " offre(s) disponible(s)");
+            }
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
@@ -130,7 +154,10 @@ public class CandidatOffreController implements Initializable {
         sal.setStyle("-fx-text-fill:#27ae60;-fx-font-weight:bold;-fx-font-size:13;");
         Button btn = new Button("Voir l offre"); btn.setMaxWidth(Double.MAX_VALUE);
         btn.setStyle("-fx-background-color:#1a3323;-fx-text-fill:white;-fx-background-radius:8;-fx-cursor:hand;-fx-font-size:12;");
-        btn.setOnAction(e -> { selectedOffreForView = o; navigateToDetail(); });
+        btn.setCursor(Cursor.HAND);
+        btn.setUserData(o.getId());
+        btn.setFocusTraversable(false);
+        btn.setOnAction(e -> ouvrirDetails(o));
         c.getChildren().addAll(badge, title, loc, sal, btn);
         return c;
     }
@@ -140,12 +167,15 @@ public class CandidatOffreController implements Initializable {
         String s = statutFilter != null && statutFilter.getValue() != null ? statutFilter.getValue() : "Toutes les offres";
         if (cardsContainer == null) return;
         try {
-            List<Offre> all = offreService.afficher();
+            List<Offre> all = offreService.afficher().stream()
+                    .filter(this::isVisibleForCandidate)
+                    .toList();
             cardsContainer.getChildren().clear();
             all.stream().filter(o -> {
                 boolean mt = q.isEmpty() || (o.getTitle()!=null&&o.getTitle().toLowerCase().contains(q))
                         || (o.getLieu()!=null&&o.getLieu().toLowerCase().contains(q));
-                boolean ms = s.equals("Toutes les offres") || o.getStatut().equalsIgnoreCase(s);
+                boolean ms = s.equals("Toutes les offres")
+                        || (o.getStatut() != null && o.getStatut().equalsIgnoreCase(s));
                 return mt && ms;
             }).forEach(o -> cardsContainer.getChildren().add(buildCard(o)));
             if (countLabel != null) countLabel.setText(cardsContainer.getChildren().size() + " offre(s)");
@@ -237,9 +267,10 @@ public class CandidatOffreController implements Initializable {
         nomFichier   = file.getName();
         contenuCV    = extrairePDF(file);
 
-        filePreviewIcon.setText("CV");
-        filePreviewName.setText(nomFichier);
-        filePreviewBar.setVisible(true); filePreviewBar.setManaged(true);
+        // ✅ Vérifications null — ces éléments n'existent pas dans tous les FXML
+        if (filePreviewIcon != null) filePreviewIcon.setText("CV");
+        if (filePreviewName != null) filePreviewName.setText(nomFichier);
+        if (filePreviewBar  != null) { filePreviewBar.setVisible(true); filePreviewBar.setManaged(true); }
 
         userMsg("Voici mon CV : " + nomFichier);
 
@@ -254,7 +285,7 @@ public class CandidatOffreController implements Initializable {
     @FXML
     public void supprimerFichier() {
         nomFichier = ""; contenuCV = "";
-        filePreviewBar.setVisible(false); filePreviewBar.setManaged(false);
+        if (filePreviewBar != null) { filePreviewBar.setVisible(false); filePreviewBar.setManaged(false); }
         botMsg("CV supprime. Vous pouvez en importer un nouveau.");
     }
 
@@ -375,7 +406,7 @@ public class CandidatOffreController implements Initializable {
         try {
             if (offreSelPourChat == null) {
                 List<Demande> mes = demandeService.afficher().stream()
-                        .filter(d -> d.getUsers_id() == 2).toList();
+                        .filter(d -> d.getUsers_id() == SessionManager.getInstance().getCurrentUser().getId()).toList();
                 for (Demande d : mes) {
                     for (Offre o : offreService.afficher()) {
                         if (o.getId().equals((long) d.getOffre_id())
@@ -636,7 +667,11 @@ public class CandidatOffreController implements Initializable {
     @FXML public void handleLancerTest() {
         if (overlay == null || simulatorModal == null) return;
         resetIntro();
-        overlay.setVisible(true); simulatorModal.setVisible(true);
+        overlay.setManaged(true);
+        overlay.setVisible(true);
+        overlay.setMouseTransparent(false);
+        simulatorModal.setManaged(true);
+        simulatorModal.setVisible(true);
         simulatorModal.setScaleX(0.85); simulatorModal.setScaleY(0.85); simulatorModal.setOpacity(0);
         ScaleTransition st = new ScaleTransition(Duration.millis(200), simulatorModal); st.setToX(1); st.setToY(1);
         FadeTransition  ft = new FadeTransition(Duration.millis(200), simulatorModal);  ft.setToValue(1);
@@ -855,7 +890,15 @@ public class CandidatOffreController implements Initializable {
     @FXML public void closeSimulator() {
         stopSim();
         FadeTransition ft=new FadeTransition(Duration.millis(150),simulatorModal);ft.setToValue(0);
-        ft.setOnFinished(e->{overlay.setVisible(false);simulatorModal.setVisible(false);simulatorModal.setOpacity(1);resetIntro();});
+        ft.setOnFinished(e->{
+            overlay.setVisible(false);
+            overlay.setManaged(false);
+            overlay.setMouseTransparent(true);
+            simulatorModal.setVisible(false);
+            simulatorModal.setManaged(false);
+            simulatorModal.setOpacity(1);
+            resetIntro();
+        });
         ft.play();
     }
 
@@ -870,28 +913,89 @@ public class CandidatOffreController implements Initializable {
     //  NAVIGATION
     // ════════════════════════════════════════════════════════
     private void setupDetail() {
+        if (currentOffreForView == null) return;
         DateTimeFormatter fmt=DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        detailTitle.setText(selectedOffreForView.getTitle());
-        detailDesc.setText(selectedOffreForView.getDescription());
-        detailLieu.setText(selectedOffreForView.getLieu());
-        detailSalaire.setText(selectedOffreForView.getSalaire()+" TND mensuel");
-        if(selectedOffreForView.getDate_debut()!=null)detailDebut.setText(selectedOffreForView.getDate_debut().format(fmt));
-        if(selectedOffreForView.getDate_fin()!=null){String df=selectedOffreForView.getDate_fin().format(fmt);detailFin.setText(df);if(dateLimitLabel!=null)dateLimitLabel.setText(df);}
-        boolean exp=selectedOffreForView.getDate_fin()!=null&&LocalDateTime.now().isAfter(selectedOffreForView.getDate_fin());
-        boolean cl="Cloturee".equalsIgnoreCase(selectedOffreForView.getStatut());
+        detailTitle.setText(currentOffreForView.getTitle());
+        detailDesc.setText(currentOffreForView.getDescription());
+        detailLieu.setText(currentOffreForView.getLieu());
+        detailSalaire.setText(currentOffreForView.getSalaire()+" TND mensuel");
+        if(currentOffreForView.getDate_debut()!=null)detailDebut.setText(currentOffreForView.getDate_debut().format(fmt));
+        if(currentOffreForView.getDate_fin()!=null){String df=currentOffreForView.getDate_fin().format(fmt);detailFin.setText(df);if(dateLimitLabel!=null)dateLimitLabel.setText(df);}
+        boolean exp=currentOffreForView.getDate_fin()!=null&&LocalDateTime.now().isAfter(currentOffreForView.getDate_fin());
+        boolean cl="Cloturee".equalsIgnoreCase(currentOffreForView.getStatut());
         if(exp||cl){btnPostuler.setDisable(true);btnPostuler.setText(cl?"Offre Cloturee":"Offre expiree");btnPostuler.setStyle("-fx-background-color:#95a5a6;-fx-text-fill:white;-fx-background-radius:10;");}
     }
 
     @FXML public void handlePostuler() {
-        if(selectedOffreForView==null)return;
-        try{boolean ex=demandeService.afficher().stream().anyMatch(d->d.getUsers_id()==2&&d.getOffre_id()==selectedOffreForView.getId().intValue());
+        if(currentOffreForView==null)return;
+        try{boolean ex=demandeService.afficher().stream().anyMatch(d->d.getUsers_id()==SessionManager.getInstance().getCurrentUser().getId()&&d.getOffre_id()==currentOffreForView.getId().intValue());
             if(ex)new Alert(Alert.AlertType.INFORMATION,"Vous avez deja postule !").showAndWait();
-            else{PostulerController.currentOffreId=selectedOffreForView.getId();navTo("/Views/Offres/PostulerForm.fxml");}
-        }catch(SQLException e){e.printStackTrace();}
+            else{
+                PostulerController.currentOffreId=currentOffreForView.getId();
+                navTo("/Views/Offres/PostulerForm.fxml");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Erreur lors de l'ouverture du formulaire : " + e.getMessage()).showAndWait();
+        }
     }
 
-    @FXML public void showListPage(){selectedOffreForView=null;switchView("/Views/Offres/CandidatOffreList.fxml");}
-    private void navigateToDetail(){switchView("/Views/Offres/OffreDetailView.fxml");}
-    private void navTo(String path){try{Parent r=FXMLLoader.load(getClass().getResource(path));if(btnPostuler!=null&&btnPostuler.getScene()!=null){StackPane ca=(StackPane)btnPostuler.getScene().lookup("#contentArea");if(ca!=null)ca.getChildren().setAll(r);}}catch(IOException e){e.printStackTrace();}}
-    private void switchView(String path){try{Parent r=FXMLLoader.load(getClass().getResource(path));Scene sc=cardsContainer!=null&&cardsContainer.getScene()!=null?cardsContainer.getScene():detailTitle!=null?detailTitle.getScene():null;if(sc!=null){StackPane ca=(StackPane)sc.lookup("#contentArea");if(ca!=null)ca.getChildren().setAll(r);else sc.setRoot(r);}}catch(IOException e){e.printStackTrace();}}
+    @FXML public void showListPage(){currentOffreForView=null;switchView("/Views/Offres/CandidatOffreList.fxml");}
+    
+    private void ouvrirDetails(Offre o) {
+        if (o == null || o.getId() == null || o.getId() <= 0) {
+            new Alert(Alert.AlertType.ERROR, "Cette offre est invalide ou n'a pas encore d'identifiant.").showAndWait();
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/Offres/OffreDetailView.fxml"));
+            Parent root = loader.load();
+            
+            CandidatOffreController controller = loader.getController();
+            controller.initData(o);
+            setContent(root, cardsContainer != null ? cardsContainer : detailTitle);
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Impossible d'ouvrir le detail de l'offre.").showAndWait();
+        }
+    }
+    private void navTo(String path){
+        try{
+            Parent r=FXMLLoader.load(getClass().getResource(path));
+            setContent(r, btnPostuler);
+        }catch(Exception e){
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Impossible de charger la page : " + e.getMessage()).showAndWait();
+        }
+    }
+    private void switchView(String path){
+        try{
+            Parent r = FXMLLoader.load(getClass().getResource(path));
+            setContent(r, cardsContainer != null ? cardsContainer : detailTitle);
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private boolean isVisibleForCandidate(Offre offre) {
+        return offre != null
+                && Boolean.TRUE.equals(offre.getIs_active())
+                && "approuvée".equalsIgnoreCase(offre.getStatut_validation());
+    }
+
+    private void setContent(Parent root, Node anchor) {
+        if (root == null || anchor == null) {
+            return;
+        }
+        Scene scene = anchor.getScene();
+        if (scene == null) {
+            return;
+        }
+        StackPane contentArea = (StackPane) scene.getRoot().lookup("#contentArea");
+        if (contentArea != null) {
+            contentArea.getChildren().setAll(root);
+        } else {
+            scene.setRoot(root);
+        }
+    }
 }

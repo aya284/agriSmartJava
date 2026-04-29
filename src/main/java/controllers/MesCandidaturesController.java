@@ -15,6 +15,7 @@ import javafx.util.Duration;
 import services.ChatbotUpdateService;
 import services.DemandeService;
 import services.OffreService;
+import utils.SessionManager;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -40,13 +41,28 @@ public class MesCandidaturesController implements Initializable {
     private final DemandeService demandeService = new DemandeService();
     private final OffreService offreService = new OffreService();
     private final ChatbotUpdateService updateService = new ChatbotUpdateService();
-    private final int STATIC_USER_ID = 2;
+
+    // ✅ SUPPRIMÉ : private final int STATIC_USER_ID = 2;
+    // ✅ On utilise SessionManager pour récupérer l'ID du vrai utilisateur connecté
 
     private Demande offreSelectionneePourChat = null;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Vérification de sécurité : si personne n'est connecté, on ne charge rien
+        if (SessionManager.getInstance().getCurrentUser() == null) {
+            System.err.println("⚠️ Aucun utilisateur connecté dans MesCandidaturesController !");
+            return;
+        }
+        System.out.println("✅ Candidatures chargées pour : "
+                + SessionManager.getInstance().getCurrentUser().getEmail()
+                + " (ID: " + getCurrentUserId() + ")");
         refreshList();
+    }
+
+    // ✅ Méthode utilitaire — récupère l'ID de l'utilisateur connecté
+    private int getCurrentUserId() {
+        return SessionManager.getInstance().getCurrentUser().getId();
     }
 
     // --- LOGIQUE D'AFFICHAGE DE LA LISTE ---
@@ -57,11 +73,20 @@ public class MesCandidaturesController implements Initializable {
             List<Demande> allDemandes = demandeService.afficher();
             List<Offre> allOffres = offreService.afficher();
 
+            // ✅ Filtre par l'ID de l'utilisateur connecté (pas 2 en dur)
+            int userId = getCurrentUserId();
             List<Demande> userDemandes = allDemandes.stream()
-                    .filter(d -> d.getUsers_id() == STATIC_USER_ID)
+                    .filter(d -> d.getUsers_id() == userId)
                     .collect(Collectors.toList());
 
             updateStats(userDemandes);
+
+            if (userDemandes.isEmpty()) {
+                Label vide = new Label("Vous n'avez pas encore postulé à une offre.");
+                vide.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 14; -fx-padding: 30;");
+                listContainer.getChildren().add(vide);
+                return;
+            }
 
             for (Demande d : userDemandes) {
                 Offre o = allOffres.stream()
@@ -77,14 +102,16 @@ public class MesCandidaturesController implements Initializable {
 
     private HBox createCandidatureRow(Demande d, Offre o) {
         HBox row = new HBox(20);
-        row.setStyle("-fx-padding: 15; -fx-border-color: #eee; -fx-border-width: 0 0 1 0; -fx-alignment: CENTER_LEFT; -fx-background-color: white;");
+        row.setStyle("-fx-padding: 15; -fx-border-color: #eee; -fx-border-width: 0 0 1 0; " +
+                "-fx-alignment: CENTER_LEFT; -fx-background-color: white;");
 
         VBox offerInfo = new VBox(5);
         offerInfo.setPrefWidth(250);
         String titreAffiche = (o != null) ? o.getTitle() : "Offre #" + d.getOffre_id();
         Label title = new Label(titreAffiche);
         title.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1a3323;");
-        Label detail = new Label((o != null ? o.getLieu() : "Lieu inconnu") + " • " + (o != null ? o.getSalaire() : "0") + " DT");
+        Label detail = new Label((o != null ? o.getLieu() : "Lieu inconnu") + " • "
+                + (o != null ? o.getSalaire() : "0") + " DT");
         detail.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11;");
         offerInfo.getChildren().addAll(title, detail);
 
@@ -108,15 +135,16 @@ public class MesCandidaturesController implements Initializable {
         statusLabel.setPrefWidth(90);
         String color = d.getStatut().equalsIgnoreCase("Acceptée") ? "#27ae60" :
                 d.getStatut().equalsIgnoreCase("En cours") ? "#f39c12" : "#e74c3c";
-        statusLabel.setStyle("-fx-background-color: " + color + "22; -fx-text-fill: " + color + "; -fx-padding: 5 10; -fx-background-radius: 15; -fx-font-weight: bold; -fx-alignment: center;");
+        statusLabel.setStyle("-fx-background-color: " + color + "22; -fx-text-fill: " + color
+                + "; -fx-padding: 5 10; -fx-background-radius: 15; -fx-font-weight: bold; -fx-alignment: center;");
 
         HBox actions = new HBox(8);
-        Button viewBtn = new Button("👁");
-        Button editBtn = new Button("✏");
+        Button viewBtn   = new Button("👁");
+        Button editBtn   = new Button("✏");
         Button deleteBtn = new Button("🗑");
         deleteBtn.setStyle("-fx-text-fill: #e74c3c;");
-        viewBtn.setOnAction(e -> showOffreDetail(o));
-        editBtn.setOnAction(e -> handleEdit(d));
+        viewBtn.setOnAction(e   -> showOffreDetail(o));
+        editBtn.setOnAction(e   -> handleEdit(d));
         deleteBtn.setOnAction(e -> handleDelete(d));
         actions.getChildren().addAll(viewBtn, editBtn, deleteBtn);
 
@@ -124,7 +152,7 @@ public class MesCandidaturesController implements Initializable {
         return row;
     }
 
-    // --- LOGIQUE DU CHATBOT INTELLIGENT ---
+    // --- LOGIQUE DU CHATBOT ---
 
     @FXML
     public void handleSendChat() {
@@ -135,47 +163,48 @@ public class MesCandidaturesController implements Initializable {
         chatInputField.clear();
         String userTextLower = userText.toLowerCase();
 
-        // 1. Gestion de la politesse
-        if (userTextLower.contains("bonjour") || userTextLower.contains("salut") || userTextLower.contains("aider")) {
-            typeMessage("Bonjour ! 😊 Je peux vous aider à modifier vos candidatures. Tapez simplement le nom de l'offre concernée.", false);
+        if (userTextLower.contains("bonjour") || userTextLower.contains("salut")
+                || userTextLower.contains("aider")) {
+            typeMessage("Bonjour ! 😊 Je peux vous aider à modifier vos candidatures. "
+                    + "Tapez simplement le nom de l'offre concernée.", false);
             return;
         }
 
         try {
+            int userId = getCurrentUserId(); // ✅ ID dynamique
+
             if (offreSelectionneePourChat == null) {
                 List<Offre> offresPostulees = offreService.afficher();
                 List<Demande> mesDemandes = demandeService.afficher().stream()
-                        .filter(dem -> dem.getUsers_id() == STATIC_USER_ID).collect(Collectors.toList());
+                        .filter(dem -> dem.getUsers_id() == userId) // ✅ ID dynamique
+                        .collect(Collectors.toList());
 
                 for (Demande d : mesDemandes) {
-                    Offre o = offresPostulees.stream()
+                    Offre offre = offresPostulees.stream()
                             .filter(off -> String.valueOf(off.getId()).equals(String.valueOf(d.getOffre_id())))
                             .findFirst().orElse(null);
 
-                    if (o != null) {
-                        String titreOffre = o.getTitle().toLowerCase();
+                    if (offre != null) {
+                        String titreOffre = offre.getTitle().toLowerCase();
                         boolean matchTrouve = false;
-
-                        // Vérification intelligente : on découpe la phrase de l'utilisateur
                         String[] motsUtilisateur = userTextLower.split(" ");
                         for (String mot : motsUtilisateur) {
-                            // Si un mot significatif (>3 lettres) est dans le titre, on valide
                             if (mot.length() > 3 && titreOffre.contains(mot)) {
                                 matchTrouve = true;
                                 break;
                             }
                         }
-
                         if (matchTrouve || titreOffre.contains(userTextLower)) {
                             offreSelectionneePourChat = d;
-                            typeMessage("✅ J'ai trouvé l'offre : '" + o.getTitle() + "'.\nQue voulez-vous modifier ? (nom, prenom ou num)", false);
+                            typeMessage("✅ J'ai trouvé l'offre : '" + offre.getTitle()
+                                    + "'.\nQue voulez-vous modifier ? (nom, prenom ou num)", false);
                             return;
                         }
                     }
                 }
                 typeMessage("❌ Désolé, je ne trouve pas cette offre. Pouvez-vous préciser le titre ?", false);
+
             } else {
-                // Modification des données
                 String response = updateService.processMessage(userText, offreSelectionneePourChat);
                 if (response != null) {
                     typeMessage(response, false);
@@ -186,15 +215,20 @@ public class MesCandidaturesController implements Initializable {
                     }
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // --- AUTRES MÉTHODES ---
 
     private void updateStats(List<Demande> demandes) {
-        statAcceptee.setText(String.valueOf(demandes.stream().filter(d -> "Acceptée".equalsIgnoreCase(d.getStatut())).count()));
-        statEnCours.setText(String.valueOf(demandes.stream().filter(d -> "En cours".equalsIgnoreCase(d.getStatut())).count()));
-        statRefusee.setText(String.valueOf(demandes.stream().filter(d -> "Refusée".equalsIgnoreCase(d.getStatut())).count()));
+        statAcceptee.setText(String.valueOf(demandes.stream()
+                .filter(d -> "Acceptée".equalsIgnoreCase(d.getStatut())).count()));
+        statEnCours.setText(String.valueOf(demandes.stream()
+                .filter(d -> "En cours".equalsIgnoreCase(d.getStatut())).count()));
+        statRefusee.setText(String.valueOf(demandes.stream()
+                .filter(d -> "Refusée".equalsIgnoreCase(d.getStatut())).count()));
     }
 
     private void handleEdit(Demande d) {
@@ -209,7 +243,9 @@ public class MesCandidaturesController implements Initializable {
             try {
                 demandeService.supprimer(d.getId().intValue());
                 refreshList();
-            } catch (SQLException e) { e.printStackTrace(); }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -217,26 +253,48 @@ public class MesCandidaturesController implements Initializable {
         try {
             File f = new File(path);
             if (f.exists()) Desktop.getDesktop().open(f);
-        } catch (IOException e) { e.printStackTrace(); }
+            else System.err.println("⚠️ Fichier introuvable : " + path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showOffreDetail(Offre o) {
         if (o != null) {
-            CandidatOffreController.selectedOffreForView = o;
-            switchView("/Views/Offres/OffreDetailView.fxml");
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/Offres/OffreDetailView.fxml"));
+                Parent root = loader.load();
+                
+                CandidatOffreController controller = loader.getController();
+                controller.setData(o);
+                
+                StackPane area = (StackPane) listContainer.getScene().lookup("#contentArea");
+                if (area != null) area.getChildren().setAll(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    @FXML private void toggleChat() { chatContainer.setVisible(!chatContainer.isVisible()); chatContainer.setManaged(chatContainer.isVisible()); }
+    @FXML
+    private void toggleChat() {
+        chatContainer.setVisible(!chatContainer.isVisible());
+        chatContainer.setManaged(chatContainer.isVisible());
+    }
 
-    @FXML private void showOffres() { switchView("/Views/Offres/CandidatOffreList.fxml"); }
+    @FXML
+    private void showOffres() {
+        switchView("/Views/Offres/CandidatOffreList.fxml");
+    }
 
     private void switchView(String path) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource(path));
             StackPane area = (StackPane) listContainer.getScene().lookup("#contentArea");
             if (area != null) area.getChildren().setAll(root);
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void typeMessage(String text, boolean isUser) {
@@ -244,9 +302,14 @@ public class MesCandidaturesController implements Initializable {
     }
 
     private void addSimpleMessage(String text, boolean isUser) {
-        Label label = new Label(text); label.setWrapText(true); label.setMaxWidth(220);
-        label.setStyle(isUser ? "-fx-background-color: #1a3323; -fx-text-fill: white; -fx-padding: 8; -fx-background-radius: 12;" : "-fx-background-color: #e8f5e9; -fx-text-fill: #1a3323; -fx-padding: 8; -fx-background-radius: 12;");
-        HBox box = new HBox(label); box.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.setMaxWidth(220);
+        label.setStyle(isUser
+                ? "-fx-background-color: #1a3323; -fx-text-fill: white; -fx-padding: 8; -fx-background-radius: 12;"
+                : "-fx-background-color: #e8f5e9; -fx-text-fill: #1a3323; -fx-padding: 8; -fx-background-radius: 12;");
+        HBox box = new HBox(label);
+        box.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         chatMessagesArea.getChildren().add(box);
         chatScrollPane.setVvalue(1.0);
     }

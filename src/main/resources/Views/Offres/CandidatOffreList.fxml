@@ -58,15 +58,15 @@
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
                     style="-fx-background-color:transparent;-fx-background:transparent;-fx-border-color:transparent;">
             <FlowPane fx:id="cardsContainer" hgap="20.0" vgap="20.0">
-                <padding><Insets bottom="10.0" left="5.0" right="5.0" top="10.0"/></padding>
+                <padding><Insets bottom="90.0" left="5.0" right="5.0" top="10.0"/></padding>
             </FlowPane>
         </ScrollPane>
     </VBox>
 
-    <Region fx:id="overlay" visible="false"
-            style="-fx-background-color:rgba(0,0,0,0.65);" mouseTransparent="false"/>
+    <Region fx:id="overlay" visible="false" managed="false"
+            style="-fx-background-color:rgba(0,0,0,0.65);" mouseTransparent="true"/>
 
-    <VBox fx:id="simulatorModal" visible="false"
+    <VBox fx:id="simulatorModal" visible="false" managed="false"
           maxWidth="560.0" maxHeight="560.0" alignment="TOP_CENTER" spacing="0"
           style="-fx-background-color:white;-fx-background-radius:20;
                  -fx-effect:dropshadow(three-pass-box,rgba(0,0,0,0.35),25,0,0,0);">
