@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.YieldPredictionController" spacing="20" prefWidth="750" prefHeight="650" style="-fx-background-color: white; -fx-border-radius: 12; -fx-background-radius: 12;">
+    <padding><Insets top="25" right="30" bottom="25" left="30"/></padding>
+
+    <!-- En-tête -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="📈 Prédiction de Rendement IA (Hugging Face)" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblContext" text="-" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px; -fx-font-style: italic;"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Zone de statut de l'analyse -->
+    <VBox fx:id="loadingBox" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
+        <ProgressIndicator prefWidth="50" prefHeight="50" style="-fx-progress-color: #3498db;"/>
+        <Label text="Analyse globale en cours via Hugging Face..." style="-fx-font-size: 15px; -fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+        <Label text="Étude des données de la parcelle, de la culture et des consommations..." style="-fx-text-fill: #7f8c8d;"/>
+    </VBox>
+
+    <!-- Zone des Résultats -->
+    <ScrollPane fx:id="scrollResults" fitToWidth="true" fitToHeight="false" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;" visible="false" managed="false" VBox.vgrow="ALWAYS">
+        <VBox spacing="20" style="-fx-padding: 5;">
+            
+            <!-- Chiffres Clés -->
+            <HBox spacing="20">
+                <VBox alignment="CENTER" style="-fx-padding: 20; -fx-background-color: #fdf2e9; -fx-border-color: #e67e22; -fx-border-radius: 8; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(230,126,34,0.2), 5, 0, 0, 2);" HBox.hgrow="ALWAYS" prefWidth="350">
+                    <Label text="Rendement Total Estimé" style="-fx-font-size: 14px; -fx-text-fill: #d35400;"/>
+                    <Label fx:id="lblTotalYield" text="-" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #e67e22;"/>
+                </VBox>
+                <VBox alignment="CENTER" style="-fx-padding: 20; -fx-background-color: #ebf5fb; -fx-border-color: #3498db; -fx-border-radius: 8; -fx-background-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(52,152,219,0.2), 5, 0, 0, 2);" HBox.hgrow="ALWAYS" prefWidth="350">
+                    <Label text="Rendement à l'Hectare" style="-fx-font-size: 14px; -fx-text-fill: #2980b9;"/>
+                    <Label fx:id="lblYieldPerHa" text="-" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #3498db;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Facteurs -->
+            <HBox spacing="20">
+                <!-- Facteurs Positifs -->
+                <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: #eaeded; -fx-border-radius: 8; -fx-background-radius: 8;" HBox.hgrow="ALWAYS" prefWidth="350">
+                    <Label text="✅ Facteurs Favorables :" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #27ae60;"/>
+                    <VBox fx:id="boxPositiveFactors" spacing="5"/>
+                </VBox>
+                
+                <!-- Risques -->
+                <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: #fdedec; -fx-border-radius: 8; -fx-background-radius: 8;" HBox.hgrow="ALWAYS" prefWidth="350">
+                    <Label text="⚠️ Facteurs de Risque :" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #c0392b;"/>
+                    <VBox fx:id="boxRiskFactors" spacing="5"/>
+                </VBox>
+            </HBox>
+
+            <!-- Conseil d'optimisation -->
+            <VBox spacing="10" style="-fx-padding: 15; -fx-background-color: #f4f6f7; -fx-border-color: #8e44ad; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="💡" style="-fx-font-size: 20px;"/>
+                    <Label text="Recommandation de l'Agronome IA" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #8e44ad;"/>
+                </HBox>
+                <Label fx:id="lblRecommendation" text="-" wrapText="true" style="-fx-font-size: 15px; -fx-text-fill: #2c3e50; -fx-line-spacing: 5px;"/>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+    <Separator/>
+    <!-- Boutons d'action -->
+    <HBox alignment="CENTER_RIGHT" spacing="15">
+        <Button text="Fermer" onAction="#closeModal" style="-fx-background-color: #bdc3c7; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 20; -fx-cursor: hand; -fx-font-weight: bold; -fx-border-radius: 5;"/>
+        <Button fx:id="btnExport" text="📄 Exporter en PDF" onAction="#exportPDF" disable="true" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10 20; -fx-cursor: hand; -fx-font-weight: bold; -fx-border-radius: 5;"/>
+    </HBox>
+</VBox>

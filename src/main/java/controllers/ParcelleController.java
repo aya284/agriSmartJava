@@ -491,18 +491,20 @@ public class ParcelleController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox actions = new HBox(5);
-        actions.setAlignment(Pos.CENTER_RIGHT);
-
         Button btnUtiliser = new Button("Utiliser");
         btnUtiliser.getStyleClass().add("btn-primary");
         btnUtiliser.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #27ae60;");
         btnUtiliser.setOnAction(e -> openConsommationModal(c));
 
-        Button btnDiagnostic = new Button("🔍 IA");
+        Button btnDiagnostic = new Button("🔍 Diagnostic");
         btnDiagnostic.getStyleClass().add("btn-primary");
-        btnDiagnostic.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #8e44ad;"); // Couleur distincte pour l'IA
+        btnDiagnostic.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #8e44ad;");
         btnDiagnostic.setOnAction(e -> openDiagnosticModal(c));
+
+        Button btnYield = new Button("📈 Rendement");
+        btnYield.getStyleClass().add("btn-primary");
+        btnYield.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #e67e22;");
+        btnYield.setOnAction(e -> openYieldPredictionModal(c));
 
         Button btnEdit = new Button("✎");
         btnEdit.getStyleClass().add("culture-action-btn");
@@ -512,9 +514,20 @@ public class ParcelleController {
         btnDel.getStyleClass().add("culture-action-btn-danger");
         btnDel.setOnAction(e -> handleCultureDelete(c));
 
-        actions.getChildren().addAll(btnUtiliser, btnDiagnostic, btnEdit, btnDel);
+        VBox actionsBox = new VBox(5);
+        actionsBox.setAlignment(Pos.CENTER_RIGHT);
 
-        header.getChildren().addAll(icon, titleArea, spacer, actions);
+        HBox topActions = new HBox(5);
+        topActions.setAlignment(Pos.CENTER_RIGHT);
+        topActions.getChildren().addAll(btnUtiliser, btnEdit, btnDel);
+
+        HBox bottomActions = new HBox(5);
+        bottomActions.setAlignment(Pos.CENTER_RIGHT);
+        bottomActions.getChildren().addAll(btnDiagnostic, btnYield);
+
+        actionsBox.getChildren().addAll(topActions, bottomActions);
+
+        header.getChildren().addAll(icon, titleArea, spacer, actionsBox);
 
         // Dates
         HBox dateGrid = new HBox(0);
@@ -662,6 +675,31 @@ public class ParcelleController {
             stage.showAndWait();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void openYieldPredictionModal(Culture c) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/YieldPredictionModal.fxml"));
+            Parent root = loader.load();
+            YieldPredictionController controller = loader.getController();
+            Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+            
+            // Récupérer les consommations pour cette culture
+            List<Consommation> consumptions = consS.getByCulture(c.getId());
+            
+            controller.setContext(selected, c, consumptions);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Prédiction de Rendement IA");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Erreur", "Impossible d'ouvrir la fenêtre de prédiction : " + e.getMessage());
         }
     }
 

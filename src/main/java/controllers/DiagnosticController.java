@@ -34,10 +34,7 @@ public class DiagnosticController {
     
     @FXML private Label lblStatus;
     @FXML private Label lblDiseaseName;
-    @FXML private ProgressBar probBar;
-    @FXML private Label lblProbability;
     @FXML private Label lblTreatment;
-    @FXML private Button btnTreat;
 
     private Culture culture;
     private Parcelle parcelle;
@@ -87,7 +84,6 @@ public class DiagnosticController {
     private void startDiagnostic() {
         resultsBox.setVisible(false);
         loadingBox.setVisible(true);
-        btnTreat.setDisable(true);
         
         // Démarrer l'animation de scan
         scannerLine.setVisible(true);
@@ -125,10 +121,7 @@ public class DiagnosticController {
                 lblStatus.setText("Erreur d'image");
                 lblStatus.setStyle("-fx-background-color: #e67e22; -fx-text-fill: white; -fx-padding: 3 8; -fx-border-radius: 12; -fx-background-radius: 12;");
                 lblDiseaseName.setText("Ceci ne semble pas être une plante !");
-                probBar.setProgress(0);
-                lblProbability.setText("-");
                 lblTreatment.setText("Veuillez prendre une photo claire d'une feuille ou d'une plante.");
-                btnTreat.setDisable(true);
                 return;
             }
 
@@ -140,24 +133,17 @@ public class DiagnosticController {
                 lblStatus.setText("Plante Saine");
                 lblStatus.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-padding: 3 8; -fx-border-radius: 12; -fx-background-radius: 12;");
                 lblDiseaseName.setText("Aucune maladie détectée");
-                probBar.setProgress(isHealthyProb);
-                lblProbability.setText(Math.round(isHealthyProb * 100) + "%");
                 lblTreatment.setText("Continuez l'entretien normal.");
-                btnTreat.setDisable(true);
             } else {
                 lblStatus.setText("Maladie Détectée");
                 lblStatus.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 3 8; -fx-border-radius: 12; -fx-background-radius: 12;");
-                btnTreat.setDisable(false);
                 
                 JSONArray diseases = health.getJSONArray("diseases");
                 if (diseases.length() > 0) {
                     JSONObject topDisease = diseases.getJSONObject(0);
                     String name = topDisease.getString("name");
-                    double prob = topDisease.getDouble("probability");
                     
                     lblDiseaseName.setText(name);
-                    probBar.setProgress(prob);
-                    lblProbability.setText(Math.round(prob * 100) + "%");
                     
                     if (topDisease.has("disease_details")) {
                         JSONObject details = topDisease.getJSONObject("disease_details");
@@ -185,8 +171,7 @@ public class DiagnosticController {
                     }
                 } else {
                     lblDiseaseName.setText("Maladie inconnue");
-                    lblProbability.setText("-");
-                    probBar.setProgress(0);
+                    lblTreatment.setText("Aucune information disponible.");
                 }
             }
         } catch (Exception e) {
@@ -202,20 +187,7 @@ public class DiagnosticController {
     }
 
     @FXML
-    private void openTreatment() {
-        // Redirige vers le formulaire de consommation (engrais/traitement)
-        // en utilisant la culture actuelle
-        if (culture != null) {
-            closeModal();
-            // Demander au contrôleur principal d'ouvrir le modal de conso
-            // Cela nécessiterait une référence, ou on laisse l'utilisateur
-            // cliquer sur "Utiliser ressource" depuis la vue de culture.
-            System.out.println("Ouvrir traitement pour la culture: " + culture.getTypeCulture());
-        }
-    }
-
-    @FXML
     private void closeModal() {
-        ((Stage) btnTreat.getScene().getWindow()).close();
+        ((Stage) lblStatus.getScene().getWindow()).close();
     }
 }
