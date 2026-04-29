@@ -14,7 +14,7 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         MyConnection.getInstance();
         // On démarre par le layout de Login
-        Parent root = FXMLLoader.load(getClass().getResource("/Views/Mainview.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/Views/Loginview.fxml"));
         Scene scene = new Scene(root, 1200, 750);
         scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
         primaryStage.setTitle("AgriSmart Desktop");

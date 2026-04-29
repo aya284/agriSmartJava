@@ -21,6 +21,7 @@ import services.ParcelleService;
 import services.CultureService;
 import services.ConsommationService;
 import services.WeatherService;
+import services.SoilService;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import java.io.IOException;
@@ -48,8 +49,19 @@ public class ParcelleController {
     private TextField txtSearch;
     @FXML
     private VBox weatherContainer;
+    @FXML
+    private VBox soilAnalysisContainer;
+    @FXML
+    private Label lblSoilType, lblSoilPh, lblSoilHumidity, lblSoilFertility, lblSoilResult, lblSoilRecommendation;
+    
+    @FXML
+    private VBox recommendationContainer;
+    @FXML
+    private Label lblRecommendation;
 
     private WeatherService weatherS = new WeatherService();
+    private SoilService soilS = new SoilService();
+    private services.GeminiService geminiService = new services.GeminiService();
 
     private ParcelleService ps = new ParcelleService();
     private CultureService cs = new CultureService();
@@ -217,6 +229,10 @@ public class ParcelleController {
     }
 
     private void afficherDetails(Parcelle p) {
+        if (soilAnalysisContainer != null) {
+            soilAnalysisContainer.setVisible(false);
+        }
+        
         if (!isMapLoaded) {
             pendingParcelle = p;
             lblDetailNom.setText(p.getNom());
@@ -489,6 +505,11 @@ public class ParcelleController {
         btnUtiliser.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #27ae60;");
         btnUtiliser.setOnAction(e -> openConsommationModal(c));
 
+        Button btnDiagnostic = new Button("🔍 IA");
+        btnDiagnostic.getStyleClass().add("btn-primary");
+        btnDiagnostic.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #8e44ad;"); // Couleur distincte pour l'IA
+        btnDiagnostic.setOnAction(e -> openDiagnosticModal(c));
+
         Button btnEdit = new Button("✎");
         btnEdit.getStyleClass().add("culture-action-btn");
         btnEdit.setOnAction(e -> openEditCultureModal(c));
@@ -497,7 +518,7 @@ public class ParcelleController {
         btnDel.getStyleClass().add("culture-action-btn-danger");
         btnDel.setOnAction(e -> handleCultureDelete(c));
 
-        actions.getChildren().addAll(btnUtiliser, btnEdit, btnDel);
+        actions.getChildren().addAll(btnUtiliser, btnDiagnostic, btnEdit, btnDel);
 
         header.getChildren().addAll(icon, titleArea, spacer, actions);
 
@@ -630,6 +651,26 @@ public class ParcelleController {
         }
     }
 
+    private void openDiagnosticModal(Culture c) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/DiagnosticModal.fxml"));
+            Parent root = loader.load();
+            DiagnosticController controller = loader.getController();
+            Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+            controller.setContext(c, selected);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Diagnostic Botanique IA");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void openEditConsommationModal(Consommation cons, Culture c) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/Views/ConsommationForm.fxml"));
@@ -750,5 +791,147 @@ public class ParcelleController {
         alert.setTitle(title);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void analyzeSoil() {
+        Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Erreur", "Veuillez sélectionner une parcelle d'abord.");
+            return;
+        }
+
+        // Afficher un message de chargement
+        lblSoilType.setText("Chargement...");
+        lblSoilPh.setText("Chargement...");
+        lblSoilHumidity.setText("Chargement...");
+        lblSoilFertility.setText("Chargement...");
+        lblSoilResult.setText("Récupération des données API...");
+        lblSoilRecommendation.setText("");
+        soilAnalysisContainer.setVisible(true);
+
+        Thread thread = new Thread(() -> {
+            try {
+                // Appel API réel (ISRIC SoilGrids - Spécifique au sol)
+                JSONObject soilData = soilS.getRealSoilData(selected.getLatitude(), selected.getLongitude());
+
+                javafx.application.Platform.runLater(() -> {
+                    // Valeurs par défaut (Fallback si l'API est indisponible)
+                    String typeSol = "Inconnu";
+                    double ph = 6.5;
+                    double realHumidityPercent = 40.0; 
+                    int fertility = 50;
+                    
+                    boolean apiSuccess = false;
+
+                    // Si l'API distincte de Sol a répondu
+                    if (soilData != null && soilData.has("properties")) {
+                        apiSuccess = true;
+                        try {
+                            org.json.JSONArray layers = soilData.getJSONObject("properties").getJSONArray("layers");
+                            int sand = 0; int clay = 0;
+                            
+                            for (int i = 0; i < layers.length(); i++) {
+                                JSONObject layer = layers.getJSONObject(i);
+                                String name = layer.getString("name");
+                                int meanValue = layer.getJSONArray("depths").getJSONObject(0).getJSONObject("values").getInt("mean");
+                                
+                                if (name.equals("phh2o")) ph = meanValue / 10.0;
+                                else if (name.equals("sand")) sand = meanValue;
+                                else if (name.equals("clay")) clay = meanValue;
+                            }
+                            
+                            // Déduction du type de sol selon la texture
+                            if (sand > 500) typeSol = "sableux";
+                            else if (clay > 400) typeSol = "argileux";
+                            else typeSol = "limoneux";
+                            
+                            // Fertilité estimée à partir de la qualité du sol (pH proche de 6.5 = très fertile)
+                            fertility = 100 - (int)(Math.abs(ph - 6.5) * 20);
+                            
+                        } catch (Exception ex) {
+                            apiSuccess = false;
+                            System.err.println("Erreur parsing SoilGrids: " + ex.getMessage());
+                        }
+                    } 
+                    
+                    if (!apiSuccess) {
+                        // Fallback logique en cas de non réponse de l'API (ISRIC est souvent très lente)
+                        String[] types = {"sableux", "argileux", "limoneux"};
+                        typeSol = types[Math.abs(selected.getNom().hashCode() + selected.getId()) % 3];
+                        ph = 5.5 + (Math.abs(selected.getLatitude() * 100) % 3.0);
+                        realHumidityPercent = 30 + (Math.abs(selected.getLongitude() * 100) % 50.0);
+                        fertility = 40 + (Math.abs((int)selected.getSurface() * 10) % 60);
+                    }
+
+                    // 4. Affichage des résultats
+                    lblSoilType.setText(typeSol + (apiSuccess ? " (API)" : " (Simulé)"));
+                    lblSoilPh.setText(String.format(java.util.Locale.US, "%.1f", ph) + (apiSuccess ? " (API)" : " (Simulé)"));
+                    lblSoilHumidity.setText(String.format(java.util.Locale.US, "%.1f", realHumidityPercent) + " %");
+                    lblSoilFertility.setText(fertility + " %");
+
+                    lblSoilResult.setText("📌 Résultat : \"Cette parcelle a un sol " + typeSol + " avec pH " + String.format(java.util.Locale.US, "%.1f", ph) + "\"");
+
+                    // 5. Recommandations
+                    String reco = "🌾 Action recommandée :\n";
+                    if (typeSol.equals("sableux")) {
+                        reco += "💧 Le sol est drainant. Arroser souvent.";
+                    } else if (typeSol.equals("argileux")) {
+                        reco += "⚠️ Retient beaucoup d'eau. Arroser moins.";
+                    } else {
+                        reco += "💧 Irrigation modérée (conditions optimales).";
+                    }
+                    lblSoilRecommendation.setText(reco);
+
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    lblSoilResult.setText("❌ Erreur lors de l'analyse : " + e.getMessage());
+                });
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+    }
+    @FXML
+    private void recommanderCultureIA() {
+        Parcelle selected = lvParcelles.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showError("Erreur", "Veuillez sélectionner une parcelle d'abord.");
+            return;
+        }
+
+        recommendationContainer.setVisible(true);
+        recommendationContainer.setManaged(true);
+        lblRecommendation.setText("Analyse IA en cours... Réflexion de l'Agronome Virtuel ⏳");
+
+        Thread thread = new Thread(() -> {
+            try {
+                String prompt = String.format(
+                    "Tu es un expert agronome en Tunisie. " +
+                    "J'ai une parcelle agricole de %.2f hectares. Le sol est de type : %s. " +
+                    "Les coordonnées sont Latitude: %s, Longitude: %s. " +
+                    "En te basant sur le climat méditerranéen de ces coordonnées et ce type de sol, " +
+                    "quelles sont les 3 meilleures cultures à planter ? " +
+                    "Donne une réponse courte, avec des puces (•). Pour chaque culture, " +
+                    "indique un pourcentage de réussite estimé et une brève justification (1 phrase).",
+                    selected.getSurface(), selected.getTypeSol(), selected.getLatitude(), selected.getLongitude()
+                );
+
+                String resultat = geminiService.generateRecommendation(prompt);
+
+                javafx.application.Platform.runLater(() -> {
+                    lblRecommendation.setText(resultat);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    lblRecommendation.setText("❌ Erreur lors de la recommandation IA : " + e.getMessage());
+                });
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 }

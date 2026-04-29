@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="controllers.DiagnosticController" spacing="15" prefWidth="500" styleClass="panel-card">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- En-tête -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Diagnostic IA (Plant.id)" styleClass="panel-title" style="-fx-font-size: 18px; -fx-text-fill: #2c3e50;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblCultureContext" text="Culture: -" styleClass="panel-muted"/>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Zone d'upload et affichage de l'image -->
+    <StackPane fx:id="imageContainer" prefHeight="300" style="-fx-background-color: #f1f2f6; -fx-border-color: #dcdde1; -fx-border-radius: 5; -fx-background-radius: 5; -fx-cursor: hand;" onMouseClicked="#handleImageClick">
+        <VBox fx:id="uploadPromptBox" alignment="CENTER" spacing="10">
+            <Label text="📸" style="-fx-font-size: 40px;"/>
+            <Label text="Cliquez pour sélectionner une photo de la feuille" styleClass="panel-muted"/>
+        </VBox>
+        <ImageView fx:id="imageView" fitWidth="460" fitHeight="280" preserveRatio="true" visible="false"/>
+        
+        <!-- Scanner laser (Animation) -->
+        <Rectangle fx:id="scannerLine" width="460" height="4" fill="#00d2d3" visible="false" translateY="-140"/>
+    </StackPane>
+
+    <!-- Zone de statut de l'analyse -->
+    <VBox fx:id="loadingBox" alignment="CENTER" spacing="10" visible="false" managed="${loadingBox.visible}">
+        <ProgressIndicator prefWidth="30" prefHeight="30"/>
+        <Label text="Analyse IA en cours via Plant.id..." styleClass="panel-muted"/>
+    </VBox>
+
+    <!-- Zone des Résultats -->
+    <VBox fx:id="resultsBox" spacing="15" visible="false" managed="${resultsBox.visible}">
+        
+        <!-- Statut global de la plante -->
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 10; -fx-background-color: #f8f9fa; -fx-border-radius: 5; -fx-background-radius: 5;">
+            <Label text="État Général :" style="-fx-font-weight: bold; -fx-text-fill: #34495e;"/>
+            <Label fx:id="lblStatus" text="-" style="-fx-font-weight: bold; -fx-padding: 3 8; -fx-border-radius: 12; -fx-background-radius: 12;"/>
+        </HBox>
+
+        <!-- Détails Maladie -->
+        <GridPane vgap="10" hgap="10">
+            <Label text="Maladie Détectée :" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="panel-muted"/>
+            <Label fx:id="lblDiseaseName" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="panel-value" style="-fx-font-weight: bold;"/>
+            
+            <Label text="Confiance IA :" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="panel-muted"/>
+            <HBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="10" alignment="CENTER_LEFT">
+                <ProgressBar fx:id="probBar" prefWidth="150" progress="0"/>
+                <Label fx:id="lblProbability" text="0%" styleClass="panel-value"/>
+            </HBox>
+        </GridPane>
+
+        <!-- Traitement -->
+        <VBox spacing="5" style="-fx-padding: 10; -fx-background-color: #e8f6f3; -fx-border-color: #1abc9c; -fx-border-radius: 5; -fx-background-radius: 5;">
+            <Label text="Traitements recommandés (si disponibles) :" style="-fx-font-weight: bold; -fx-text-fill: #16a085;"/>
+            <Label fx:id="lblTreatment" text="-" wrapText="true" style="-fx-text-fill: #2c3e50;"/>
+        </VBox>
+
+    </VBox>
+
+    <!-- Boutons d'action -->
+    <HBox alignment="CENTER_RIGHT" spacing="10">
+        <Button text="Fermer" onAction="#closeModal" styleClass="btn-secondary"/>
+        <Button fx:id="btnTreat" text="Chercher un traitement dans le stock" onAction="#openTreatment" styleClass="btn-primary" disable="true"/>
+    </HBox>
+</VBox>
