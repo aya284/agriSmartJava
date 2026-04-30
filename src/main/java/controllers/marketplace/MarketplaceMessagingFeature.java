@@ -2,47 +2,61 @@ package controllers.marketplace;
 
 import entities.MarketplaceMessage;
 import entities.Produit;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import services.MarketplaceImageService;
 import services.MarketplaceConversationService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
 import services.UserService;
+import services.VoiceRecordingService;
 import services.WebSocketClient;
 import services.WebSocketServer;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.LineEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.net.URI;
-import java.awt.Desktop;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.UUID;
+import javafx.util.Duration;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public class MarketplaceMessagingFeature {
     private static final DateTimeFormatter CHAT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
-    private static final String CALL_INVITE_PREFIX = "CALL_INVITE|";
-    private static final String DEFAULT_JITSI_BASE_URL = "https://meet.jit.si/";
+    private static final String VOICE_MESSAGE_TEXT = "Message vocal";
+    private static final String LEGACY_CALL_PREFIX = "CALL_INVITE|";
 
     private final MarketplaceMessagingState state;
     private final MarketplaceConversationService conversationService;
@@ -56,6 +70,7 @@ public class MarketplaceMessagingFeature {
     private final Label messagingTitleLabel;
     private final Label messagingMetaLabel;
     private final TextArea messageInputArea;
+    private final ToggleButton btnVoiceMessage;
     private final Consumer<StackPane> animateOverlayIn;
     private final Consumer<StackPane> animateOverlayOut;
     private final IntSupplier currentUserIdSupplier;
@@ -65,12 +80,23 @@ public class MarketplaceMessagingFeature {
     private final BiConsumer<String, Boolean> showToast;
     private final java.util.function.Function<String, String> normalizeText;
     private final WebSocketClient webSocketClient = new WebSocketClient();
+    private final VoiceRecordingService voiceRecorder = new VoiceRecordingService();
+    private final MarketplaceImageService uploads = new MarketplaceImageService();
     private int websocketConversationId = -1;
+    /** UI while recording near composer */
+    private VBox voiceRecordingBanner;
+    private Label recordingTimerLabel;
+    private Timeline recordingElapsedTimeline;
+    private Timeline recordingWaveTimeline;
+    private final ArrayList<Rectangle> waveBars = new ArrayList<>();
+    private long recordingWallClockStartMs;
 
-    /** Full-screen overlay on top of the messaging dialog; hosts embedded Jitsi (WebView). */
-    private StackPane jitsiEmbeddedOverlayRoot;
-    private WebEngine jitsiEmbeddedEngine;
-    private String lastEmbeddedJitsiUrl;
+    private Clip playbackClip;
+    private Path playbackClipSource;
+    private Timeline playbackPositionTicker;
+    private Button playbackActiveButton;
+    private ProgressBar playbackActiveBar;
+    private Label playbackActiveTimeLabel;
 
     public MarketplaceMessagingFeature(
             MarketplaceMessagingState state,
@@ -85,6 +111,7 @@ public class MarketplaceMessagingFeature {
             Label messagingTitleLabel,
             Label messagingMetaLabel,
             TextArea messageInputArea,
+            ToggleButton btnVoiceMessage,
             Consumer<StackPane> animateOverlayIn,
             Consumer<StackPane> animateOverlayOut,
             IntSupplier currentUserIdSupplier,
@@ -105,6 +132,7 @@ public class MarketplaceMessagingFeature {
         this.messagingTitleLabel = messagingTitleLabel;
         this.messagingMetaLabel = messagingMetaLabel;
         this.messageInputArea = messageInputArea;
+        this.btnVoiceMessage = btnVoiceMessage;
         this.animateOverlayIn = animateOverlayIn;
         this.animateOverlayOut = animateOverlayOut;
         this.currentUserIdSupplier = currentUserIdSupplier;
@@ -183,7 +211,7 @@ public class MarketplaceMessagingFeature {
         if (messagingOverlay == null) {
             return;
         }
-        closeEmbeddedJitsiCall();
+        cancelVoiceRecordingQuietly();
         clearPendingMessageContext();
         loadConversationsAndRender(null);
         animateOverlayIn.accept(messagingOverlay);
@@ -193,7 +221,8 @@ public class MarketplaceMessagingFeature {
         if (messagingOverlay == null) {
             return;
         }
-        closeEmbeddedJitsiCall();
+        cancelVoiceRecordingQuietly();
+        stopPlaybackFully();
         animateOverlayOut.accept(messagingOverlay);
     }
 
@@ -250,11 +279,104 @@ public class MarketplaceMessagingFeature {
         }
     }
 
-    public void sendCallInvite() {
+    /**
+     * Bound to the "Message vocal" toggle in FXML: selected = recording; unselect = send WAV.
+     */
+    public void handleVoiceToggle() {
+        if (btnVoiceMessage == null) {
+            return;
+        }
+        if (btnVoiceMessage.isSelected()) {
+            beginVoiceRecording();
+        } else {
+            finishVoiceRecordingAndSend();
+        }
+    }
+
+    private void beginVoiceRecording() {
+        stopPlaybackFully();
+        try {
+            voiceRecorder.start();
+            if (btnVoiceMessage != null) {
+                btnVoiceMessage.setText("Envoyer...");
+                btnVoiceMessage.getStyleClass().remove("recording-active-toggle");
+                btnVoiceMessage.getStyleClass().add("recording-active-toggle");
+            }
+            if (messageInputArea != null) {
+                messageInputArea.setEditable(false);
+            }
+            openRecordingBanner();
+            showToast.accept("Microphone actif.", true);
+        } catch (LineUnavailableException ex) {
+            hideRecordingBannerFully();
+            if (btnVoiceMessage != null) {
+                btnVoiceMessage.setSelected(false);
+                btnVoiceMessage.setText("Message vocal");
+                btnVoiceMessage.getStyleClass().remove("recording-active-toggle");
+            }
+            if (messageInputArea != null) {
+                messageInputArea.setEditable(true);
+            }
+            showAlert.accept("Microphone", "Micro indisponible: " + ex.getMessage());
+        }
+    }
+
+    private void cancelVoiceRecordingQuietly() {
+        voiceRecorder.cancel();
+        hideRecordingBannerFully();
+        if (btnVoiceMessage != null) {
+            btnVoiceMessage.setSelected(false);
+            btnVoiceMessage.setText("Message vocal");
+            btnVoiceMessage.getStyleClass().remove("recording-active-toggle");
+        }
+        if (messageInputArea != null) {
+            messageInputArea.setEditable(true);
+        }
+    }
+
+    /** User clicked Annuler — does not send. */
+    private void cancelVoiceRecordingFromUser() {
+        voiceRecorder.cancel();
+        hideRecordingBannerFully();
+        if (btnVoiceMessage != null) {
+            btnVoiceMessage.setSelected(false);
+            btnVoiceMessage.setText("Message vocal");
+            btnVoiceMessage.getStyleClass().remove("recording-active-toggle");
+        }
+        if (messageInputArea != null) {
+            messageInputArea.setEditable(true);
+        }
+        showToast.accept("Enregistrement annule.", false);
+    }
+
+    private void finishVoiceRecordingAndSend() {
+        hideRecordingBannerFully();
+        if (messageInputArea != null) {
+            messageInputArea.setEditable(true);
+        }
+        if (btnVoiceMessage != null) {
+            btnVoiceMessage.setText("Message vocal");
+            btnVoiceMessage.getStyleClass().remove("recording-active-toggle");
+        }
+        Path outFile = uploads.getSharedUploadsDir()
+                .resolve("messages")
+                .resolve(UUID.randomUUID() + ".wav");
+        try {
+            voiceRecorder.stopAndSaveWav(outFile);
+        } catch (IOException ex) {
+            showToast.accept(ex.getMessage() == null ? "Enregistrement annule." : ex.getMessage(), false);
+            cancelVoiceRecordingQuietly();
+            return;
+        }
+
+        String relative = "uploads/messages/" + outFile.getFileName();
+
         try {
             if (state.selectedConversation == null) {
                 if (!state.hasPendingMessageContext()) {
-                    showAlert.accept("Appel vocal", "Choisissez une conversation ou contactez un vendeur depuis la fiche produit.");
+                    showAlert.accept("Messagerie", "Choisissez une conversation ou contactez un vendeur depuis la fiche produit.");
+                    cleanupVoiceDraft(outFile);
+                    cancelVoiceRecordingQuietly();
                     return;
                 }
                 state.selectedConversation = conversationService.findOrCreateConversation(
@@ -266,24 +388,21 @@ public class MarketplaceMessagingFeature {
 
             connectRealtimeIfNeeded(state.selectedConversation);
 
-            String roomName = buildJitsiRoomName(state.selectedConversation.getId());
-            String roomUrl = DEFAULT_JITSI_BASE_URL + roomName;
-            String payload = CALL_INVITE_PREFIX + roomUrl + "|" + roomName;
-
             if (webSocketClient.isConnected()) {
-                webSocketClient.sendMessage(payload, "");
+                webSocketClient.sendMessage(VOICE_MESSAGE_TEXT, relative);
                 refreshMessagingBadge();
                 clearPendingMessageContext();
-                showToast.accept("Invitation d'appel envoyee.", true);
-                openEmbeddedJitsiCall(roomUrl);
+                showToast.accept("Message vocal envoye.", true);
+                cancelVoiceRecordingQuietly();
                 return;
             }
 
             MarketplaceMessage message = new MarketplaceMessage();
             message.setConversationId(state.selectedConversation.getId());
             message.setSenderId(currentUserIdSupplier.getAsInt());
-            message.setContent(payload);
+            message.setContent(VOICE_MESSAGE_TEXT);
             message.setRead(false);
+            message.setAudioPath(relative);
             messageService.ajouter(message);
             conversationService.touchLastMessage(state.selectedConversation.getId());
 
@@ -291,10 +410,131 @@ public class MarketplaceMessagingFeature {
             loadConversationsAndRender(state.selectedConversation.getId());
             refreshMessagingBadge();
             clearPendingMessageContext();
-            showToast.accept("Invitation d'appel envoyee.", true);
-            openEmbeddedJitsiCall(roomUrl);
+            showToast.accept("Message vocal envoye.", true);
+            cancelVoiceRecordingQuietly();
         } catch (SQLException e) {
+            cleanupVoiceDraft(outFile);
+            cancelVoiceRecordingQuietly();
             showSqlAlert.accept(e);
+        }
+    }
+
+    private static void cleanupVoiceDraft(Path wav) {
+        try {
+            Files.deleteIfExists(wav);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void ensureRecordingBannerInserted() {
+        if (voiceRecordingBanner != null || messageInputArea == null) {
+            return;
+        }
+        Parent p = messageInputArea.getParent();
+        if (!(p instanceof VBox wrap)) {
+            return;
+        }
+        voiceRecordingBanner = new VBox(10);
+        voiceRecordingBanner.getStyleClass().add("voice-recording-banner");
+        voiceRecordingBanner.setVisible(false);
+        voiceRecordingBanner.setManaged(false);
+
+        HBox top = new HBox(12);
+        top.setAlignment(Pos.CENTER_LEFT);
+        Circle pulse = new Circle(5, Color.web("#dc2626"));
+        Label subtitle = new Label("Enregistrement en cours");
+        subtitle.getStyleClass().add("voice-recording-title");
+        Region grow = new Region();
+        HBox.setHgrow(grow, Priority.ALWAYS);
+        recordingTimerLabel = new Label("0:00");
+        recordingTimerLabel.getStyleClass().add("voice-recording-timer");
+        top.getChildren().addAll(pulse, subtitle, grow, recordingTimerLabel);
+
+        HBox waves = new HBox(3);
+        waves.setAlignment(Pos.CENTER_LEFT);
+        waves.setPadding(new Insets(4, 0, 8, 0));
+        waveBars.clear();
+        for (int i = 0; i < 14; i++) {
+            Rectangle r = new Rectangle(4, 10);
+            r.setArcWidth(3);
+            r.setArcHeight(3);
+            r.setFill(Color.web(i % 2 == 0 ? "#145f3d" : "#2e9d62"));
+            waveBars.add(r);
+            waves.getChildren().add(r);
+        }
+
+        HBox bottom = new HBox(12);
+        bottom.setAlignment(Pos.CENTER_LEFT);
+        Button cancel = new Button("Annuler");
+        cancel.getStyleClass().add("voice-recording-cancel");
+        cancel.setOnAction(e -> cancelVoiceRecordingFromUser());
+        Label hint = new Label("Recliquez sur « Message vocal » pour envoyer l'audio.");
+        hint.setWrapText(true);
+        hint.getStyleClass().add("voice-msg-time-hint");
+
+        bottom.getChildren().addAll(cancel, hint);
+        voiceRecordingBanner.getChildren().addAll(top, waves, bottom);
+        wrap.getChildren().add(0, voiceRecordingBanner);
+    }
+
+    private void openRecordingBanner() {
+        ensureRecordingBannerInserted();
+        if (voiceRecordingBanner == null) {
+            return;
+        }
+        recordingWallClockStartMs = System.currentTimeMillis();
+        if (recordingTimerLabel != null) {
+            recordingTimerLabel.setText("0:00");
+        }
+        if (recordingElapsedTimeline != null) {
+            recordingElapsedTimeline.stop();
+        }
+        recordingElapsedTimeline = new Timeline(new KeyFrame(Duration.millis(120), ev -> {
+            if (recordingTimerLabel != null) {
+                long sec = (System.currentTimeMillis() - recordingWallClockStartMs) / 1000L;
+                recordingTimerLabel.setText(formatElapsedClock(sec));
+            }
+        }));
+        recordingElapsedTimeline.setCycleCount(Animation.INDEFINITE);
+        recordingElapsedTimeline.play();
+
+        if (recordingWaveTimeline != null) {
+            recordingWaveTimeline.stop();
+        }
+        final double[] phase = {0};
+        recordingWaveTimeline = new Timeline(new KeyFrame(Duration.millis(65), ev -> {
+            phase[0] += 0.45;
+            for (int i = 0; i < waveBars.size(); i++) {
+                double amp = 0.55 + 0.45 * Math.sin(phase[0] + i * 0.51);
+                double h = Math.max(4, Math.min(28, 8 + 20 * amp));
+                waveBars.get(i).setHeight(h);
+            }
+        }));
+        recordingWaveTimeline.setCycleCount(Animation.INDEFINITE);
+        recordingWaveTimeline.play();
+
+        voiceRecordingBanner.setVisible(true);
+        voiceRecordingBanner.setManaged(true);
+    }
+
+    private static String formatElapsedClock(long totalSec) {
+        long m = totalSec / 60;
+        long s = totalSec % 60;
+        return String.format("%d:%02d", m, s);
+    }
+
+    private void hideRecordingBannerFully() {
+        if (recordingElapsedTimeline != null) {
+            recordingElapsedTimeline.stop();
+            recordingElapsedTimeline = null;
+        }
+        if (recordingWaveTimeline != null) {
+            recordingWaveTimeline.stop();
+            recordingWaveTimeline = null;
+        }
+        if (voiceRecordingBanner != null) {
+            voiceRecordingBanner.setVisible(false);
+            voiceRecordingBanner.setManaged(false);
         }
     }
 
@@ -437,9 +677,12 @@ public class MarketplaceMessagingFeature {
             for (MarketplaceMessage message : messages) {
                 boolean mine = message.getSenderId() == currentUserIdSupplier.getAsInt();
                 String rawContent = safe(message.getContent());
+                String audio = safe(message.getAudioPath());
                 VBox bubble;
-                if (isCallInviteMessage(rawContent)) {
-                    bubble = buildCallInviteBubble(rawContent, mine);
+                if (!audio.isBlank()) {
+                    bubble = buildVoiceMessageBubble(audio, mine);
+                } else if (rawContent.startsWith(LEGACY_CALL_PREFIX)) {
+                    bubble = buildLegacyCallInviteBubble(mine);
                 } else {
                     Label body = new Label(normalizeText.apply(rawContent));
                     body.setWrapText(true);
@@ -465,189 +708,245 @@ public class MarketplaceMessagingFeature {
         }
     }
 
-    private boolean isCallInviteMessage(String content) {
-        return content != null && content.startsWith(CALL_INVITE_PREFIX);
-    }
+    private VBox buildVoiceMessageBubble(String audioRelativePath, boolean mine) {
+        Path wav = resolveUploadedAudioPath(audioRelativePath);
+        boolean playable = wav != null && Files.exists(wav);
 
-    private VBox buildCallInviteBubble(String rawContent, boolean mine) {
-        CallInvite invite = parseCallInvite(rawContent);
+        Label mic = new Label("\u266A");
+        mic.setMinSize(36, 36);
+        mic.setAlignment(Pos.CENTER);
+        mic.getStyleClass().add("voice-msg-mic");
+        if (!mine) {
+            mic.getStyleClass().add("voice-msg-mic-them");
+        }
 
-        Label title = new Label("Appel vocal");
-        title.setStyle("-fx-font-weight: 800;");
+        Label title = new Label(VOICE_MESSAGE_TEXT);
+        title.getStyleClass().add("voice-msg-title");
 
-        Label subtitle = new Label(invite.roomName == null || invite.roomName.isBlank() ? "Invitation d'appel" : invite.roomName);
-        subtitle.setWrapText(true);
-        subtitle.setStyle("-fx-opacity: 0.9;");
+        Label hint = new Label(playable ? "Lecture ou pause pendant l'écoute." : "Fichier audio introuvable");
+        hint.getStyleClass().add("voice-msg-time-hint");
 
-        Button join = new Button("Rejoindre dans l'app");
-        join.getStyleClass().add(mine ? "chat-send-btn" : "action-chip");
-        join.setOnAction(e -> openEmbeddedJitsiCall(invite.roomUrl));
+        ProgressBar progress = new ProgressBar(0);
+        progress.setPrefWidth(220);
+        progress.setMaxWidth(Double.MAX_VALUE);
+        progress.getStyleClass().add("voice-msg-progress");
 
-        Button browser = new Button("Navigateur");
-        browser.getStyleClass().add("action-chip");
-        browser.setOnAction(e -> openBrowserForCall(invite.roomUrl));
+        Label timeLbl = new Label("0:00 / 0:00");
+        timeLbl.getStyleClass().add("voice-msg-time-hint");
 
-        Button copy = new Button("Copier lien");
-        copy.getStyleClass().add("action-chip");
-        copy.setOnAction(e -> copyToClipboard(invite.roomUrl));
+        Button playPause = new Button("Lecture");
+        playPause.setDisable(!playable);
+        playPause.setMinSize(40, 40);
+        playPause.getStyleClass().add("voice-msg-play-btn");
+        playPause.getStyleClass().add(mine ? "voice-msg-play-btn-mine" : "voice-msg-play-btn-them");
+        playPause.setOnAction(e -> {
+            if (playable && wav != null) {
+                toggleVoicePlayback(wav, playPause, progress, timeLbl);
+            }
+        });
 
-        HBox actions = new HBox(8, join, browser, copy);
-        actions.setAlignment(Pos.CENTER_LEFT);
+        VBox center = new VBox(4, title, hint, progress, timeLbl);
+        center.setFillWidth(true);
 
-        VBox card = new VBox(8, title, subtitle, actions);
-        card.setMaxWidth(460);
-        card.setStyle(
-                "-fx-padding: 12; " +
-                "-fx-background-radius: 12; " +
-                "-fx-border-radius: 12; " +
-                "-fx-border-color: rgba(148,163,184,0.55); " +
-                "-fx-background-color: " + (mine ? "rgba(59,130,246,0.12)" : "rgba(15,23,42,0.04)") + ";"
-        );
+        HBox row = new HBox(12, mic, center, playPause);
+        row.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(center, Priority.ALWAYS);
+
+        VBox card = new VBox(6, row);
+        card.setMaxWidth(480);
+        card.getStyleClass().add("voice-msg-card");
+        card.getStyleClass().add(mine ? "voice-msg-card-mine" : "voice-msg-card-them");
+
+        if (playable && wav != null) {
+            try {
+                Clip probe = AudioSystem.getClip();
+                try (AudioInputStream ais = AudioSystem.getAudioInputStream(wav.toFile())) {
+                    probe.open(ais);
+                }
+                long len = Math.max(0L, probe.getMicrosecondLength());
+                timeLbl.setText("0:00 / " + formatPlaybackUs(len));
+                probe.close();
+            } catch (Exception ignored) {
+                timeLbl.setText("0:00 / —");
+            }
+        }
+
         return card;
     }
 
-    private CallInvite parseCallInvite(String rawContent) {
-        // Format: CALL_INVITE|<url>|<roomName>
-        String payload = rawContent == null ? "" : rawContent;
-        String rest = payload.startsWith(CALL_INVITE_PREFIX) ? payload.substring(CALL_INVITE_PREFIX.length()) : payload;
-        String[] parts = rest.split("\\|", 2);
-        String url = parts.length >= 1 ? parts[0] : "";
-        String room = parts.length == 2 ? parts[1] : "";
-        CallInvite invite = new CallInvite();
-        invite.roomUrl = url;
-        invite.roomName = room;
-        return invite;
+    private VBox buildLegacyCallInviteBubble(boolean mine) {
+        Label t = new Label("Invitation d'appel (ancienne fonction)");
+        t.getStyleClass().add("voice-msg-title");
+        Label s = new Label("Les appels utilisent maintenant des messages vocaux.");
+        s.setWrapText(true);
+        s.getStyleClass().add("voice-msg-time-hint");
+
+        VBox card = new VBox(6, t, s);
+        card.setMaxWidth(420);
+        card.getStyleClass().add("voice-msg-card");
+        card.getStyleClass().add(mine ? "voice-msg-card-mine" : "voice-msg-card-them");
+        return card;
     }
 
-    private void openEmbeddedJitsiCall(String url) {
-        String safeUrl = safe(url).trim();
-        if (safeUrl.isEmpty()) {
-            showToast.accept("Lien d'appel invalide.", false);
-            return;
+    private Path resolveUploadedAudioPath(String stored) {
+        String s = safe(stored).trim().replace('\\', '/');
+        if (s.isEmpty()) {
+            return null;
         }
-
-        ensureJitsiEmbeddedOverlayUi();
-        if (jitsiEmbeddedEngine == null || jitsiEmbeddedOverlayRoot == null) {
-            copyToClipboard(safeUrl);
-            showToast.accept("Embedded call UI indisponible. Lien copie.", false);
-            return;
+        Path root = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+        if (s.startsWith("uploads/")) {
+            return root.resolve(s).normalize();
         }
-
-        lastEmbeddedJitsiUrl = safeUrl;
-        jitsiEmbeddedEngine.load(safeUrl);
-        jitsiEmbeddedOverlayRoot.setManaged(true);
-        jitsiEmbeddedOverlayRoot.setVisible(true);
-        jitsiEmbeddedOverlayRoot.toFront();
+        return uploads.getSharedUploadsDir().resolve(s).normalize();
     }
 
-    private void closeEmbeddedJitsiCall() {
-        lastEmbeddedJitsiUrl = null;
-        if (jitsiEmbeddedEngine != null) {
-            try {
-                jitsiEmbeddedEngine.load("about:blank");
-            } catch (Exception ignored) {
-            }
-        }
-        if (jitsiEmbeddedOverlayRoot != null) {
-            jitsiEmbeddedOverlayRoot.setManaged(false);
-            jitsiEmbeddedOverlayRoot.setVisible(false);
-        }
-    }
-
-    private void ensureJitsiEmbeddedOverlayUi() {
-        if (messagingOverlay == null || jitsiEmbeddedOverlayRoot != null) {
+    private void toggleVoicePlayback(Path wav, Button toggle, ProgressBar bar, Label timeLabel) {
+        if (wav == null) {
             return;
         }
-
-        StackPane backdrop = new StackPane();
-        backdrop.setPickOnBounds(true);
-        StackPane.setAlignment(backdrop, Pos.CENTER);
-
-        BorderPane shell = new BorderPane();
-        shell.setStyle("-fx-background-color: white; -fx-background-radius: 12;");
-        shell.setPrefSize(860, 580);
-        shell.setMaxWidth(960);
-        shell.setMaxHeight(720);
-
-        Label titleLbl = new Label("Appel vocal");
-        titleLbl.setStyle("-fx-font-size: 16px; -fx-font-weight: 700;");
-
-        Button closeBtn = new Button("Fermer");
-        closeBtn.getStyleClass().add("publish-header-btn");
-        closeBtn.setOnAction(e -> closeEmbeddedJitsiCall());
-
-        Button browserBtn = new Button("Navigateur");
-        browserBtn.getStyleClass().add("action-chip");
-        browserBtn.setOnAction(e -> {
-            String u = lastEmbeddedJitsiUrl;
-            if (u == null || u.isBlank()) {
-                showToast.accept("Aucun lien disponible.", false);
-                return;
-            }
-            openBrowserForCall(u);
-        });
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox header = new HBox(10, titleLbl, spacer, browserBtn, closeBtn);
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(12, 14, 8, 14));
-
-        WebView webView = new WebView();
-        WebEngine engine = webView.getEngine();
-        webView.setPrefSize(860, 520);
-
-        BorderPane.setMargin(webView, new Insets(0, 14, 14, 14));
-        shell.setTop(header);
-        shell.setCenter(webView);
-
-        backdrop.getChildren().add(shell);
-        StackPane.setAlignment(shell, Pos.CENTER);
-
-        jitsiEmbeddedOverlayRoot = backdrop;
-        jitsiEmbeddedEngine = engine;
-        jitsiEmbeddedOverlayRoot.setVisible(false);
-        jitsiEmbeddedOverlayRoot.setManaged(false);
-
-        messagingOverlay.getChildren().add(jitsiEmbeddedOverlayRoot);
-    }
-
-    private void openBrowserForCall(String url) {
-        String safeUrl = safe(url).trim();
-        if (safeUrl.isEmpty()) {
-            showToast.accept("Lien d'appel invalide.", false);
-            return;
-        }
-
         try {
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(URI.create(safeUrl));
+            Path abs = wav.toAbsolutePath().normalize();
+            if (playbackClip != null && playbackClipSource != null && playbackClipSource.equals(abs)) {
+                if (playbackClip.isRunning()) {
+                    playbackClip.stop();
+                    stopPlaybackTickerOnly();
+                    toggle.setText("Lecture");
+                    return;
+                }
+                long clipLen = Math.max(1, playbackClip.getMicrosecondLength());
+                long pos = playbackClip.getMicrosecondPosition();
+                if (pos >= clipLen - 180_000L) {
+                    playbackClip.setMicrosecondPosition(0);
+                    if (bar != null) {
+                        bar.setProgress(0);
+                    }
+                }
+                playbackClip.start();
+                startPlaybackTicker(bar, timeLabel);
+                toggle.setText("Pause");
                 return;
             }
         } catch (Exception ignored) {
-            // fallthrough to clipboard copy
         }
 
-        copyToClipboard(safeUrl);
-        showToast.accept("Lien copie. Ouvrez-le dans votre navigateur.", true);
+        stopPlaybackFully();
+        try {
+            Clip clip = AudioSystem.getClip();
+            try (AudioInputStream ais = AudioSystem.getAudioInputStream(wav.toFile())) {
+                clip.open(ais);
+            }
+            final long length = Math.max(1, clip.getMicrosecondLength());
+            playbackClip = clip;
+            playbackClipSource = wav.toAbsolutePath().normalize();
+            playbackActiveButton = toggle;
+            playbackActiveBar = bar;
+            playbackActiveTimeLabel = timeLabel;
+
+            toggle.setText("Pause");
+
+            clip.addLineListener(ev -> {
+                if (ev.getType() != LineEvent.Type.STOP) {
+                    return;
+                }
+                Clip c = playbackClip;
+                Platform.runLater(() -> {
+                    if (c == null || playbackClip != c) {
+                        return;
+                    }
+                    long pos = Math.max(0, c.getMicrosecondPosition());
+                    boolean naturallyEnded = pos >= length - 200_000L;
+                    if (!naturallyEnded) {
+                        return;
+                    }
+                    stopPlaybackTickerOnly();
+                    toggle.setText("Lecture");
+                    if (bar != null) {
+                        bar.setProgress(0);
+                    }
+                    if (timeLabel != null) {
+                        timeLabel.setText("0:00 / " + formatPlaybackUs(length));
+                    }
+                    try {
+                        c.flush();
+                        c.close();
+                    } catch (Exception ignored) {
+                    }
+                    playbackClip = null;
+                    playbackClipSource = null;
+                    playbackActiveButton = null;
+                    playbackActiveBar = null;
+                    playbackActiveTimeLabel = null;
+                });
+            });
+
+            clip.start();
+            startPlaybackTicker(bar, timeLabel);
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException ex) {
+            showToast.accept("Lecture impossible.", false);
+        }
     }
 
-    private void copyToClipboard(String text) {
-        String value = safe(text);
-        ClipboardContent content = new ClipboardContent();
-        content.putString(value);
-        Clipboard.getSystemClipboard().setContent(content);
-        showToast.accept("Lien copie.", true);
+    private void startPlaybackTicker(ProgressBar bar, Label timeLabel) {
+        if (playbackClip == null) {
+            return;
+        }
+        stopPlaybackTickerOnly();
+        playbackPositionTicker = new Timeline(new KeyFrame(Duration.millis(45), ev -> {
+            if (playbackClip == null || !playbackClip.isOpen()) {
+                return;
+            }
+            long len = Math.max(1, playbackClip.getMicrosecondLength());
+            long pos = Math.min(len, playbackClip.getMicrosecondPosition());
+            double p = (double) pos / (double) len;
+            if (bar != null) {
+                bar.setProgress(p);
+            }
+            if (timeLabel != null) {
+                timeLabel.setText(formatPlaybackUs(pos) + " / " + formatPlaybackUs(len));
+            }
+        }));
+        playbackPositionTicker.setCycleCount(Animation.INDEFINITE);
+        playbackPositionTicker.play();
     }
 
-    private String buildJitsiRoomName(int conversationId) {
-        String random = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
-        return "agriSmart-" + conversationId + "-" + random;
+    private void stopPlaybackTickerOnly() {
+        if (playbackPositionTicker != null) {
+            playbackPositionTicker.stop();
+            playbackPositionTicker = null;
+        }
     }
 
-    private static class CallInvite {
-        String roomUrl;
-        String roomName;
+    private void stopPlaybackFully() {
+        stopPlaybackTickerOnly();
+        try {
+            if (playbackClip != null) {
+                playbackClip.stop();
+                playbackClip.flush();
+                playbackClip.close();
+            }
+        } catch (Exception ignored) {
+        }
+        playbackClip = null;
+        playbackClipSource = null;
+        if (playbackActiveButton != null) {
+            playbackActiveButton.setText("Lecture");
+        }
+        if (playbackActiveBar != null) {
+            playbackActiveBar.setProgress(0);
+        }
+        playbackActiveButton = null;
+        playbackActiveBar = null;
+        playbackActiveTimeLabel = null;
+    }
+
+    private static String formatPlaybackUs(long micros) {
+        if (micros < 0) {
+            micros = 0;
+        }
+        long totalSec = micros / 1_000_000L;
+        long m = totalSec / 60;
+        long s = totalSec % 60;
+        return String.format("%d:%02d", m, s);
     }
 
     private void refreshMessagingDisplayMaps() throws SQLException {

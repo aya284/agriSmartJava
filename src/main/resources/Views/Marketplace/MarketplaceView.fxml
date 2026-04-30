@@ -18,6 +18,11 @@
                     <Label text="Marketplace AgriSmart" styleClass="feature-title"/>
                     <Label text="Produits agricoles en vente ou en location." styleClass="feature-subtitle"/>
 
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <Label fx:id="exchangeRateLabel" styleClass="exchange-rate-hint" wrapText="true" maxWidth="680" HBox.hgrow="ALWAYS"/>
+                        <Button text="Actualiser les taux" styleClass="action-chip" onAction="#refreshExchangeRates"/>
+                    </HBox>
+
                     <HBox spacing="10">
                         <Button text="Espace vendeur" styleClass="action-chip" onAction="#openSellerSpace"/>
                         <Button fx:id="btnMessagingCenter" text="Messagerie" styleClass="action-chip,gold" onAction="#openMessagingCenter"/>
@@ -394,11 +399,7 @@
                 </VBox>
 
                 <VBox styleClass="chat-main" HBox.hgrow="ALWAYS" spacing="10">
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
-                        <HBox HBox.hgrow="ALWAYS"/>
-                        <Button text="Appel vocal" styleClass="action-chip,primary" onAction="#startVoiceCall"/>
-                    </HBox>
+                    <Label fx:id="messagingTitleLabel" text="Messagerie" styleClass="chat-thread-title"/>
                     <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="invisible-scrollpane">
                         <content>
                             <VBox fx:id="messageListBox" spacing="10" styleClass="chat-thread-list"/>
@@ -407,7 +408,8 @@
 
                     <VBox styleClass="chat-composer-wrap" spacing="8">
                         <TextArea fx:id="messageInputArea" promptText="Ecrire votre message..." wrapText="true" prefRowCount="3" styleClass="chat-input"/>
-                        <HBox alignment="CENTER_RIGHT">
+                        <HBox alignment="CENTER_RIGHT" spacing="8">
+                            <ToggleButton fx:id="btnVoiceMessage" text="Message vocal" styleClass="action-chip" onAction="#handleVoiceMessage"/>
                             <Button text="Envoyer" styleClass="chat-send-btn" onAction="#sendCurrentMessage"/>
                         </HBox>
                     </VBox>

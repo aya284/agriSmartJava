@@ -128,10 +128,13 @@ public class WebSocketMarketplaceEndpoint {
         int senderId = context.userId;
         String content = json.optString("content", "").trim();
         String audioPath = json.optString("audioPath", "");
-        
-        if (content.isEmpty()) {
+        boolean hasAudio = audioPath != null && !audioPath.isBlank();
+        if (!hasAudio && content.isEmpty()) {
             sendErrorToClient(session, "Message content cannot be empty");
             return;
+        }
+        if (hasAudio && content.isEmpty()) {
+            content = "Message vocal";
         }
         
         try {

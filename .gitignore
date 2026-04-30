@@ -45,3 +45,6 @@ src/main/client_secret.json
 # Local runtime secrets
 local.secrets.properties
 config/local.secrets.properties
+
+# User-uploaded voice messages (marketplace)
+uploads/messages/

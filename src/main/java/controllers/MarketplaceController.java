@@ -66,6 +66,7 @@ import services.ReviewService;
 import services.StockAlertService;
 import services.GeocodingService;
 import services.HuggingFaceAiService;
+import services.ExchangeRateService;
 import services.UserService;
 import services.WishlistService;
 import entities.Review;
@@ -92,6 +93,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -100,6 +102,7 @@ import java.util.UUID;
 import utils.MarketplaceValidator;
 import utils.SessionManager;
 import javafx.util.Duration;
+import javafx.concurrent.Task;
 
 public class MarketplaceController implements Initializable {
 
@@ -171,6 +174,7 @@ public class MarketplaceController implements Initializable {
     @FXML private ComboBox<String> typeFilterCombo;
     @FXML private ComboBox<String> promoFilterCombo;
     @FXML private Label statusLabel;
+    @FXML private Label exchangeRateLabel;
     @FXML private Button prevPageButton;
     @FXML private Button nextPageButton;
     @FXML private Label pageInfoLabel;
@@ -181,6 +185,7 @@ public class MarketplaceController implements Initializable {
     @FXML private Label messagingTitleLabel;
     @FXML private Label messagingMetaLabel;
     @FXML private TextArea messageInputArea;
+    @FXML private ToggleButton btnVoiceMessage;
     @FXML private HBox toastContainer;
     @FXML private Label toastIconLabel;
     @FXML private Label toastTitleLabel;
@@ -223,6 +228,7 @@ public class MarketplaceController implements Initializable {
     private final StockAlertService stockAlertService = new StockAlertService();
     private final GeocodingService geocodingService = new GeocodingService();
     private final HuggingFaceAiService huggingFaceService = new HuggingFaceAiService();
+    private final ExchangeRateService exchangeRateService = new ExchangeRateService();
     private final UserService userService = new UserService();
     private final MarketplaceMessagingState messagingState = new MarketplaceMessagingState();
     private final MarketplaceWishlistState wishlistState = new MarketplaceWishlistState();
@@ -436,8 +442,39 @@ public class MarketplaceController implements Initializable {
         refreshMessagingBadge();
         refreshWishlistState();
 
+        refreshExchangeRatesDisplay(false);
+
         // Initialize new features
         initializeAdvancedFeatures();
+    }
+
+    private void refreshExchangeRatesDisplay(boolean forceRemote) {
+        if (exchangeRateLabel == null) {
+            return;
+        }
+        exchangeRateLabel.setText(forceRemote ? "Actualisation des taux..." : "Chargement des taux...");
+
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() {
+                if (!exchangeRateService.hasApiKey()) {
+                    return exchangeRateService.missingKeyMessage();
+                }
+                Optional<ExchangeRateService.Snapshot> snap = exchangeRateService.getSnapshot(forceRemote);
+                if (snap.isEmpty()) {
+                    return exchangeRateService.unavailableMessage();
+                }
+                return exchangeRateService.formatSnapshot(snap.get(), Locale.FRANCE);
+            }
+        };
+        task.setOnSucceeded(e -> exchangeRateLabel.setText(task.getValue()));
+        task.setOnFailed(ev -> exchangeRateLabel.setText(exchangeRateService.unavailableMessage()));
+        new Thread(task, "exchange-rates").start();
+    }
+
+    @FXML
+    public void refreshExchangeRates() {
+        refreshExchangeRatesDisplay(true);
     }
 
     private void initializeAdvancedFeatures() {
@@ -473,6 +510,7 @@ public class MarketplaceController implements Initializable {
                 messagingTitleLabel,
                 messagingMetaLabel,
                 messageInputArea,
+                btnVoiceMessage,
                 this::animateOverlayIn,
                 this::animateOverlayOut,
                 this::getCurrentUserId,
@@ -1044,9 +1082,9 @@ public class MarketplaceController implements Initializable {
     }
 
     @FXML
-    public void startVoiceCall() {
+    public void handleVoiceMessage() {
         if (messagingFeature != null) {
-            messagingFeature.sendCallInvite();
+            messagingFeature.handleVoiceToggle();
         }
     }
 

@@ -226,6 +226,13 @@
     -fx-font-size: 18px;
 }
 
+.exchange-rate-hint {
+    -fx-text-fill: #2d4a3e;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-wrap-text: true;
+}
+
 .action-chip {
     -fx-background-color: #ffffff;
     -fx-background-insets: 0;
@@ -2119,10 +2126,116 @@
     -fx-background-color: linear-gradient(to right, #1a7248, #25875a);
 }
 
+/* Toggle mic while recording */
+.recording-active-toggle {
+    -fx-background-color: linear-gradient(to right, #fca5a5, #fecaca);
+    -fx-text-fill: #991b1b;
+    -fx-border-color: #ef4444;
+    -fx-border-radius: 20;
+}
+
 .chat-empty-label {
     -fx-text-fill: #8092a2;
     -fx-font-size: 13px;
     -fx-padding: 8;
+}
+
+/* Voice message bubbles */
+.voice-msg-card {
+    -fx-padding: 12 14;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+}
+.voice-msg-card-mine {
+    -fx-background-color: linear-gradient(to bottom right, rgba(20,95,61,0.14), rgba(26,114,72,0.08));
+    -fx-border-color: rgba(20,95,61,0.35);
+}
+.voice-msg-card-them {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d3e0d7;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 8, 0.2, 0, 2);
+}
+.voice-msg-mic {
+    -fx-font-size: 18px;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-alignment: center;
+    -fx-background-radius: 18;
+    -fx-background-color: linear-gradient(to bottom, #145f3d, #1a7248);
+    -fx-text-fill: #ffffff;
+}
+.voice-msg-mic-them {
+    -fx-background-color: #e8f0ec;
+    -fx-text-fill: #145f3d;
+}
+.voice-msg-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e3a2f;
+}
+.voice-msg-time-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #6b7c72;
+}
+.voice-msg-progress .bar {
+    -fx-background-color: linear-gradient(to right, #145f3d, #2e9d62);
+    -fx-background-radius: 4;
+}
+.voice-msg-progress .track {
+    -fx-background-color: #d8e6dd;
+    -fx-background-radius: 4;
+}
+.voice-msg-play-btn {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-background-radius: 20;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.voice-msg-play-btn-mine {
+    -fx-background-color: linear-gradient(to bottom right, #145f3d, #1a7248);
+    -fx-text-fill: #ffffff;
+}
+.voice-msg-play-btn-them {
+    -fx-background-color: #f0faf4;
+    -fx-border-color: #cfe5d9;
+    -fx-border-radius: 20;
+    -fx-text-fill: #145f3d;
+}
+
+/* Recording strip above composer */
+.voice-recording-banner {
+    -fx-background-color: linear-gradient(to right, #fff8f8, #fffefe);
+    -fx-background-radius: 12;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 10 12;
+}
+.voice-recording-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #9f1239;
+}
+.voice-recording-timer {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-font-family: "Consolas", "Segoe UI Mono", monospace;
+    -fx-text-fill: #b91c1c;
+}
+.voice-recording-cancel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #fca5a5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #b91c1c;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+.voice-recording-cancel:hover {
+    -fx-background-color: #fef2f2;
 }
 
 /* Wishlist center */
