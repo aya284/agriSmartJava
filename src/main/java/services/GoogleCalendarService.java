@@ -21,9 +21,26 @@ import java.util.List;
 public class GoogleCalendarService {
 
     private static final String APPLICATION_NAME = "AgriSmart";
-    private static final String API_KEY = "AIzaSyCELVRV52-cqqJLwgGABnkYmTxsBXDbCKY";
+    private static final String API_KEY = loadGoogleApiKey();
     private static final String CALENDAR_ID = "dd8f31c87f25f66a8fb8d1386f0f23cd80d9d595231528715f2a6ca04551a0b9@group.calendar.google.com";
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/calendar");
+
+    private static String loadGoogleApiKey() {
+        // Try to load from environment variable first
+        String envKey = System.getenv("GOOGLE_CALENDAR_API_KEY");
+        if (envKey != null && !envKey.trim().isEmpty()) {
+            return envKey.trim();
+        }
+
+        // No fallback to properties file for security reasons
+        // If no environment variable is set, use empty string (will cause API errors)
+        System.err.println("WARNING: GOOGLE_CALENDAR_API_KEY environment variable not set.");
+        System.err.println("Google Calendar integration will not work without the API key.");
+        System.err.println("Set the environment variable:");
+        System.err.println("Windows: set GOOGLE_CALENDAR_API_KEY=your_api_key_here");
+        System.err.println("Or add it to your system environment variables.");
+        return "";
+    }
 
     private Calendar getCalendarService() throws Exception {
         var transport = GoogleNetHttpTransport.newTrustedTransport();
