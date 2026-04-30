@@ -17,7 +17,7 @@
 
                     <HBox spacing="10">
                         <Button text="Nouvelle tache" styleClass="action-chip,primary" onAction="#handleAdd"/>
-
+                        <Button text="Voir Calendrier" styleClass="action-chip" onAction="#showCalendar"/>
                     </HBox>
                 </VBox>
 

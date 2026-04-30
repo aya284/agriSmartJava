@@ -2789,3 +2789,93 @@
     -fx-background-color: #dce8fb;
     -fx-border-color: #b3c8ec;
 }
+
+/* ===================== CALENDAR STYLES ===================== */
+.calendar-grid {
+    -fx-border-color: #dce8df;
+    -fx-border-width: 1;
+    -fx-background-color: #ffffff;
+}
+.calendar-header-cell {
+    -fx-padding: 10;
+    -fx-background-color: #f8fcf9;
+    -fx-text-fill: #2D6A4F;
+    -fx-font-weight: bold;
+    -fx-border-color: #dce8df;
+    -fx-border-width: 0 1 1 0;
+}
+.calendar-cell {
+    -fx-padding: 8;
+    -fx-min-height: 100;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #f0f4f1;
+    -fx-border-width: 0 1 1 0;
+    -fx-cursor: hand;
+}
+.calendar-cell:hover {
+    -fx-background-color: #f9fdfb;
+}
+.calendar-cell.today {
+    -fx-background-color: #f0f9f4;
+}
+.calendar-day-number {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5c7384;
+    -fx-padding: 0 0 5 0;
+}
+.today .calendar-day-number {
+    -fx-text-fill: #1b5c41;
+    -fx-font-size: 16px;
+}
+.calendar-task-chip {
+    -fx-background-radius: 4;
+    -fx-padding: 3 6;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-margin: 2 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 2, 0, 0, 1);
+}
+.calendar-task-chip:hover {
+    -fx-opacity: 0.9;
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
+}
+.priority-low { -fx-background-color: #2ecc71; }
+.priority-medium { -fx-background-color: #3498db; }
+.priority-high { -fx-background-color: #e74c3c; }
+.priority-urgent { -fx-background-color: #9b59b6; }
+
+/* Calendar Styles */
+.calendar-day-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2D6A4F;
+    -fx-padding: 10;
+}
+.calendar-day-cell {
+    -fx-min-height: 120;
+    -fx-padding: 10;
+    -fx-background-color: white;
+    -fx-border-color: #dce8df;
+    -fx-border-width: 0.5;
+}
+.calendar-day-cell:hover {
+    -fx-background-color: #f4faf6;
+}
+.calendar-day-cell.today {
+    -fx-background-color: #e6f5ec;
+}
+.calendar-day-number {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5c7384;
+}
+.calendar-task-label {
+    -fx-font-size: 11px;
+    -fx-padding: 3 6;
+    -fx-background-radius: 4;
+    -fx-text-fill: white;
+}

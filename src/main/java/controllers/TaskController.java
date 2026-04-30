@@ -103,6 +103,9 @@ public class TaskController {
     private final ParcelleService parcelleService = new ParcelleService();
     private final CultureService cultureService = new CultureService();
     private final UserService userService = new UserService();
+    private final services.HuggingFaceService hfService = new services.HuggingFaceService();
+    private final javafx.animation.PauseTransition debounce = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
+    
     private final ObservableList<Task> taskList = FXCollections.observableArrayList();
     private final ObservableList<SelectionOption> parcelleOptions = FXCollections.observableArrayList();
     private final ObservableList<SelectionOption> cultureOptions = FXCollections.observableArrayList();
@@ -181,6 +184,19 @@ public class TaskController {
     }
 
     @FXML
+    public void showCalendar(javafx.event.ActionEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/Views/CalendarView.fxml"));
+            javafx.scene.Parent root = loader.load();
+            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
+            scene.setRoot(root);
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            showWarning("Navigation Error", "Could not load calendar view.");
+        }
+    }
+
+    @FXML
     public void handleResetSearch() {
         searchField.clear();
     }
@@ -224,6 +240,55 @@ public class TaskController {
         typeComboBox.valueProperty().addListener((obs, old, val) -> resetField(typeComboBox, typeErrorLabel));
         dateDebutPicker.valueProperty().addListener((obs, old, val) -> resetField(dateDebutPicker, dateDebutErrorLabel));
         dateFinPicker.valueProperty().addListener((obs, old, val) -> resetField(dateFinPicker, dateFinErrorLabel));
+
+        // AI Summarization
+        descriptionArea.textProperty().addListener((obs, old, val) -> {
+            if (val != null && val.trim().length() > 50) {
+                // Show immediate feedback that AI is thinking
+                resumeArea.setPromptText("L'IA prépare un résumé..."); 
+                
+                debounce.setOnFinished(e -> {
+                    System.out.println("Starting AI Summarization for: " + val.substring(0, 20) + "...");
+                    javafx.application.Platform.runLater(() -> resumeArea.setText("Génération du résumé par IA..."));
+                    
+                    new Thread(() -> {
+                        try {
+                            String summary = hfService.summarize(val);
+                            System.out.println("Summary generated: " + (summary != null ? summary.substring(0, Math.min(50, summary.length())) : "null"));
+                            javafx.application.Platform.runLater(() -> {
+                                if (summary != null && !summary.isEmpty()) {
+                                    resumeArea.setText(summary);
+                                    resumeArea.setPromptText(""); // Clear prompt
+                                } else {
+                                    resumeArea.setText("Résumé indisponible");
+                                    resumeArea.setPromptText("");
+                                }
+                            });
+                        } catch (Exception ex) {
+                            System.err.println("Exception in summarization: " + ex.getMessage());
+                            ex.printStackTrace();
+                            javafx.application.Platform.runLater(() -> {
+                                resumeArea.setText("Erreur: " + ex.getMessage());
+                                resumeArea.setPromptText("");
+                            });
+                        }
+                    }).start();
+                });
+                debounce.playFromStart();
+            }
+        });
+
+        // Auto-Priority based on keywords
+        titreField.textProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                String lower = val.toLowerCase();
+                if (lower.contains("fuite") || lower.contains("urgent") || lower.contains("danger") || lower.contains("mort") || lower.contains("panne")) {
+                    prioriteComboBox.setValue("Haute");
+                } else if (lower.contains("check") || lower.contains("visite") || lower.contains("routine")) {
+                    prioriteComboBox.setValue("Basse");
+                }
+            }
+        });
     }
 
     private void initializeTable() {

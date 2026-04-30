@@ -106,6 +106,7 @@ public class TaskAssignmentController {
     private final UserService userService = new UserService();
     private final TaskAssignmentService taskAssignmentService = new TaskAssignmentService();
     private final SuiviTacheService suiviTacheService = new SuiviTacheService();
+    private final services.HuggingFaceService hfService = new services.HuggingFaceService();
 
     private final ObservableList<Task> taskList = FXCollections.observableArrayList();
     private final ObservableList<User> workerList = FXCollections.observableArrayList();
@@ -528,6 +529,37 @@ public class TaskAssignmentController {
                 showSqlError(exception);
             }
         }
+    }
+
+    @FXML
+    private void handleListen() {
+        TaskAssignment selected = employeeTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Selection Required", "Veuillez selectionner une tache pour l'ecouter.");
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                // Fetch the full task details to get the description
+                Task task = taskService.getById(selected.getTaskId());
+                String textToRead = "Tâche: " + task.getTitre() + ". Description: " + (task.getDescription() != null ? task.getDescription() : "Aucune description.");
+                
+                byte[] audioData = hfService.textToSpeech(textToRead);
+                if (audioData != null) {
+                    java.io.File tempFile = java.io.File.createTempFile("tts_", ".wav");
+                    try (java.io.FileOutputStream fos = new java.io.FileOutputStream(tempFile)) {
+                        fos.write(audioData);
+                    }
+                    
+                    javafx.scene.media.AudioClip clip = new javafx.scene.media.AudioClip(tempFile.toURI().toString());
+                    clip.play();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> showWarning("Erreur Audio", "Impossible de generer l'audio : " + e.getMessage()));
+            }
+        }).start();
     }
 
     @FXML

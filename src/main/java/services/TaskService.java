@@ -57,6 +57,19 @@ public class TaskService {
         return tasks;
     }
 
+    public Task getById(int idTask) throws SQLException {
+        String sql = "SELECT * FROM task WHERE id_task = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, idTask);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSet(resultSet);
+                }
+            }
+        }
+        return null;
+    }
+
     private void bindTask(PreparedStatement preparedStatement, Task task, boolean includeId) throws SQLException {
         preparedStatement.setString(1, task.getTitre());
         preparedStatement.setString(2, task.getDescription());

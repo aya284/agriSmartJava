@@ -157,6 +157,8 @@
                         <HBox spacing="10" alignment="CENTER_LEFT">
                             <Button fx:id="markDoneBtn" text="Marquer comme Realisee"
                                     styleClass="action-chip,primary" onAction="#handleMarkDone"/>
+                            <Button text="Ecouter Instruction" onAction="#handleListen"
+                                    styleClass="action-chip"/>
                         </HBox>
                     </VBox>
                 </VBox>

@@ -18,7 +18,8 @@ public class GoogleAuthService {
 
     private static final List<String> SCOPES = List.of(
             "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile"
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/calendar"
     );
 
     public Userinfo authenticate() throws Exception {

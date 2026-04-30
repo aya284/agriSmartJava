@@ -33,6 +33,8 @@ build/
 !**/src/test/**/build/
 # Google OAuth secret
 src/main/client_secret.json
+# API Keys and sensitive configuration
+src/main/resources/config.properties
 ### VS Code ###
 .vscode/
 
