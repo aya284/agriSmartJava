@@ -8,6 +8,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Properties;
+import java.io.InputStream;
 
 public class HuggingFaceService {
 
@@ -16,18 +18,29 @@ public class HuggingFaceService {
     private static final String TTS_MODEL = "facebook/mms-tts-fra";
 
     private static String loadApiKey() {
-        // Only load from environment variable for security
+        // 1. Try environment variable first
         String envKey = System.getenv("HUGGINGFACE_API_KEY");
         if (envKey != null && !envKey.trim().isEmpty()) {
             return envKey.trim();
         }
 
-        // No fallback to properties file for security reasons
-        // If no environment variable is set, use local summarization only
-        System.err.println("WARNING: HUGGINGFACE_API_KEY environment variable not set. Using local summarization only.");
-        System.err.println("To enable AI summarization, set the environment variable:");
-        System.err.println("Windows: set HUGGINGFACE_API_KEY=your_token_here");
-        System.err.println("Or add it to your system environment variables.");
+        // 2. Fallback to config.properties
+        try (InputStream input = HuggingFaceService.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                System.err.println("WARNING: config.properties not found.");
+            } else {
+                Properties prop = new Properties();
+                prop.load(input);
+                String propKey = prop.getProperty("HUGGINGFACE_API_KEY");
+                if (propKey != null && !propKey.trim().isEmpty() && !propKey.contains("your_")) {
+                    return propKey.trim();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading API key from config.properties: " + e.getMessage());
+        }
+
+        System.err.println("WARNING: HUGGINGFACE_API_KEY not found in environment or config.properties.");
         return "";
     }
     private final HttpClient client = HttpClient.newBuilder()

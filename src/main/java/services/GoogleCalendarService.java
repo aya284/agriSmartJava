@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Properties;
 
 public class GoogleCalendarService {
 
@@ -26,19 +27,29 @@ public class GoogleCalendarService {
     private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/calendar");
 
     private static String loadGoogleApiKey() {
-        // Try to load from environment variable first
+        // 1. Try environment variable first
         String envKey = System.getenv("GOOGLE_CALENDAR_API_KEY");
         if (envKey != null && !envKey.trim().isEmpty()) {
             return envKey.trim();
         }
 
-        // No fallback to properties file for security reasons
-        // If no environment variable is set, use empty string (will cause API errors)
-        System.err.println("WARNING: GOOGLE_CALENDAR_API_KEY environment variable not set.");
-        System.err.println("Google Calendar integration will not work without the API key.");
-        System.err.println("Set the environment variable:");
-        System.err.println("Windows: set GOOGLE_CALENDAR_API_KEY=your_api_key_here");
-        System.err.println("Or add it to your system environment variables.");
+        // 2. Fallback to config.properties
+        try (InputStream input = GoogleCalendarService.class.getResourceAsStream("/config.properties")) {
+            if (input == null) {
+                System.err.println("WARNING: config.properties not found for Google Calendar.");
+            } else {
+                Properties prop = new Properties();
+                prop.load(input);
+                String propKey = prop.getProperty("GOOGLE_CALENDAR_API_KEY");
+                if (propKey != null && !propKey.trim().isEmpty() && !propKey.contains("your_")) {
+                    return propKey.trim();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading Google API key from config.properties: " + e.getMessage());
+        }
+
+        System.err.println("WARNING: GOOGLE_CALENDAR_API_KEY not found in environment or config.properties.");
         return "";
     }
 
