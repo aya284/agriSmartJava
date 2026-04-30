@@ -31,9 +31,9 @@ public class OcrService {
         tesseract.setDatapath(foundPath);
         
         // --- Enhanced Configuration for Arabic ---
-        tesseract.setLanguage("ara+eng"); // Arabic primary, English secondary
-        tesseract.setOcrEngineMode(1);    // LSTM only
-        tesseract.setPageSegMode(3);      // Fully automatic page segmentation
+        tesseract.setLanguage("ara+eng"); 
+        tesseract.setOcrEngineMode(1);   
+        tesseract.setPageSegMode(3);     
         
         // Critical variables for noisy scans
         tesseract.setVariable("preserve_interword_spaces", "1");
@@ -41,10 +41,7 @@ public class OcrService {
         tesseract.setVariable("tessedit_char_whitelist", ""); // Reset whitelist
     }
 
-    /**
-     * Extracts text with region-based preprocessing and quality validation.
-     * Strategy: Scan top 35% (CIN zone) with PSM 11, then full image with PSM 3.
-     */
+  
     public String extractText(String filePath) throws Exception {
         if (filePath == null || filePath.isBlank()) {
             throw new Exception("Chemin du fichier invalide.");

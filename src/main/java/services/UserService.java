@@ -16,6 +16,8 @@ import java.util.Optional;
 public class UserService {
     private final Connection conn = MyConnection.getInstance().getConn();
     private final AdminNotificationService notificationService = new AdminNotificationService();
+    private final LoginHistoryService historyService = new LoginHistoryService();
+    private final TwoFactorAuthService tfaService = new TwoFactorAuthService();
 
     // ── REGISTER ──────────────────────────────────────────────
     public void register(User user) throws Exception {
@@ -68,27 +70,107 @@ public class UserService {
     }
     // ── LOGIN ─────────────────────────────────────────────────
     public Optional<User> login(String email, String password) throws Exception {
-        // Validation centralisée
+        System.out.println("[DEBUG] Login attempt for email: " + email);
         String error = Validator.validateLoginForm(email, password);
-        if (error != null) throw new Exception(error);
+        if (error != null) {
+            System.out.println("[DEBUG] Login validation failed: " + error);
+            throw new Exception(error);
+        }
 
-        try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT * FROM users WHERE email = ?")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE email = ?")) {
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
 
-            if (!rs.next())
+            if (!rs.next()) {
+                System.out.println("[DEBUG] User not found for email: " + email);
                 throw new Exception("E-mail ou mot de passe incorrect.");
+            }
 
-            if (!PasswordUtils.verify(password, rs.getString("password")))
+            User user = mapUser(rs);
+            System.out.println("[DEBUG] User found: ID=" + user.getId() + ", Role=" + user.getRole());
+
+            // 1. Verify Password
+            if (!PasswordUtils.verify(password, rs.getString("password"))) {
+                System.out.println("[DEBUG] Password mismatch for user: " + user.getId());
+                historyService.recordLogin(user.getId(), "FAILED", "Mot de passe incorrect");
                 throw new Exception("E-mail ou mot de passe incorrect.");
+            }
 
-            String status = rs.getString("status");
-            if (!"active".equalsIgnoreCase(status))
+            // 2. Check Account Status
+            String status = user.getStatus();
+            if (!"active".equalsIgnoreCase(status)) {
+                System.out.println("[DEBUG] Account not active: " + status);
+                historyService.recordLogin(user.getId(), "FAILED", "Compte " + status);
                 throw new Exception("Compte " + status + ". Veuillez contacter le support.");
+            }
 
-            return Optional.of(mapUser(rs));
+            // 3. Check if 2FA is required
+            int failedAttempts = historyService.getRecentFailedAttempts(user.getId(), 60);
+            boolean isFirstLogin = !historyService.hasLoginHistory(user.getId());
+            System.out.println("[DEBUG] Checking 2FA: failedAttempts=" + failedAttempts + ", isFirstLogin=" + isFirstLogin);
+
+            if (tfaService.is2faRequired(user, failedAttempts, isFirstLogin)) {
+                System.out.println("[DEBUG] 2FA TRIGGERED for user: " + user.getId());
+                throw new TwoFactorRequiredException(user);
+            }
+
+            // 4. Record Success
+            System.out.println("[DEBUG] Login SUCCESS for user: " + user.getId());
+            historyService.recordLogin(user.getId(), "SUCCESS", null);
+            return Optional.of(user);
         }
+    }
+
+    /**
+     * Exception to signal that 2FA is needed before final login.
+     */
+    public static class TwoFactorRequiredException extends Exception {
+        private final User user;
+        public TwoFactorRequiredException(User user) {
+            super("Two-factor authentication required");
+            this.user = user;
+        }
+        public User getUser() { return user; }
+    }
+
+    // ── 2FA VERIFICATION ───────────────────────────────────────
+
+    public User finalize2faLogin(int userId, String code) throws Exception {
+        System.out.println("[DEBUG] finalising 2FA OTP for user: " + userId + " with code: " + code);
+        if (tfaService.verifyOtp(userId, code)) {
+            User user = findById(userId);
+            System.out.println("[DEBUG] 2FA OTP SUCCESS for user: " + userId);
+            historyService.recordLogin(userId, "SUCCESS", "2FA OTP Verified");
+            return user;
+        } else {
+            System.out.println("[DEBUG] 2FA OTP FAILED for user: " + userId);
+            historyService.recordLogin(userId, "FAILED", "Code 2FA incorrect");
+            throw new Exception("Code de vérification incorrect.");
+        }
+    }
+
+    public User verifyFaceLogin(int userId, String capturedImagePath) throws Exception {
+        System.out.println("[DEBUG] finalising 2FA Face ID for user: " + userId);
+        User user = findById(userId);
+        if (user == null) {
+            System.out.println("[DEBUG] User not found for Face ID: " + userId);
+            throw new Exception("Utilisateur introuvable.");
+        }
+
+        if (tfaService.verifyFace(user.getImage(), capturedImagePath)) {
+            System.out.println("[DEBUG] Face ID SUCCESS for user: " + userId);
+            historyService.recordLogin(userId, "SUCCESS", "Face ID Verified");
+            return user;
+        } else {
+            System.out.println("[DEBUG] Face ID FAILED for user: " + userId);
+            historyService.recordLogin(userId, "FAILED", "Face ID mismatch");
+            throw new Exception("Reconnaissance faciale échouée.");
+        }
+    }
+
+    public void requestOtp(int userId) throws Exception {
+        User user = findById(userId);
+        if (user != null) tfaService.sendOtp(user);
     }
 
     // ── GOOGLE LOGIN / AUTO-REGISTER ─────────────────────────
@@ -178,6 +260,10 @@ public class UserService {
         u.setStatus(rs.getString("status"));
         u.setCinNumber(rs.getString("cin_number"));
         u.setGoogleId(rs.getString("google_id"));
+        u.setTwoFactorCode(rs.getString("two_factor_code"));
+        Timestamp tfaExpiry = rs.getTimestamp("two_factor_expires_at");
+        if (tfaExpiry != null) u.setTwoFactorExpiresAt(tfaExpiry.toLocalDateTime());
+
         // ── Dates ── ← c'était manquant
         Timestamp createdAt = rs.getTimestamp("created_at");
         Timestamp updatedAt = rs.getTimestamp("updated_at");

@@ -18,6 +18,8 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String googleId;
+    private String twoFactorCode;
+    private LocalDateTime twoFactorExpiresAt;
 
     public User() {}
 
@@ -61,6 +63,10 @@ public class User {
     public void setCinNumber(String cinNumber) { this.cinNumber = cinNumber; }
     public String getGoogleId() { return googleId; }
     public void setGoogleId(String googleId) { this.googleId = googleId; }
+    public String getTwoFactorCode() { return twoFactorCode; }
+    public void setTwoFactorCode(String twoFactorCode) { this.twoFactorCode = twoFactorCode; }
+    public LocalDateTime getTwoFactorExpiresAt() { return twoFactorExpiresAt; }
+    public void setTwoFactorExpiresAt(LocalDateTime twoFactorExpiresAt) { this.twoFactorExpiresAt = twoFactorExpiresAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

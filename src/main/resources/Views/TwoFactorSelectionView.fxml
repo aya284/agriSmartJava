@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.user.TwoFactorSelectionController">
+
+    <VBox alignment="CENTER" maxWidth="460" spacing="24"
+          style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 50 55 45 55; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 28, 0.0, 0, 14);">
+
+        <Label text="Verification en 2 etapes"
+               style="-fx-text-fill: #2a5438; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+        <Label text="Choisissez une methode de verification pour securiser votre connexion."
+               wrapText="true" maxWidth="340"
+               style="-fx-text-fill: #555555; -fx-font-size: 14px;"/>
+
+        <Separator/>
+
+        <VBox spacing="12" maxWidth="360">
+
+            <Button onAction="#handleOtpSelection" maxWidth="Infinity" text="Email OTP  —  Recevoir un code a 6 chiffres"
+                    style="-fx-background-color: #f0f7f3; -fx-border-color: #2a5438; -fx-border-width: 1.5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 16 20; -fx-font-size: 14px; -fx-text-fill: #2a5438; -fx-font-weight: bold; -fx-cursor: hand;"/>
+
+            <Button onAction="#handleFaceIdSelection" maxWidth="Infinity" text="Reconnaissance Faciale  —  Verification via camera"
+                    style="-fx-background-color: #f0f7f3; -fx-border-color: #2a5438; -fx-border-width: 1.5; -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 16 20; -fx-font-size: 14px; -fx-text-fill: #2a5438; -fx-font-weight: bold; -fx-cursor: hand;"/>
+        </VBox>
+
+        <HBox alignment="CENTER">
+            <Hyperlink onAction="#handleCancel"
+                       style="-fx-text-fill: #E6BF4A; -fx-font-weight: bold; -fx-font-size: 13px;"
+                       text="Annuler et retourner a la connexion"/>
+        </HBox>
+
+    </VBox>
+</StackPane>

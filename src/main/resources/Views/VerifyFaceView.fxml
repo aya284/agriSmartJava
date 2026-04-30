@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+
+<StackPane style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.user.VerifyFaceController">
+
+    <VBox alignment="CENTER" maxWidth="500" spacing="20"
+          style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 40 50 40 50; -fx-border-color: #e5e7eb; -fx-border-width: 1; -fx-border-radius: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 28, 0.0, 0, 14);">
+
+        <VBox alignment="CENTER" spacing="6">
+            <Label text="Reconnaissance Faciale"
+                   style="-fx-text-fill: #2a5438; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="Regardez la camera pour confirmer votre identite."
+                   wrapText="true" maxWidth="360"
+                   style="-fx-text-fill: #555555; -fx-font-size: 13.5px;"/>
+        </VBox>
+
+        <Separator/>
+
+        <StackPane style="-fx-background-color: #1a1a1a; -fx-background-radius: 14; -fx-border-color: #2a5438; -fx-border-width: 2; -fx-border-radius: 14;"
+                   minWidth="340" minHeight="255">
+            <ImageView fx:id="cameraFeed" fitWidth="340" fitHeight="255" preserveRatio="true"/>
+            <Label fx:id="statusLabel" text="Initialisation de la camera..."
+                   style="-fx-text-fill: #9ca3af; -fx-font-size: 13px;"/>
+        </StackPane>
+
+        <Label fx:id="errorLabel" style="-fx-text-fill: #e74c3c; -fx-font-size: 13px;" visible="false" wrapText="true" maxWidth="360"/>
+
+        <Button fx:id="captureBtn" text="Capturer et Verifier" onAction="#handleCapture" maxWidth="360"
+                style="-fx-background-color: #2a5438; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; -fx-background-radius: 12; -fx-padding: 14 20; -fx-cursor: hand;"/>
+
+        <HBox alignment="CENTER">
+            <Hyperlink onAction="#handleBack"
+                       style="-fx-text-fill: #E6BF4A; -fx-font-weight: bold; -fx-font-size: 13px;"
+                       text="&lt;- Changer de methode"/>
+        </HBox>
+
+    </VBox>
+</StackPane>

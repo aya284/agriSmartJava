@@ -34,12 +34,6 @@
                 <Hyperlink onAction="#goToForgotPassword" style="-fx-text-fill: #2a5438; -fx-font-size: 12.5px;" text="Mot de passe oublié ?" />
             </HBox>
 
-            <!-- ✅ reCAPTCHA — height increased to 100 for proper rendering -->
-            <!-- ✅ reCAPTCHA Checkbox -->
-            <VBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 0 0 0 5;">
-                <CheckBox fx:id="captchaCheckBox" onAction="#handleCaptchaClick" style="-fx-text-fill: #555555; -fx-font-size: 14px; -fx-cursor: hand;" text="Je ne suis pas un robot" />
-                <Label fx:id="errCaptcha" maxWidth="320" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" visible="false" wrapText="true" />
-            </VBox>
         </VBox>
 
         <!-- Error Label -->

@@ -2966,3 +2966,76 @@
     -fx-font-size: 10px;
     -fx-text-fill: #888888;
 }
+
+/* Auth Pages (Login, 2FA, OTP) */
+.auth-container {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 20, 0, 0, 10);
+}
+
+.auth-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+}
+
+.auth-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #475569;
+}
+
+.auth-field {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+    -fx-text-fill: #1e293b;
+}
+
+.auth-field:focused {
+    -fx-border-color: #3b82f6;
+    -fx-background-color: white;
+}
+
+.auth-btn-primary {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.auth-btn-primary:hover {
+    -fx-background-color: #2563eb;
+}
+
+.auth-btn-secondary {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #1e293b;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.auth-btn-secondary:hover {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #cbd5e1;
+}
+
+.auth-link-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #3b82f6;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-underline: true;
+}
+
+.auth-link-btn:hover {
+    -fx-text-fill: #2563eb;
+}

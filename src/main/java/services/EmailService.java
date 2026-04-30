@@ -41,7 +41,18 @@ public class EmailService {
         msg.setRecipients(Message.RecipientType.TO,
                 InternetAddress.parse(toEmail));
         msg.setSubject("AgriSmart – Votre code de réinitialisation");
-        msg.setContent(buildOtpHtml(otp), "text/html; charset=utf-8");
+        msg.setContent(buildOtpHtml(otp, "Réinitialisation du mot de passe"), "text/html; charset=utf-8");
+        Transport.send(msg);
+    }
+
+    public void sendTwoFactorOtpEmail(String toEmail, String otp) throws Exception {
+        Session session = buildSession();
+        Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress(FROM_EMAIL, "AgriSmart"));
+        msg.setRecipients(Message.RecipientType.TO,
+                InternetAddress.parse(toEmail));
+        msg.setSubject("AgriSmart – Code de double authentification (2FA)");
+        msg.setContent(buildOtpHtml(otp, "Vérification de sécurité"), "text/html; charset=utf-8");
         Transport.send(msg);
     }
 
@@ -209,14 +220,14 @@ public class EmailService {
         """.formatted(user.getFirstName(), statusColor, statusLabel, message);
     }
 
-    private String buildOtpHtml(String otp) {
+    private String buildOtpHtml(String otp, String title) {
         return """
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;
                         border:1px solid #e0e0e0;border-radius:12px;
                         padding:40px;text-align:center;">
               <h2 style="color:#2a5438;margin-top:0;">AgriSmart</h2>
               <div style="border-bottom:2px solid #f0f0f0;margin:20px 0;"></div>
-              <h3 style="color:#333;">Réinitialisation du mot de passe</h3>
+              <h3 style="color:#333;">%s</h3>
               <p style="color:#555;">Utilisez ce code de vérification :</p>
               <div style="background:#f4f6f8;border-radius:12px;padding:20px;
                           font-family:monospace;font-size:32px;font-weight:bold;
@@ -224,9 +235,9 @@ public class EmailService {
                 %s
               </div>
               <p style="color:#888;font-size:14px;">
-                Valable pendant <strong>60 minutes</strong>.
+                Valable pendant <strong>10 minutes</strong>.
               </p>
             </div>
-        """.formatted(otp);
+        """.formatted(title, otp);
     }
 }
