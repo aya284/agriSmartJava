@@ -31,6 +31,15 @@ public class FormulaireCultureController {
         this.parcelleId = parcelleId;
     }
 
+    public void prefillCultureName(String nom, String variete) {
+        if (txtType != null && nom != null) {
+            txtType.setText(nom);
+        }
+        if (txtVariete != null && variete != null) {
+            txtVariete.setText(variete);
+        }
+    }
+
     public void setCultureData(Culture c) {
         this.currentId = c.getId();
         this.parcelleId = c.getParcelleId();
@@ -69,6 +78,7 @@ public class FormulaireCultureController {
                 cs.modifier(c);
                 NotificationUtil.showSuccess(null, "Culture mise à jour !");
             }
+            MainController.refreshNotifications();
             close();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur SQL", "Une erreur technique est survenue : " + e.getMessage());
