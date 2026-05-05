@@ -2820,13 +2820,13 @@ public class MarketplaceController implements Initializable {
             Button btnAddCart = new Button("Ajouter au panier");
             btnAddCart.getStyleClass().add("btn-cart-small");
             boolean isOwnOffer = p.getVendeurId() > 0 && p.getVendeurId() == getCurrentUserId();
-            boolean isAlreadyBought = purchasedProductIds.contains(p.getId());
+            boolean isOutOfStock = p.getQuantiteStock() <= 0;
             if (isOwnOffer) {
                 btnAddCart.setText("C ton offre");
                 btnAddCart.setDisable(true);
                 btnAddCart.getStyleClass().add("own-offer");
-            } else if (isAlreadyBought) {
-                btnAddCart.setText("Deja achete");
+            } else if (isOutOfStock) {
+                btnAddCart.setText("Rupture stock");
                 btnAddCart.setDisable(true);
                 btnAddCart.getStyleClass().add("own-offer");
             } else {

@@ -6,6 +6,7 @@ import utils.MyConnection;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.text.Normalizer;
 
 /**
  * Recommendation service that reads directly from the database to provide
@@ -26,6 +27,12 @@ public class RecommendationService {
     private static final double W_SIMILARITY = 0.65;
     private static final double W_POPULARITY = 0.20;
     private static final double W_RECENCY = 0.15;
+
+    private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
+            "de", "des", "du", "la", "le", "les", "et", "ou", "a", "au", "aux",
+            "avec", "sans", "pour", "par", "sur", "en", "d", "l", "un", "une",
+            "the", "and", "or", "for", "with", "from", "this", "that"
+    ));
 
     /**
      * Returns a list of recommended products for the given user, ranked by score.
@@ -307,7 +314,9 @@ public class RecommendationService {
         String targetCat = safe(product.getCategorie()).toLowerCase();
         String targetType = safe(product.getType()).toLowerCase();
         String targetDesc = safe(product.getDescription()).toLowerCase();
+        String targetName = safe(product.getNom()).toLowerCase();
         double targetPrice = product.isPromotion() ? product.getPromotionPrice() : product.getPrix();
+        Set<String> targetTokens = tokenize(targetName + " " + targetDesc + " " + targetCat);
 
         List<ScoredProduct> scored = new ArrayList<>();
         for (Produit p : allProducts) {
@@ -317,38 +326,40 @@ public class RecommendationService {
             String cat = safe(p.getCategorie()).toLowerCase();
             String type = safe(p.getType()).toLowerCase();
             String desc = safe(p.getDescription()).toLowerCase();
+            String name = safe(p.getNom()).toLowerCase();
+            Set<String> candidateTokens = tokenize(name + " " + desc + " " + cat);
 
-            // Category match is the strongest signal
-            if (!targetCat.isEmpty() && targetCat.equals(cat)) {
-                score += 3.0;
+            boolean sameCategory = !targetCat.isEmpty() && targetCat.equals(cat);
+            boolean sameType = !targetType.isEmpty() && targetType.equals(type);
+
+            // Hard guardrail: keep only products with strong structural affinity.
+            // Either same category, or same type with meaningful text overlap.
+            double textOverlap = jaccard(targetTokens, candidateTokens);
+            if (!sameCategory && !(sameType && textOverlap >= 0.18)) {
+                continue;
             }
 
-            // Type match (vente/location)
-            if (!targetType.isEmpty() && targetType.equals(type)) {
-                score += 1.5;
+            if (sameCategory) {
+                score += 4.0;
+            }
+            if (sameType) {
+                score += 2.0;
             }
 
-            // Description keyword overlap
-            if (!targetDesc.isEmpty() && !desc.isEmpty()) {
-                String[] targetWords = targetDesc.split("\\s+");
-                for (String word : targetWords) {
-                    if (word.length() > 3 && desc.contains(word)) {
-                        score += 0.3;
-                    }
-                }
-            }
+            // Strong semantic signal from normalized token overlap (name + desc + category).
+            score += textOverlap * 4.0;
 
-            // Price proximity bonus (closer price = more similar)
+            // Price proximity should refine, not dominate.
             if (targetPrice > 0) {
                 double pPrice = p.isPromotion() ? p.getPromotionPrice() : p.getPrix();
                 double ratio = Math.min(targetPrice, pPrice) / Math.max(targetPrice, pPrice);
-                score += ratio * 0.8;
+                score += ratio * 0.6;
             }
 
-            // Recency bonus
-            score += computeRecencyScore(p) * 0.3;
+            // Small recency tie-breaker only.
+            score += computeRecencyScore(p) * 0.15;
 
-            if (score > 0) {
+            if (score >= 2.6) {
                 scored.add(new ScoredProduct(p, score));
             }
         }
@@ -370,6 +381,41 @@ public class RecommendationService {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private Set<String> tokenize(String text) {
+        String normalized = normalizeText(text);
+        if (normalized.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> tokens = new HashSet<>();
+        for (String token : normalized.split("\\s+")) {
+            if (token.length() < 3) continue;
+            if (STOP_WORDS.contains(token)) continue;
+            tokens.add(token);
+        }
+        return tokens;
+    }
+
+    private String normalizeText(String text) {
+        String value = safe(text).toLowerCase(Locale.ROOT);
+        if (value.isEmpty()) return "";
+        String noAccents = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return noAccents.replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ").trim();
+    }
+
+    private double jaccard(Set<String> a, Set<String> b) {
+        if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
+            return 0.0;
+        }
+        Set<String> inter = new HashSet<>(a);
+        inter.retainAll(b);
+        if (inter.isEmpty()) return 0.0;
+        Set<String> union = new HashSet<>(a);
+        union.addAll(b);
+        return union.isEmpty() ? 0.0 : ((double) inter.size() / union.size());
     }
 
     // ─── Inner classes ──────────────────────────────────────────────────

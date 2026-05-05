@@ -38,6 +38,21 @@ public class PaymentGatewayService {
         this.stripeCurrency = readConfig("marketplace.payment.currency", "PAYMENT_API_CURRENCY", "usd")
                 .trim()
                 .toLowerCase(Locale.ROOT);
+        
+        // Log configuration state for debugging
+        logConfigurationState();
+    }
+    
+    private void logConfigurationState() {
+        System.out.println("=== PaymentGatewayService Configuration ===");
+        System.out.println("Payment Mode: " + mode);
+        System.out.println("Stripe Secret Key Configured: " + (!stripeSecretKey.isBlank()));
+        System.out.println("Admin Email: " + (adminEmail.isBlank() ? "[not configured]" : adminEmail));
+        System.out.println("Currency: " + stripeCurrency);
+        
+        if ("stripe".equals(mode) && stripeSecretKey.isBlank()) {
+            System.err.println("WARNING: Stripe mode is enabled but STRIPE_SECRET_KEY is not configured!");
+        }
     }
 
     public PaymentResult chargeCard(double amount, int customerId, String description, CardInput cardInput) {
@@ -53,8 +68,12 @@ public class PaymentGatewayService {
             return new PaymentResult(false, "", "Mode paiement inconnu: " + mode + ". Utilisez mock ou stripe.");
         }
 
+        // Validate Stripe configuration
         if (stripeSecretKey.isBlank()) {
-            return new PaymentResult(false, "", "STRIPE_SECRET_KEY manquante.");
+            String errorMsg = "Configuration Stripe manquante: STRIPE_SECRET_KEY n'est pas definie. " +
+                    "Verifiez votre variable d'environnement ou propriete systeme.";
+            System.err.println("PAYMENT ERROR: " + errorMsg);
+            return new PaymentResult(false, "", errorMsg);
         }
 
         String paymentMethod = resolveStripeTestPaymentMethod(cardInput == null ? "" : cardInput.cardNumber());
@@ -75,6 +94,7 @@ public class PaymentGatewayService {
             return parseStripeResponse(response);
         } catch (Exception ex) {
             String message = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+            System.err.println("PAYMENT ERROR: " + message);
             return new PaymentResult(false, "", "Erreur technique paiement: " + message);
         }
     }
@@ -110,11 +130,35 @@ public class PaymentGatewayService {
         int statusCode = response.statusCode();
 
         if (statusCode >= 400) {
-            return new PaymentResult(false, "", "Erreur Stripe HTTP " + statusCode + ": " + extractStripeError(body));
+            String stripeError = extractStripeError(body);
+            
+            // Handle authentication errors specifically
+            if (statusCode == 401 || statusCode == 403) {
+                String authErrorMsg = "Erreur d'authentification Stripe (HTTP " + statusCode + "): " +
+                        "Verifiez que votre STRIPE_SECRET_KEY est correcte et valide. " +
+                        "Detals: " + stripeError;
+                System.err.println("STRIPE AUTH ERROR: " + authErrorMsg);
+                return new PaymentResult(false, "", authErrorMsg);
+            }
+            
+            // Handle invalid request format
+            if (statusCode == 400) {
+                String badRequestMsg = "Erreur de requete Stripe (HTTP 400): " + stripeError + 
+                        ". Verifiez le format des donnees de paiement.";
+                System.err.println("STRIPE BAD REQUEST: " + badRequestMsg);
+                return new PaymentResult(false, "", badRequestMsg);
+            }
+            
+            // Generic API error
+            String genericMsg = "Erreur API Stripe (HTTP " + statusCode + "): " + stripeError;
+            System.err.println("STRIPE API ERROR: " + genericMsg);
+            return new PaymentResult(false, "", genericMsg);
         }
 
         if (body.isBlank()) {
-            return new PaymentResult(false, "", "Reponse Stripe vide.");
+            String msg = "Reponse Stripe vide.";
+            System.err.println("PAYMENT ERROR: " + msg);
+            return new PaymentResult(false, "", msg);
         }
 
         JSONObject json = new JSONObject(body);
@@ -122,18 +166,25 @@ public class PaymentGatewayService {
         String paymentIntentId = json.optString("id", "").trim();
 
         if ("succeeded".equals(status)) {
+            System.out.println("Payment succeeded: " + paymentIntentId);
             return new PaymentResult(true, paymentIntentId, "");
         }
 
         if ("requires_action".equals(status) || "requires_source_action".equals(status)) {
-            return new PaymentResult(false, "", "Paiement requiert une verification 3D Secure (non supportee dans ce flux). Utilisez une carte test simple.");
+            String msg = "Paiement requiert une verification 3D Secure (non supportee dans ce flux). Utilisez une carte test simple.";
+            System.out.println("PAYMENT WARNING: " + msg);
+            return new PaymentResult(false, "", msg);
         }
 
         if ("requires_payment_method".equals(status)) {
-            return new PaymentResult(false, "", "Paiement refuse. Verifiez la carte test utilisee.");
+            String msg = "Paiement refuse. Verifiez la carte test utilisee.";
+            System.out.println("PAYMENT INFO: " + msg);
+            return new PaymentResult(false, "", msg);
         }
 
-        return new PaymentResult(false, "", "Paiement non confirme. Statut Stripe: " + status);
+        String msg = "Paiement non confirme. Statut Stripe: " + status;
+        System.out.println("PAYMENT WARNING: " + msg);
+        return new PaymentResult(false, "", msg);
     }
 
     private String extractStripeError(String body) {
@@ -148,11 +199,26 @@ public class PaymentGatewayService {
             }
             String code = error.optString("code", "").trim();
             String message = error.optString("message", "Erreur Stripe.").trim();
+            String type = error.optString("type", "").trim();
+            
+            // Build descriptive error message
+            StringBuilder errorDesc = new StringBuilder();
             if (!code.isBlank()) {
-                return code + " - " + message;
+                errorDesc.append(code);
             }
-            return message;
+            if (!type.isBlank()) {
+                if (errorDesc.length() > 0) errorDesc.append(" [").append(type).append("]");
+                else errorDesc.append(type);
+            }
+            
+            if (errorDesc.length() > 0) {
+                errorDesc.append(" - ");
+            }
+            errorDesc.append(message);
+            
+            return errorDesc.toString();
         } catch (Exception ex) {
+            System.err.println("Failed to parse Stripe error: " + ex.getMessage());
             return body;
         }
     }
@@ -185,5 +251,59 @@ public class PaymentGatewayService {
             return fromEnv;
         }
         return defaultValue;
+    }
+    
+    /**
+     * Validates the Stripe configuration for the current mode.
+     * Returns an empty string if valid, otherwise returns an error message.
+     */
+    public String validateConfiguration() {
+        if ("mock".equals(mode)) {
+            return ""; // Mock mode doesn't require credentials
+        }
+        
+        if (!"stripe".equals(mode)) {
+            return "Mode paiement invalide: " + mode;
+        }
+        
+        if (stripeSecretKey.isBlank()) {
+            return "Stripe mode is enabled but STRIPE_SECRET_KEY environment variable or system property " +
+                    "marketplace.payment.stripe.secret is not configured. " +
+                    "Set it before starting the application.";
+        }
+        
+        if (!stripeSecretKey.startsWith("sk_test_") && !stripeSecretKey.startsWith("sk_live_")) {
+            return "STRIPE_SECRET_KEY appears to be invalid. It should start with sk_test_ or sk_live_.";
+        }
+        
+        return ""; // Configuration is valid
+    }
+    
+    /**
+     * Gets a human-readable description of the current payment configuration.
+     */
+    public String getConfigurationStatus() {
+        StringBuilder status = new StringBuilder();
+        status.append("Payment Mode: ").append(mode).append("\n");
+        
+        if ("mock".equals(mode)) {
+            status.append("Status: Mock mode - payments are simulated locally.\n");
+        } else if ("stripe".equals(mode)) {
+            if (stripeSecretKey.isBlank()) {
+                status.append("Status: Stripe mode enabled but NOT CONFIGURED!\n");
+                status.append("Required: Set STRIPE_SECRET_KEY environment variable or -Dmarketplace.payment.stripe.secret JVM property.\n");
+            } else {
+                String keyPreview = stripeSecretKey.substring(0, Math.min(10, stripeSecretKey.length())) + "...";
+                status.append("Status: Stripe mode configured.\n");
+                status.append("Secret Key: ").append(keyPreview).append("\n");
+            }
+        } else {
+            status.append("Status: Unknown payment mode.\n");
+        }
+        
+        status.append("Currency: ").append(stripeCurrency).append("\n");
+        status.append("Admin Email: ").append(adminEmail.isBlank() ? "[not configured]" : adminEmail).append("\n");
+        
+        return status.toString();
     }
 }

@@ -183,6 +183,13 @@ public class MarketplaceCheckoutFeature {
         grid.add(deliveryHintLabel, 1, 7);
         grid.add(policyLabel, 0, 8, 2, 1);
 
+        // Error display area (initially hidden)
+        Label errorDisplay = new Label();
+        errorDisplay.setStyle("-fx-text-fill: #cc0000; -fx-font-size: 11; -fx-wrap-text: true;");
+        errorDisplay.setVisible(false);
+        errorDisplay.setManaged(false);
+        errorDisplay.setMaxWidth(Double.MAX_VALUE);
+
         Button validateInlineButton = new Button("Valider");
         validateInlineButton.getStyleClass().add("checkout-save-btn");
 
@@ -197,9 +204,23 @@ public class MarketplaceCheckoutFeature {
         inlineActions.setAlignment(Pos.CENTER_RIGHT);
         inlineActions.getStyleClass().add("checkout-inline-actions");
 
-        VBox content = new VBox(10, sectionTitle, sectionSubtitle, summaryLabel, grid, inlineActions);
+        VBox content = new VBox(10, sectionTitle, sectionSubtitle, summaryLabel, grid, errorDisplay, inlineActions);
         content.getStyleClass().add("checkout-content-shell");
         checkoutDialog.getDialogPane().setContent(content);
+
+        // Helper function to display errors in the modal
+        java.util.function.Consumer<String> showErrorInModal = (errorMsg) -> {
+            errorDisplay.setText("⚠ " + errorMsg);
+            errorDisplay.setVisible(true);
+            errorDisplay.setManaged(true);
+        };
+
+        // Helper function to clear errors
+        Runnable clearErrorInModal = () -> {
+            errorDisplay.setText("");
+            errorDisplay.setVisible(false);
+            errorDisplay.setManaged(false);
+        };
 
         Node hiddenCancelNode = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
         if (hiddenCancelNode != null) {
@@ -279,8 +300,17 @@ public class MarketplaceCheckoutFeature {
                     adresse
             );
             if (checkoutError != null) {
-                host.showToast("Validation", checkoutError, false);
+                showErrorInModal.accept(checkoutError);
                 return;
+            }
+
+            // Pre-validate payment configuration if using card payment
+            if ("carte".equalsIgnoreCase(modePaiement)) {
+                String configError = paymentGatewayService.validateConfiguration();
+                if (!configError.isBlank()) {
+                    showErrorInModal.accept("Configuration Stripe: " + configError);
+                    return;
+                }
             }
 
             String cardValidationError = null;
@@ -294,13 +324,15 @@ public class MarketplaceCheckoutFeature {
 
                 cardValidationError = MarketplaceValidator.validateCardFields(cardNumber, expMonth, expYear, cvc);
                 if (cardValidationError != null) {
-                    host.showToast("Paiement", cardValidationError, false);
+                    showErrorInModal.accept(cardValidationError);
                     return;
                 }
                 cardInput = new PaymentGatewayService.CardInput(cardNumber, expMonth, expYear, cvc, holder);
             }
 
             try {
+                clearErrorInModal.run();
+                
                 int itemCount = 0;
                 double totalAmount = 0.0;
                 for (CartItem cartItem : cartItems) {
@@ -323,7 +355,15 @@ public class MarketplaceCheckoutFeature {
                             cardInput
                     );
                     if (!paymentResult.success()) {
-                        host.showToast("Paiement", paymentResult.errorMessage(), false);
+                        // Display payment error in red in the modal
+                        String errorMsg = paymentResult.errorMessage();
+                        if (errorMsg.contains("STRIPE_SECRET_KEY")) {
+                            showErrorInModal.accept("Configuration Stripe manquante. Contactez l'administrateur.");
+                        } else if (errorMsg.contains("401") || errorMsg.contains("403")) {
+                            showErrorInModal.accept("Les identifiants Stripe sont invalides. Verifiez la configuration.");
+                        } else {
+                            showErrorInModal.accept(errorMsg);
+                        }
                         return;
                     }
                     paymentRef = paymentResult.paymentReference();
@@ -353,15 +393,20 @@ public class MarketplaceCheckoutFeature {
                         buildCheckoutSuccessPane(checkoutDialog, host, commandeId, modePaiement, adresse, itemCount, totalAmount)
                 );
             } catch (SQLException e) {
+                String sqlError = safe(e.getMessage());
+                if (sqlError.isBlank()) {
+                    sqlError = "Erreur base de donnees.";
+                }
+                showErrorInModal.accept("Erreur base de donnees: " + sqlError);
                 host.showSqlAlert(e);
             } catch (Exception e) {
                 String details = safe(e.getMessage());
                 if (details.isBlank()) {
                     details = e.getClass().getSimpleName();
                 }
-                host.showToast("Paiement", "Erreur inattendue: " + details, false);
+                showErrorInModal.accept("Erreur inattendue: " + details);
             } catch (Throwable t) {
-                host.showToast("Paiement", "Erreur technique inattendue: " + t.getClass().getSimpleName(), false);
+                showErrorInModal.accept("Erreur technique: " + t.getClass().getSimpleName());
             }
         });
 
