@@ -235,12 +235,20 @@ public class CommandeService implements IService<Commande> {
 
     public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
                                       List<CartItem> cartItems) throws SQLException {
+        return createCommandeFromCart(clientId, modePaiement, adresseLivraison, cartItems, null, null, "en_attente");
+    }
+
+    public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
+                                      List<CartItem> cartItems, String paymentRef,
+                                      java.time.LocalDateTime paidAt, String initialStatus) throws SQLException {
         if (cartItems == null || cartItems.isEmpty()) {
             throw new SQLException("Le panier est vide.");
         }
 
+        String normalizedStatus = normalizeStatus(initialStatus);
+
         String insertCommande = "INSERT INTO commande (statut, mode_paiement, adresse_livraison, montant_total, " +
-                "created_at, updated_at, client_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
+                "payment_ref, paid_at, created_at, updated_at, client_id) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)";
         String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire) " +
             "VALUES (?, ?, ?, ?)";
         String lockProduit = "SELECT quantite_stock, prix, is_promotion, promotion_price, banned, vendeur_id " +
@@ -302,11 +310,13 @@ public class CommandeService implements IService<Commande> {
             }
 
             try (PreparedStatement psCommande = conn.prepareStatement(insertCommande, Statement.RETURN_GENERATED_KEYS)) {
-                psCommande.setString(1, "en_attente");
+                psCommande.setString(1, normalizedStatus);
                 psCommande.setString(2, modePaiement);
                 psCommande.setString(3, adresseLivraison);
                 psCommande.setDouble(4, total);
-                psCommande.setInt(5, clientId);
+                psCommande.setString(5, paymentRef);
+                psCommande.setTimestamp(6, toTimestamp(paidAt));
+                psCommande.setInt(7, clientId);
                 psCommande.executeUpdate();
 
                 try (ResultSet keys = psCommande.getGeneratedKeys()) {

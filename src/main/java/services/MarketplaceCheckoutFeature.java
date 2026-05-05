@@ -37,6 +37,7 @@ public class MarketplaceCheckoutFeature {
     private final CommandeService commandeService;
     private final CartSessionService cartSessionService;
     private final MarketplaceInvoicePdfService invoicePdfService = new MarketplaceInvoicePdfService();
+    private final PaymentGatewayService paymentGatewayService = new PaymentGatewayService();
 
     public MarketplaceCheckoutFeature(CommandeService commandeService, CartSessionService cartSessionService) {
         this.commandeService = commandeService;
@@ -83,7 +84,7 @@ public class MarketplaceCheckoutFeature {
         checkoutDialog.getDialogPane().getStyleClass().add("checkout-dialog-pane");
         host.applyDialogStylesheet(checkoutDialog.getDialogPane());
         checkoutDialog.getDialogPane().setPrefWidth(560);
-        checkoutDialog.getDialogPane().setPrefHeight(340);
+        checkoutDialog.getDialogPane().setPrefHeight(520);
         checkoutDialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
 
         int previewItemCount = 0;
@@ -107,12 +108,43 @@ public class MarketplaceCheckoutFeature {
         TextField adresseField = new TextField();
         adresseField.setPromptText("Adresse de livraison");
         adresseField.setDisable(true);
+
+        TextField cardNumberField = new TextField();
+        cardNumberField.setPromptText("Numero de carte");
+        cardNumberField.setDisable(true);
+
+        TextField expMonthField = new TextField();
+        expMonthField.setPromptText("MM");
+        expMonthField.setDisable(true);
+
+        TextField expYearField = new TextField();
+        expYearField.setPromptText("YY ou YYYY");
+        expYearField.setDisable(true);
+
+        TextField cvcField = new TextField();
+        cvcField.setPromptText("CVC");
+        cvcField.setDisable(true);
+
+        TextField cardHolderField = new TextField();
+        cardHolderField.setPromptText("Titulaire de la carte");
+        cardHolderField.setDisable(true);
+
         modeLivraisonBox.getStyleClass().add("checkout-field");
         modePaiementBox.getStyleClass().add("checkout-field");
         adresseField.getStyleClass().add("checkout-field");
+        cardNumberField.getStyleClass().add("checkout-field");
+        expMonthField.getStyleClass().add("checkout-field");
+        expYearField.getStyleClass().add("checkout-field");
+        cvcField.getStyleClass().add("checkout-field");
+        cardHolderField.getStyleClass().add("checkout-field");
 
         Label policyLabel = new Label("Modes de paiement disponibles: domicile ou carte.");
         policyLabel.getStyleClass().add("checkout-policy-label");
+
+        Label cardHintLabel = new Label("Paiement carte: testez avec 4242 4242 4242 4242.");
+        cardHintLabel.getStyleClass().add("checkout-helper-label");
+        cardHintLabel.setVisible(false);
+        cardHintLabel.setManaged(false);
 
         Label sectionTitle = new Label("Finalisez votre commande");
         sectionTitle.getStyleClass().add("checkout-title");
@@ -137,8 +169,26 @@ public class MarketplaceCheckoutFeature {
         grid.add(modePaiementBox, 1, 1);
         grid.add(new Label("Adresse"), 0, 2);
         grid.add(adresseField, 1, 2);
-        grid.add(deliveryHintLabel, 1, 3);
-        grid.add(policyLabel, 0, 4, 2, 1);
+        grid.add(new Label("Numero carte"), 0, 3);
+        grid.add(cardNumberField, 1, 3);
+
+        HBox cardMetaBox = new HBox(8, expMonthField, expYearField, cvcField);
+        grid.add(new Label("Expiration / CVC"), 0, 4);
+        grid.add(cardMetaBox, 1, 4);
+
+        grid.add(new Label("Titulaire"), 0, 5);
+        grid.add(cardHolderField, 1, 5);
+
+        grid.add(cardHintLabel, 1, 6);
+        grid.add(deliveryHintLabel, 1, 7);
+        grid.add(policyLabel, 0, 8, 2, 1);
+
+        // Error display area (initially hidden)
+        Label errorDisplay = new Label();
+        errorDisplay.setStyle("-fx-text-fill: #cc0000; -fx-font-size: 11; -fx-wrap-text: true;");
+        errorDisplay.setVisible(false);
+        errorDisplay.setManaged(false);
+        errorDisplay.setMaxWidth(Double.MAX_VALUE);
 
         Button validateInlineButton = new Button("Valider");
         validateInlineButton.getStyleClass().add("checkout-save-btn");
@@ -154,9 +204,23 @@ public class MarketplaceCheckoutFeature {
         inlineActions.setAlignment(Pos.CENTER_RIGHT);
         inlineActions.getStyleClass().add("checkout-inline-actions");
 
-        VBox content = new VBox(10, sectionTitle, sectionSubtitle, summaryLabel, grid, inlineActions);
+        VBox content = new VBox(10, sectionTitle, sectionSubtitle, summaryLabel, grid, errorDisplay, inlineActions);
         content.getStyleClass().add("checkout-content-shell");
         checkoutDialog.getDialogPane().setContent(content);
+
+        // Helper function to display errors in the modal
+        java.util.function.Consumer<String> showErrorInModal = (errorMsg) -> {
+            errorDisplay.setText("⚠ " + errorMsg);
+            errorDisplay.setVisible(true);
+            errorDisplay.setManaged(true);
+        };
+
+        // Helper function to clear errors
+        Runnable clearErrorInModal = () -> {
+            errorDisplay.setText("");
+            errorDisplay.setVisible(false);
+            errorDisplay.setManaged(false);
+        };
 
         Node hiddenCancelNode = checkoutDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
         if (hiddenCancelNode != null) {
@@ -178,10 +242,36 @@ public class MarketplaceCheckoutFeature {
                 adresseField.clear();
             }
 
+            boolean cardPayment = "carte".equalsIgnoreCase(safe(modePaiementBox.getValue()).trim());
+            cardNumberField.setDisable(!cardPayment);
+            expMonthField.setDisable(!cardPayment);
+            expYearField.setDisable(!cardPayment);
+            cvcField.setDisable(!cardPayment);
+            cardHolderField.setDisable(!cardPayment);
+            cardHintLabel.setVisible(cardPayment);
+            cardHintLabel.setManaged(cardPayment);
+
+            if (!cardPayment) {
+                cardNumberField.clear();
+                expMonthField.clear();
+                expYearField.clear();
+                cvcField.clear();
+                cardHolderField.clear();
+            }
+
             String modePaiement = safe(modePaiementBox.getValue()).trim();
             String adresse = safe(adresseField.getText()).trim();
             boolean hasValidAddress = !homeDelivery || !adresse.isEmpty();
-            validateInlineButton.setDisable(modePaiement.isEmpty() || !hasValidAddress);
+
+            boolean cardInputsOk = true;
+            if (cardPayment) {
+                cardInputsOk = !safe(cardNumberField.getText()).isBlank()
+                        && !safe(expMonthField.getText()).isBlank()
+                        && !safe(expYearField.getText()).isBlank()
+                        && !safe(cvcField.getText()).isBlank();
+            }
+
+            validateInlineButton.setDisable(modePaiement.isEmpty() || !hasValidAddress || !cardInputsOk);
 
             if (homeDelivery) {
                 deliveryHintLabel.setText("Livraison: indiquez une adresse complete.");
@@ -193,6 +283,10 @@ public class MarketplaceCheckoutFeature {
         modeLivraisonBox.valueProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
         modePaiementBox.valueProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
         adresseField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
+        cardNumberField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
+        expMonthField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
+        expYearField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
+        cvcField.textProperty().addListener((obs, oldValue, newValue) -> updateCheckoutValidation.run());
         updateCheckoutValidation.run();
 
         validateInlineButton.setOnAction(event -> {
@@ -206,18 +300,39 @@ public class MarketplaceCheckoutFeature {
                     adresse
             );
             if (checkoutError != null) {
-                host.showToast("Validation", checkoutError, false);
+                showErrorInModal.accept(checkoutError);
                 return;
             }
 
-            try {
-                int commandeId = commandeService.createCommandeFromCart(
-                        host.getCurrentUserId(),
-                        modePaiement,
-                        adresse,
-                        cartItems
-                );
+            // Pre-validate payment configuration if using card payment
+            if ("carte".equalsIgnoreCase(modePaiement)) {
+                String configError = paymentGatewayService.validateConfiguration();
+                if (!configError.isBlank()) {
+                    showErrorInModal.accept("Configuration Stripe: " + configError);
+                    return;
+                }
+            }
 
+            String cardValidationError = null;
+            PaymentGatewayService.CardInput cardInput = null;
+            if ("carte".equalsIgnoreCase(modePaiement)) {
+                String cardNumber = safe(cardNumberField.getText()).trim();
+                String expMonth = safe(expMonthField.getText()).trim();
+                String expYear = safe(expYearField.getText()).trim();
+                String cvc = safe(cvcField.getText()).trim();
+                String holder = safe(cardHolderField.getText()).trim();
+
+                cardValidationError = MarketplaceValidator.validateCardFields(cardNumber, expMonth, expYear, cvc);
+                if (cardValidationError != null) {
+                    showErrorInModal.accept(cardValidationError);
+                    return;
+                }
+                cardInput = new PaymentGatewayService.CardInput(cardNumber, expMonth, expYear, cvc, holder);
+            }
+
+            try {
+                clearErrorInModal.run();
+                
                 int itemCount = 0;
                 double totalAmount = 0.0;
                 for (CartItem cartItem : cartItems) {
@@ -228,8 +343,49 @@ public class MarketplaceCheckoutFeature {
                     totalAmount += cartItem.getLineTotal();
                 }
 
+                String paymentRef = null;
+                LocalDateTime paidAt = null;
+                String initialStatus = "en_attente";
+
+                if ("carte".equalsIgnoreCase(modePaiement)) {
+                    PaymentGatewayService.PaymentResult paymentResult = paymentGatewayService.chargeCard(
+                            totalAmount,
+                            host.getCurrentUserId(),
+                            "Commande marketplace (" + itemCount + " articles)",
+                            cardInput
+                    );
+                    if (!paymentResult.success()) {
+                        // Display payment error in red in the modal
+                        String errorMsg = paymentResult.errorMessage();
+                        if (errorMsg.contains("STRIPE_SECRET_KEY")) {
+                            showErrorInModal.accept("Configuration Stripe manquante. Contactez l'administrateur.");
+                        } else if (errorMsg.contains("401") || errorMsg.contains("403")) {
+                            showErrorInModal.accept("Les identifiants Stripe sont invalides. Verifiez la configuration.");
+                        } else {
+                            showErrorInModal.accept(errorMsg);
+                        }
+                        return;
+                    }
+                    paymentRef = paymentResult.paymentReference();
+                    paidAt = LocalDateTime.now();
+                    initialStatus = "en_attente";
+                }
+
+                int commandeId = commandeService.createCommandeFromCart(
+                        host.getCurrentUserId(),
+                        modePaiement,
+                        adresse,
+                        cartItems,
+                        paymentRef,
+                        paidAt,
+                        initialStatus
+                );
+
                 cartSessionService.clear(host.getCurrentUserId());
                 host.onCheckoutSuccess(commandeId, itemCount, totalAmount);
+                if (paymentRef != null && !paymentRef.isBlank()) {
+                    host.showToast("Paiement", "Paiement confirme. Reference: " + paymentRef, true);
+                }
                 host.showToast("Commande", "Commande validee avec succes.", true);
 
                 checkoutDialog.setTitle("Commande validee");
@@ -237,7 +393,20 @@ public class MarketplaceCheckoutFeature {
                         buildCheckoutSuccessPane(checkoutDialog, host, commandeId, modePaiement, adresse, itemCount, totalAmount)
                 );
             } catch (SQLException e) {
+                String sqlError = safe(e.getMessage());
+                if (sqlError.isBlank()) {
+                    sqlError = "Erreur base de donnees.";
+                }
+                showErrorInModal.accept("Erreur base de donnees: " + sqlError);
                 host.showSqlAlert(e);
+            } catch (Exception e) {
+                String details = safe(e.getMessage());
+                if (details.isBlank()) {
+                    details = e.getClass().getSimpleName();
+                }
+                showErrorInModal.accept("Erreur inattendue: " + details);
+            } catch (Throwable t) {
+                showErrorInModal.accept("Erreur technique: " + t.getClass().getSimpleName());
             }
         });
 

@@ -10,7 +10,9 @@ import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -47,6 +49,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
+import controllers.marketplace.MarketplaceMessagingFeature;
+import controllers.marketplace.MarketplaceMessagingState;
+import controllers.marketplace.MarketplaceWishlistFeature;
+import controllers.marketplace.MarketplaceWishlistState;
 import services.CommandeService;
 import services.CartSessionService;
 import services.MarketplaceCartViewFeature;
@@ -55,8 +61,16 @@ import services.MarketplaceConversationService;
 import services.MarketplaceImageService;
 import services.MarketplaceMessageService;
 import services.ProduitService;
+import services.RecommendationService;
+import services.ReviewService;
+import services.StockAlertService;
+import services.GeocodingService;
+import services.HuggingFaceAiService;
+import services.ExchangeRateService;
 import services.UserService;
 import services.WishlistService;
+import entities.Review;
+import entities.StockAlert;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -79,6 +93,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -87,6 +102,7 @@ import java.util.UUID;
 import utils.MarketplaceValidator;
 import utils.SessionManager;
 import javafx.util.Duration;
+import javafx.concurrent.Task;
 
 public class MarketplaceController implements Initializable {
 
@@ -158,6 +174,7 @@ public class MarketplaceController implements Initializable {
     @FXML private ComboBox<String> typeFilterCombo;
     @FXML private ComboBox<String> promoFilterCombo;
     @FXML private Label statusLabel;
+    @FXML private Label exchangeRateLabel;
     @FXML private Button prevPageButton;
     @FXML private Button nextPageButton;
     @FXML private Label pageInfoLabel;
@@ -168,6 +185,7 @@ public class MarketplaceController implements Initializable {
     @FXML private Label messagingTitleLabel;
     @FXML private Label messagingMetaLabel;
     @FXML private TextArea messageInputArea;
+    @FXML private ToggleButton btnVoiceMessage;
     @FXML private HBox toastContainer;
     @FXML private Label toastIconLabel;
     @FXML private Label toastTitleLabel;
@@ -176,6 +194,23 @@ public class MarketplaceController implements Initializable {
     @FXML private StackPane wishlistOverlay;
     @FXML private Label wishlistMetaLabel;
     @FXML private FlowPane wishlistGrid;
+
+    @FXML private StackPane recommendationOverlay;
+    @FXML private Label recommendationMetaLabel;
+    @FXML private FlowPane recommendationGrid;
+
+    @FXML private Button btnNotifications;
+    @FXML private StackPane notificationOverlay;
+    @FXML private Label notificationCountLabel;
+    @FXML private VBox notificationListBox;
+
+    @FXML private VBox reviewsSection;
+    @FXML private Label reviewsAvgLabel;
+    @FXML private Label reviewsCountLabel;
+    @FXML private VBox reviewFormBox;
+    @FXML private HBox reviewStarsBox;
+    @FXML private TextArea reviewCommentField;
+    @FXML private VBox reviewsListBox;
 
     
 
@@ -188,7 +223,17 @@ public class MarketplaceController implements Initializable {
     private final MarketplaceImageService imageService = new MarketplaceImageService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
+    private final RecommendationService recommendationService = new RecommendationService();
+    private final ReviewService reviewService = new ReviewService();
+    private final StockAlertService stockAlertService = new StockAlertService();
+    private final GeocodingService geocodingService = new GeocodingService();
+    private final HuggingFaceAiService huggingFaceService = new HuggingFaceAiService();
+    private final ExchangeRateService exchangeRateService = new ExchangeRateService();
     private final UserService userService = new UserService();
+    private final MarketplaceMessagingState messagingState = new MarketplaceMessagingState();
+    private final MarketplaceWishlistState wishlistState = new MarketplaceWishlistState();
+    private MarketplaceMessagingFeature messagingFeature;
+    private MarketplaceWishlistFeature wishlistFeature;
     private List<Produit> filteredProduits = new ArrayList<>();
     private final Set<Integer> wishlistProductIds = new HashSet<>();
     private final Map<Integer, String> productNameById = new HashMap<>();
@@ -244,6 +289,10 @@ public class MarketplaceController implements Initializable {
     @FXML private Label detailsTypePill;
     @FXML private ImageView detailsImageView;
     @FXML private Spinner<Integer> detailsQuantitySpinner;
+
+    @FXML private VBox similarProductsSection;
+    @FXML private FlowPane similarProductsGrid;
+    @FXML private Label similarProductsMetaLabel;
 
     @FXML private StackPane cartOverlay;
     @FXML private VBox cartItemsBox;
@@ -381,6 +430,7 @@ public class MarketplaceController implements Initializable {
         setupFilters();
         initializeOrderToggleState();
         configureToastUi();
+        initializeMarketplaceFeatures();
 
         loadProduits();
         loadCommandes();
@@ -391,6 +441,105 @@ public class MarketplaceController implements Initializable {
         updateCartStatus();
         refreshMessagingBadge();
         refreshWishlistState();
+
+        refreshExchangeRatesDisplay(false);
+
+        // Initialize new features
+        initializeAdvancedFeatures();
+    }
+
+    private void refreshExchangeRatesDisplay(boolean forceRemote) {
+        if (exchangeRateLabel == null) {
+            return;
+        }
+        exchangeRateLabel.setText(forceRemote ? "Actualisation des taux..." : "Chargement des taux...");
+
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() {
+                if (!exchangeRateService.hasApiKey()) {
+                    return exchangeRateService.missingKeyMessage();
+                }
+                Optional<ExchangeRateService.Snapshot> snap = exchangeRateService.getSnapshot(forceRemote);
+                if (snap.isEmpty()) {
+                    return exchangeRateService.unavailableMessage();
+                }
+                return exchangeRateService.formatSnapshot(snap.get(), Locale.FRANCE);
+            }
+        };
+        task.setOnSucceeded(e -> exchangeRateLabel.setText(task.getValue()));
+        task.setOnFailed(ev -> exchangeRateLabel.setText(exchangeRateService.unavailableMessage()));
+        new Thread(task, "exchange-rates").start();
+    }
+
+    @FXML
+    public void refreshExchangeRates() {
+        refreshExchangeRatesDisplay(true);
+    }
+
+    private void initializeAdvancedFeatures() {
+        try {
+            reviewService.ensureTableExists();
+        } catch (Exception e) {
+            System.err.println("Review table init: " + e.getMessage());
+        }
+        try {
+            stockAlertService.snapshotStockLevels();
+        } catch (Exception e) {
+            System.err.println("Stock snapshot init: " + e.getMessage());
+        }
+        // Add proximity sort option
+        if (sortCombo != null && !sortCombo.getItems().contains("Proximite")) {
+            sortCombo.getItems().add("Proximite");
+        }
+        // Track review rating for display
+        selectedReviewRating = 0;
+    }
+
+    private void initializeMarketplaceFeatures() {
+        messagingFeature = new MarketplaceMessagingFeature(
+                messagingState,
+                conversationService,
+                messageService,
+                produitService,
+                userService,
+                btnMessagingCenter,
+                messagingOverlay,
+                conversationListBox,
+                messageListBox,
+                messagingTitleLabel,
+                messagingMetaLabel,
+                messageInputArea,
+                btnVoiceMessage,
+                this::animateOverlayIn,
+                this::animateOverlayOut,
+                this::getCurrentUserId,
+                this::getFallbackSellerId,
+                this::showAlert,
+                this::showSqlAlert,
+                this::showToast,
+                this::normalizeText
+        );
+
+        wishlistFeature = new MarketplaceWishlistFeature(
+                wishlistState,
+                wishlistService,
+                produitService,
+                imageService,
+                wishlistGrid,
+                wishlistMetaLabel,
+                btnWishlistCenter,
+                this::getCurrentUserId,
+                this::getSessionUserId,
+                this::showAlert,
+                this::showSqlAlert,
+                this::showToast,
+                this::showProductDetails,
+                this::renderCurrentPage,
+                this::normalizeText,
+                this::normalizeTypeForDisplay,
+                () -> MarketplaceController.this.getClass()
+        );
     }
 
     private void configureToastUi() {
@@ -872,21 +1021,8 @@ public class MarketplaceController implements Initializable {
     }
 
     private void loadWishlist() {
-        if (wishlistTable == null) {
-            refreshWishlistState();
-            return;
-        }
-        Integer sessionUserId = getSessionUserId();
-        if (sessionUserId == null) {
-            wishlistTable.setItems(FXCollections.observableArrayList());
-            refreshWishlistState();
-            return;
-        }
-        try {
-            List<WishlistItem> items = wishlistService.getByUser(sessionUserId);
-            wishlistTable.setItems(FXCollections.observableArrayList(items));
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.loadWishlist();
         }
     }
 
@@ -910,335 +1046,81 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void openMessagingCenter() {
-        if (messagingOverlay == null) {
-            return;
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingCenter();
         }
-
-        clearPendingMessageContext();
-        loadConversationsAndRender(null);
-        animateOverlayIn(messagingOverlay);
     }
 
     @FXML
     public void closeMessagingCenter() {
-        if (messagingOverlay == null) {
-            return;
+        if (messagingFeature != null) {
+            messagingFeature.closeMessagingCenter();
         }
-        animateOverlayOut(messagingOverlay);
     }
 
     @FXML
     public void openWishlistCenter() {
-        refreshWishlistState();
+        if (wishlistFeature != null) {
+            wishlistFeature.openWishlistCenter();
+        }
         animateOverlayIn(wishlistOverlay);
     }
 
     @FXML
     public void closeWishlistCenter() {
+        if (wishlistFeature != null) {
+            wishlistFeature.closeWishlistCenter();
+        }
         animateOverlayOut(wishlistOverlay);
     }
 
     @FXML
     public void sendCurrentMessage() {
-        if (messageInputArea == null) {
-            return;
+        if (messagingFeature != null) {
+            messagingFeature.sendCurrentMessage();
         }
+    }
 
-        String content = safe(messageInputArea.getText()).trim();
-        if (content.isEmpty()) {
-            return;
-        }
-
-        try {
-            if (selectedConversation == null) {
-                if (!hasPendingMessageContext()) {
-                    showAlert("Messagerie", "Choisissez une conversation ou contactez un vendeur depuis la fiche produit.");
-                    return;
-                }
-                selectedConversation = conversationService.findOrCreateConversation(
-                        pendingProductId,
-                        getCurrentUserId(),
-                        pendingSellerId
-                );
-            }
-
-            MarketplaceMessage message = new MarketplaceMessage();
-            message.setConversationId(selectedConversation.getId());
-            message.setSenderId(getCurrentUserId());
-            message.setContent(content);
-            message.setRead(false);
-            messageService.ajouter(message);
-            conversationService.touchLastMessage(selectedConversation.getId());
-
-            messageInputArea.clear();
-            renderMessages(selectedConversation);
-            loadConversationsAndRender(selectedConversation.getId());
-            refreshMessagingBadge();
-            clearPendingMessageContext();
-            showToast("Message envoye.", true);
-        } catch (SQLException e) {
-            showSqlAlert(e);
+    @FXML
+    public void handleVoiceMessage() {
+        if (messagingFeature != null) {
+            messagingFeature.handleVoiceToggle();
         }
     }
 
     private void openMessagingForProduct(Produit produit) {
-        if (produit == null) {
-            return;
-        }
-        try {
-            int sellerId = resolveSellerIdForProduct(produit);
-            entities.MarketplaceConversation existingConversation = conversationService.findConversation(
-                    produit.getId(),
-                    getCurrentUserId(),
-                    sellerId
-            );
-
-            pendingProductId = produit.getId();
-            pendingSellerId = sellerId;
-
-            if (messagingOverlay != null) {
-                loadConversationsAndRender(existingConversation == null ? null : existingConversation.getId());
-                animateOverlayIn(messagingOverlay);
-            }
-
-            if (existingConversation == null) {
-                selectedConversation = null;
-                if (messagingTitleLabel != null) {
-                    refreshMessagingDisplayMaps();
-                    messagingTitleLabel.setText("Nouveau message - " + buildConversationHeader(pendingProductId, pendingSellerId));
-                }
-                if (messagingMetaLabel != null) {
-                    messagingMetaLabel.setText("Conversation creee a l'envoi du premier message");
-                }
-                if (messageListBox != null) {
-                    messageListBox.getChildren().clear();
-                    Label hint = new Label("Ecrivez votre premier message. La conversation sera creee apres envoi.");
-                    hint.getStyleClass().add("chat-empty-label");
-                    messageListBox.getChildren().add(hint);
-                }
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingForProduct(produit);
         }
     }
 
     private void toggleWishlistForProduct(Produit produit) {
-        if (produit == null) {
-            return;
-        }
-
-        Integer sessionUserId = getSessionUserId();
-        if (sessionUserId == null) {
-            showToast("Session", "Connectez-vous pour utiliser la wishlist.", false);
-            return;
-        }
-
-        try {
-            if (wishlistProductIds.contains(produit.getId())) {
-                wishlistService.supprimerByUserAndProduit(sessionUserId, produit.getId());
-                if (statusLabel != null) {
-                    statusLabel.setText(normalizeText(safe(produit.getNom())) + " retire de la wishlist");
-                }
-                showToast("Retire de la wishlist.", true);
-            } else {
-                wishlistService.ajouter(new WishlistItem(sessionUserId, produit.getId()));
-                if (statusLabel != null) {
-                    statusLabel.setText(normalizeText(safe(produit.getNom())) + " ajoute a la wishlist");
-                }
-                showToast("Ajoute a la wishlist.", true);
-            }
-
-            loadWishlist();
-            refreshWishlistState();
-            renderCurrentPage();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.toggleWishlistForProduct(produit);
         }
     }
 
     private void refreshWishlistState() {
-        Integer sessionUserId = getSessionUserId();
-        wishlistProductIds.clear();
-        if (sessionUserId == null) {
-            refreshWishlistBadge();
-            renderWishlistGrid();
-            return;
-        }
-        try {
-            Set<Integer> availableProductIds = new HashSet<>();
-            for (Produit produit : produitService.afficher()) {
-                if (produit != null) {
-                    availableProductIds.add(produit.getId());
-                }
-            }
-
-            List<WishlistItem> userItems = wishlistService.getByUser(sessionUserId);
-            for (WishlistItem item : userItems) {
-                if (availableProductIds.contains(item.getProduitId())) {
-                    wishlistProductIds.add(item.getProduitId());
-                }
-            }
-            refreshWishlistBadge();
-            renderWishlistGrid();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.refreshWishlistState();
         }
     }
 
     private void refreshWishlistBadge() {
-        if (btnWishlistCenter == null) {
-            return;
+        if (wishlistFeature != null) {
+            wishlistFeature.refreshWishlistBadge();
         }
-
-        int count = wishlistProductIds.size();
-        btnWishlistCenter.setText(count <= 0 ? "Wishlist" : "Wishlist " + count);
     }
 
     private void renderWishlistGrid() {
-        if (wishlistGrid == null) {
-            return;
-        }
-
-        wishlistGrid.getChildren().clear();
-        try {
-            List<Produit> allProduits = produitService.afficher();
-            Map<Integer, Produit> productById = new HashMap<>();
-            for (Produit produit : allProduits) {
-                productById.put(produit.getId(), produit);
-            }
-
-            List<Produit> wishedProduits = new ArrayList<>();
-            for (Integer productId : wishlistProductIds) {
-                Produit produit = productById.get(productId);
-                if (produit != null) {
-                    wishedProduits.add(produit);
-                }
-            }
-
-            if (wishlistMetaLabel != null) {
-                wishlistMetaLabel.setText(wishedProduits.size() + " article(s) sauvegarde(s)");
-            }
-
-            if (wishedProduits.isEmpty()) {
-                Label empty = new Label("Votre wishlist est vide. Cliquez sur le coeur d'un produit pour l'ajouter ici.");
-                empty.getStyleClass().add("wishlist-empty-label");
-                wishlistGrid.getChildren().add(empty);
-                return;
-            }
-
-            for (Produit produit : wishedProduits) {
-                VBox card = new VBox(8);
-                card.getStyleClass().add("wishlist-card");
-                card.setPrefWidth(280);
-                card.setMinWidth(280);
-                card.setMaxWidth(280);
-
-                ImageView imageView = new ImageView(imageService.resolveProductImage(produit.getImage(), getClass()));
-                imageView.setFitWidth(260);
-                imageView.setFitHeight(140);
-                imageView.setPreserveRatio(false);
-                imageView.setSmooth(true);
-                StackPane imageWrap = new StackPane(imageView);
-                imageWrap.getStyleClass().add("wishlist-image-wrap");
-
-                Label title = new Label(normalizeText(safe(produit.getNom())));
-                title.getStyleClass().add("wishlist-card-title");
-                title.setWrapText(true);
-
-                Label categoryChip = new Label(normalizeText(safe(produit.getCategorie())));
-                categoryChip.getStyleClass().add("wishlist-chip");
-
-                Label typeChip = new Label(normalizeTypeForDisplay(produit.getType()));
-                typeChip.getStyleClass().addAll("wishlist-chip", "wishlist-chip-type");
-                if (TYPE_LOCATION.equalsIgnoreCase(normalizeTypeForDisplay(produit.getType()))) {
-                    typeChip.getStyleClass().add("location");
-                }
-
-                HBox chips = new HBox(6, categoryChip, typeChip);
-                chips.getStyleClass().add("wishlist-chip-row");
-                chips.setAlignment(Pos.CENTER_LEFT);
-
-                double displayPrice = (produit.isPromotion() && produit.getPromotionPrice() > 0)
-                        ? produit.getPromotionPrice()
-                        : produit.getPrix();
-                Label price = new Label(String.format("%.2f TND", displayPrice));
-                price.getStyleClass().add("wishlist-card-price");
-
-                Button viewBtn = new Button("Voir");
-                viewBtn.getStyleClass().add("wishlist-view-btn");
-                viewBtn.setOnAction(e -> showProductDetails(produit));
-
-                Button removeBtn = new Button("Retirer");
-                removeBtn.getStyleClass().add("wishlist-remove-btn");
-                removeBtn.setOnAction(e -> toggleWishlistForProduct(produit));
-
-                HBox actions = new HBox(8, viewBtn, removeBtn);
-                actions.getStyleClass().add("wishlist-actions");
-                actions.setAlignment(Pos.CENTER_LEFT);
-                HBox.setHgrow(viewBtn, Priority.ALWAYS);
-                HBox.setHgrow(removeBtn, Priority.ALWAYS);
-                viewBtn.setMaxWidth(Double.MAX_VALUE);
-                removeBtn.setMaxWidth(Double.MAX_VALUE);
-
-                card.getChildren().addAll(imageWrap, title, chips, price, actions);
-                attachWishlistCardMotion(card);
-                wishlistGrid.getChildren().add(card);
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (wishlistFeature != null) {
+            wishlistFeature.renderWishlistGrid();
         }
     }
 
     private void loadConversationsAndRender(Integer preferredConversationId) {
-        if (conversationListBox == null || messageListBox == null) {
-            return;
-        }
-
-        conversationListBox.getChildren().clear();
-        messageListBox.getChildren().clear();
-
-        try {
-            refreshMessagingDisplayMaps();
-            List<entities.MarketplaceConversation> conversations = conversationService.getByUser(getCurrentUserId());
-            if (conversations.isEmpty()) {
-                Label empty = new Label("Aucune conversation pour le moment. Ouvrez un produit puis cliquez sur Contacter le vendeur.");
-                empty.getStyleClass().add("chat-empty-label");
-                conversationListBox.getChildren().add(empty);
-                selectedConversation = null;
-                if (messagingTitleLabel != null) {
-                    messagingTitleLabel.setText("Messagerie");
-                }
-                if (messagingMetaLabel != null) {
-                    messagingMetaLabel.setText("0 conversation");
-                }
-                return;
-            }
-
-            entities.MarketplaceConversation toSelect = null;
-            for (entities.MarketplaceConversation conversation : conversations) {
-                VBox item = buildConversationTile(conversation);
-                conversationListBox.getChildren().add(item);
-
-                if (preferredConversationId != null && conversation.getId() == preferredConversationId) {
-                    toSelect = conversation;
-                }
-            }
-
-            if (toSelect == null) {
-                if (!hasPendingMessageContext()) {
-                    toSelect = conversations.get(0);
-                }
-            }
-
-            if (toSelect != null) {
-                selectConversation(toSelect);
-            }
-
-            if (messagingMetaLabel != null) {
-                messagingMetaLabel.setText(conversations.size() + " conversation(s)");
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(preferredConversationId);
         }
     }
 
@@ -1263,74 +1145,20 @@ public class MarketplaceController implements Initializable {
     }
 
     private void selectConversation(entities.MarketplaceConversation conversation) {
-        selectedConversation = conversation;
-        renderMessages(conversation);
-
-        if (messagingTitleLabel != null) {
-            messagingTitleLabel.setText(buildConversationHeader(conversation.getProduitId(), conversation.getSellerId()));
-        }
-
-        try {
-            messageService.markConversationAsRead(conversation.getId(), getCurrentUserId());
-            refreshMessagingBadge();
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.selectConversation(conversation);
         }
     }
 
     private void renderMessages(entities.MarketplaceConversation conversation) {
-        if (messageListBox == null) {
-            return;
-        }
-
-        messageListBox.getChildren().clear();
-        try {
-            List<MarketplaceMessage> messages = messageService.getByConversation(conversation.getId());
-            if (messages.isEmpty()) {
-                Label empty = new Label("Aucun message. Dites bonjour pour demarrer la discussion.");
-                empty.getStyleClass().add("chat-empty-label");
-                messageListBox.getChildren().add(empty);
-                return;
-            }
-
-            for (MarketplaceMessage message : messages) {
-                boolean mine = message.getSenderId() == getCurrentUserId();
-                Label body = new Label(normalizeText(safe(message.getContent())));
-                body.setWrapText(true);
-                body.getStyleClass().add(mine ? "chat-bubble-me" : "chat-bubble-them");
-                body.setMaxWidth(460);
-
-                String senderDisplay = mine ? "Vous" : resolveUserDisplayName(message.getSenderId());
-                Label meta = new Label(senderDisplay + " - " + formatDateTime(message.getCreatedAt()));
-                meta.getStyleClass().add("chat-bubble-meta");
-
-                VBox bubble = new VBox(4, body, meta);
-                bubble.setFillWidth(false);
-
-                HBox row = new HBox(bubble);
-                row.setAlignment(mine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-                row.getStyleClass().add("chat-row");
-
-                messageListBox.getChildren().add(row);
-            }
-        } catch (SQLException e) {
-            showSqlAlert(e);
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(conversation == null ? null : conversation.getId());
         }
     }
 
     private void refreshMessagingBadge() {
-        if (btnMessagingCenter == null) {
-            return;
-        }
-        try {
-            int unread = messageService.countUnreadForUser(getCurrentUserId());
-            if (unread <= 0) {
-                btnMessagingCenter.setText("Messagerie");
-            } else {
-                btnMessagingCenter.setText("Messagerie " + unread);
-            }
-        } catch (SQLException e) {
-            btnMessagingCenter.setText("Messagerie");
+        if (messagingFeature != null) {
+            messagingFeature.refreshMessagingBadge();
         }
     }
 
@@ -1343,47 +1171,27 @@ public class MarketplaceController implements Initializable {
     }
 
     private boolean hasPendingMessageContext() {
-        return pendingProductId > 0 && pendingSellerId > 0;
+        return messagingFeature != null && messagingFeature.hasPendingMessageContext();
     }
 
     private void clearPendingMessageContext() {
-        pendingProductId = -1;
-        pendingSellerId = -1;
+        if (messagingFeature != null) {
+            messagingFeature.clearPendingMessageContext();
+        }
     }
 
     private void refreshMessagingDisplayMaps() throws SQLException {
-        productNameById.clear();
-        userNameById.clear();
-
-        for (Produit produit : produitService.afficher()) {
-            if (produit == null) {
-                continue;
-            }
-            productNameById.put(produit.getId(), normalizeText(safe(produit.getNom())));
-        }
-
-        for (entities.User user : userService.getAllUsers()) {
-            if (user == null) {
-                continue;
-            }
-            userNameById.put(user.getId(), buildUserDisplayName(user));
+        if (messagingFeature != null) {
+            messagingFeature.loadConversationsAndRender(null);
         }
     }
 
     private String resolveProductDisplayName(int productId) {
-        String name = productNameById.get(productId);
-        if (name == null || name.isBlank()) {
-            return "Produit non disponible";
-        }
-        return name;
+        return productNameById.getOrDefault(productId, "Produit non disponible");
     }
 
     private String resolveUserDisplayName(int userId) {
-        String name = userNameById.get(userId);
-        if (name == null || name.isBlank()) {
-            return "Vendeur inconnu";
-        }
-        return name;
+        return userNameById.getOrDefault(userId, "Vendeur inconnu");
     }
 
     private String buildUserDisplayName(entities.User user) {
@@ -1394,10 +1202,7 @@ public class MarketplaceController implements Initializable {
             return fullName;
         }
         String email = normalizeText(safe(user.getEmail()));
-        if (!email.isBlank()) {
-            return email;
-        }
-        return "Utilisateur";
+        return email.isBlank() ? "Utilisateur" : email;
     }
 
     private String buildConversationHeader(int productId, int sellerId) {
@@ -1405,10 +1210,7 @@ public class MarketplaceController implements Initializable {
     }
 
     private String formatDateTime(LocalDateTime value) {
-        if (value == null) {
-            return "-";
-        }
-        return value.format(CHAT_TIME_FORMAT);
+        return value == null ? "-" : value.format(CHAT_TIME_FORMAT);
     }
 
     @FXML
@@ -1715,7 +1517,12 @@ public class MarketplaceController implements Initializable {
             }
 
             String selectedSort = sortCombo == null || sortCombo.getValue() == null ? "A-Z" : sortCombo.getValue();
-            if ("Prix croissant".equals(selectedSort)) {
+            if ("Proximite".equals(selectedSort)) {
+                filteredProduits = filtered;
+                currentPage = 0;
+                sortByProximity();
+                return;
+            } else if ("Prix croissant".equals(selectedSort)) {
                 filtered.sort(Comparator.comparingDouble(Produit::getPrix));
             } else if ("Prix decroissant".equals(selectedSort)) {
                 filtered.sort(Comparator.comparingDouble(Produit::getPrix).reversed());
@@ -1831,6 +1638,47 @@ public class MarketplaceController implements Initializable {
     public void handleProductFormInput() {
         updatePublishPreview();
         clearProductFieldErrors();
+    }
+
+    @FXML
+    public void suggestDescriptionForProduct() {
+        String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
+        String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+        String offerType = fldType == null ? "Vente" : safe(fldType.getValue()).trim();
+
+        if (productName.isBlank()) {
+            showToast("IA", "Ajoutez d'abord un nom de produit.", false);
+            return;
+        }
+
+        if (category.isEmpty() || "Choisir...".equals(category)) {
+            showToast("IA", "Selectionnez une categorie d'abord.", false);
+            return;
+        }
+
+        showToast("IA HuggingFace", "Generation de description en cours...", true);
+
+        new Thread(() -> {
+            try {
+                String generatedDesc = huggingFaceService.suggestProductDescription(productName, category, offerType);
+                Platform.runLater(() -> {
+                    if (fldDescription != null) {
+                        fldDescription.setText(generatedDesc);
+                        updatePublishPreview();
+                        showToast("IA HuggingFace", "Description generee avec succes!", true);
+                    }
+                });
+            } catch (IOException ex) {
+                Platform.runLater(() -> {
+                    showToast("IA Erreur", "Erreur API: " + ex.getMessage(), false);
+                });
+            } catch (InterruptedException ex) {
+                Platform.runLater(() -> {
+                    showToast("IA Erreur", "Generation annulee.", false);
+                });
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     @FXML
@@ -2148,6 +1996,138 @@ public class MarketplaceController implements Initializable {
         }
 
         animateOverlayIn(detailsOverlay);
+
+        // Load similar products from DB in background
+        loadSimilarProducts(p);
+
+        // Load reviews from DB
+        loadReviews(p);
+    }
+
+    private void loadSimilarProducts(Produit product) {
+        if (similarProductsGrid == null) return;
+        similarProductsGrid.getChildren().clear();
+        if (similarProductsMetaLabel != null) {
+            similarProductsMetaLabel.setText("Chargement...");
+        }
+
+        Task<List<Produit>> task = new Task<>() {
+            @Override
+            protected List<Produit> call() throws Exception {
+                return recommendationService.findSimilar(product, 6);
+            }
+        };
+        task.setOnSucceeded(event -> {
+            List<Produit> similar = task.getValue();
+            Platform.runLater(() -> renderSimilarProducts(similar));
+        });
+        task.setOnFailed(event -> {
+            Platform.runLater(() -> {
+                if (similarProductsMetaLabel != null) {
+                    similarProductsMetaLabel.setText("");
+                }
+            });
+        });
+        new Thread(task).start();
+    }
+
+    private void renderSimilarProducts(List<Produit> similar) {
+        if (similarProductsGrid == null) return;
+        similarProductsGrid.getChildren().clear();
+
+        if (similar == null || similar.isEmpty()) {
+            if (similarProductsSection != null) {
+                similarProductsSection.setVisible(false);
+                similarProductsSection.setManaged(false);
+            }
+            return;
+        }
+
+        if (similarProductsSection != null) {
+            similarProductsSection.setVisible(true);
+            similarProductsSection.setManaged(true);
+        }
+        if (similarProductsMetaLabel != null) {
+            similarProductsMetaLabel.setText(similar.size() + " produit(s) similaire(s)");
+        }
+
+        for (Produit p : similar) {
+            VBox card = buildSimilarProductCard(p);
+            animateCardEntry(card, similarProductsGrid.getChildren().size());
+            similarProductsGrid.getChildren().add(card);
+        }
+    }
+
+    private VBox buildSimilarProductCard(Produit p) {
+        VBox card = new VBox();
+        card.getStyleClass().add("product-card");
+        card.setSpacing(4);
+        card.setStyle("-fx-cursor: hand;");
+        card.setMinWidth(200);
+        card.setPrefWidth(200);
+        card.setMaxWidth(200);
+        card.setMinHeight(250);
+        card.setPrefHeight(250);
+        card.setMaxHeight(250);
+
+        StackPane imageContainer = new StackPane();
+        imageContainer.getStyleClass().add("product-image-container");
+        imageContainer.setMinHeight(115);
+        imageContainer.setPrefHeight(115);
+        imageContainer.setMaxHeight(115);
+        try {
+            Image loadedImage = imageService.resolveProductImage(p.getImage(), getClass());
+            if (loadedImage != null) {
+                ImageView imgView = new ImageView(loadedImage);
+                imgView.setFitHeight(115);
+                imgView.setFitWidth(200);
+                imgView.setPreserveRatio(false);
+                imgView.setSmooth(true);
+                imageContainer.getChildren().add(imgView);
+            }
+        } catch (Exception ignored) {}
+
+        Label simBadge = new Label("Similaire");
+        simBadge.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 2 8; -fx-background-radius: 12; -fx-font-size: 10px; -fx-font-weight: bold;");
+        StackPane.setAlignment(simBadge, javafx.geometry.Pos.TOP_LEFT);
+        StackPane.setMargin(simBadge, new javafx.geometry.Insets(6, 0, 0, 6));
+        imageContainer.getChildren().add(simBadge);
+
+        VBox infoBox = new VBox(4);
+        infoBox.setPadding(new javafx.geometry.Insets(8));
+        VBox.setVgrow(infoBox, Priority.ALWAYS);
+
+        Label titre = new Label(normalizeText(safe(p.getNom())));
+        titre.getStyleClass().add("product-title-text");
+        titre.setStyle("-fx-font-size: 13px;");
+        titre.setWrapText(false);
+        titre.setTextOverrun(OverrunStyle.ELLIPSIS);
+        titre.setMaxWidth(180);
+
+        Label catLabel = new Label(normalizeText(safe(p.getCategorie())));
+        catLabel.getStyleClass().add("product-category-text");
+        catLabel.setStyle("-fx-font-size: 11px;");
+
+        Label price = new Label((p.isPromotion() ? p.getPromotionPrice() : p.getPrix()) + " TND");
+        price.getStyleClass().add("product-price");
+        price.setStyle("-fx-font-size: 14px;");
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        Button btnView = new Button("Voir");
+        btnView.getStyleClass().add("btn-primary-small");
+        btnView.setMaxWidth(Double.MAX_VALUE);
+        btnView.setOnAction(e -> {
+            showProductDetails(p);
+            e.consume();
+        });
+
+        infoBox.getChildren().addAll(titre, catLabel, spacer, price, btnView);
+        card.getChildren().addAll(imageContainer, infoBox);
+        card.setOnMouseClicked(e -> showProductDetails(p));
+        attachCardHoverMotion(card);
+        return card;
     }
 
     @FXML
@@ -2774,7 +2754,7 @@ public class MarketplaceController implements Initializable {
 
             Button btnHeart = new Button("\u2661");
             btnHeart.getStyleClass().add("wishlist-heart-btn");
-            if (wishlistProductIds.contains(p.getId())) {
+            if (wishlistFeature != null && wishlistFeature.isProductInWishlist(p.getId())) {
                 btnHeart.getStyleClass().add("active");
                 btnHeart.setText("\u2665");
             }
@@ -2840,13 +2820,13 @@ public class MarketplaceController implements Initializable {
             Button btnAddCart = new Button("Ajouter au panier");
             btnAddCart.getStyleClass().add("btn-cart-small");
             boolean isOwnOffer = p.getVendeurId() > 0 && p.getVendeurId() == getCurrentUserId();
-            boolean isAlreadyBought = purchasedProductIds.contains(p.getId());
+            boolean isOutOfStock = p.getQuantiteStock() <= 0;
             if (isOwnOffer) {
                 btnAddCart.setText("C ton offre");
                 btnAddCart.setDisable(true);
                 btnAddCart.getStyleClass().add("own-offer");
-            } else if (isAlreadyBought) {
-                btnAddCart.setText("Deja achete");
+            } else if (isOutOfStock) {
+                btnAddCart.setText("Rupture stock");
                 btnAddCart.setDisable(true);
                 btnAddCart.getStyleClass().add("own-offer");
             } else {
@@ -2941,6 +2921,473 @@ public class MarketplaceController implements Initializable {
             reset.setToY(1.0);
             reset.play();
         });
+    }
+
+    // ─── Recommendation Feature ─────────────────────────────────────────
+
+    @FXML
+    public void openRecommendations() {
+        if (recommendationOverlay == null) return;
+        if (recommendationMetaLabel != null) {
+            recommendationMetaLabel.setText("Chargement...");
+        }
+        if (recommendationGrid != null) {
+            recommendationGrid.getChildren().clear();
+        }
+        animateOverlayIn(recommendationOverlay);
+
+        // Load recommendations in background to avoid UI freeze
+        Task<List<Produit>> task = new Task<>() {
+            @Override
+            protected List<Produit> call() throws Exception {
+                return recommendationService.recommend(getCurrentUserId(), 12);
+            }
+        };
+        task.setOnSucceeded(event -> {
+            List<Produit> recommendations = task.getValue();
+            Platform.runLater(() -> renderRecommendationGrid(recommendations));
+        });
+        task.setOnFailed(event -> {
+            Platform.runLater(() -> {
+                if (recommendationMetaLabel != null) {
+                    recommendationMetaLabel.setText("Erreur de chargement");
+                }
+                showToast("Recommandations", "Erreur lors du chargement des recommandations.", false);
+            });
+        });
+        new Thread(task).start();
+    }
+
+    @FXML
+    public void closeRecommendations() {
+        animateOverlayOut(recommendationOverlay);
+    }
+
+    private void renderRecommendationGrid(List<Produit> recommendations) {
+        if (recommendationGrid == null) return;
+        recommendationGrid.getChildren().clear();
+
+        if (recommendations == null || recommendations.isEmpty()) {
+            Label emptyLabel = new Label("Aucune recommandation disponible. Ajoutez des produits a votre wishlist ou effectuez des achats pour recevoir des suggestions personnalisees.");
+            emptyLabel.setStyle("-fx-font-size: 15px; -fx-text-fill: #888; -fx-padding: 30; -fx-wrap-text: true;");
+            emptyLabel.setWrapText(true);
+            recommendationGrid.getChildren().add(emptyLabel);
+            if (recommendationMetaLabel != null) {
+                recommendationMetaLabel.setText("0 suggestion");
+            }
+            return;
+        }
+
+        if (recommendationMetaLabel != null) {
+            recommendationMetaLabel.setText(recommendations.size() + " suggestion(s) basees sur vos donnees");
+        }
+
+        for (Produit p : recommendations) {
+            VBox card = buildRecommendationCard(p);
+            animateCardEntry(card, recommendationGrid.getChildren().size());
+            recommendationGrid.getChildren().add(card);
+        }
+    }
+
+    private VBox buildRecommendationCard(Produit p) {
+        VBox card = new VBox();
+        card.getStyleClass().add("product-card");
+        card.setSpacing(5);
+        card.setStyle("-fx-cursor: hand;");
+        card.setMinWidth(240);
+        card.setPrefWidth(240);
+        card.setMaxWidth(240);
+        card.setMinHeight(300);
+        card.setPrefHeight(300);
+        card.setMaxHeight(300);
+
+        // Image
+        StackPane imageContainer = new StackPane();
+        imageContainer.getStyleClass().add("product-image-container");
+        imageContainer.setMinHeight(140);
+        imageContainer.setPrefHeight(140);
+        imageContainer.setMaxHeight(140);
+        try {
+            Image loadedImage = imageService.resolveProductImage(p.getImage(), getClass());
+            if (loadedImage != null) {
+                ImageView imgView = new ImageView(loadedImage);
+                imgView.setFitHeight(140);
+                imgView.setFitWidth(240);
+                imgView.setPreserveRatio(false);
+                imgView.setSmooth(true);
+                imageContainer.getChildren().add(imgView);
+            } else {
+                Label fallback = new Label("No image");
+                fallback.setStyle("-fx-font-size: 14px; -fx-text-fill: #999;");
+                imageContainer.getChildren().add(fallback);
+            }
+        } catch (Exception e) {
+            Label fallback = new Label("No image");
+            fallback.setStyle("-fx-text-fill: #aaa;");
+            imageContainer.getChildren().add(fallback);
+        }
+
+        // "Recommande" badge
+        Label recoBadge = new Label("\u2728 Recommande");
+        recoBadge.setStyle("-fx-background-color: linear-gradient(to right, #f59e0b, #ef4444); -fx-text-fill: white; -fx-padding: 3 10; -fx-background-radius: 20; -fx-font-size: 11px; -fx-font-weight: bold;");
+        StackPane.setAlignment(recoBadge, javafx.geometry.Pos.TOP_LEFT);
+        StackPane.setMargin(recoBadge, new javafx.geometry.Insets(8, 0, 0, 8));
+        imageContainer.getChildren().add(recoBadge);
+
+        if (p.isPromotion()) {
+            Label promoBadge = new Label("PROMO");
+            promoBadge.getStyleClass().add("promo-badge");
+            StackPane.setAlignment(promoBadge, javafx.geometry.Pos.TOP_RIGHT);
+            StackPane.setMargin(promoBadge, new javafx.geometry.Insets(8, 8, 0, 0));
+            imageContainer.getChildren().add(promoBadge);
+        }
+
+        // Info
+        VBox infoBox = new VBox(5);
+        infoBox.setPadding(new javafx.geometry.Insets(10));
+        VBox.setVgrow(infoBox, Priority.ALWAYS);
+
+        Label titre = new Label(normalizeText(safe(p.getNom())));
+        titre.getStyleClass().add("product-title-text");
+        titre.setWrapText(false);
+        titre.setTextOverrun(OverrunStyle.ELLIPSIS);
+        titre.setMaxWidth(215);
+
+        Label categorieLib = new Label(normalizeText(safe(p.getCategorie())) + " - " + normalizeTypeForDisplay(safe(p.getType())));
+        categorieLib.getStyleClass().add("product-category-text");
+
+        HBox priceRow = new HBox(8);
+        priceRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        if (p.isPromotion()) {
+            Label oldPrice = new Label(p.getPrix() + " TND");
+            oldPrice.getStyleClass().add("product-old-price");
+            Label newPrice = new Label(p.getPromotionPrice() + " TND");
+            newPrice.getStyleClass().add("product-new-price");
+            priceRow.getChildren().addAll(newPrice, oldPrice);
+        } else {
+            Label price = new Label(p.getPrix() + " TND");
+            price.getStyleClass().add("product-price");
+            priceRow.getChildren().add(price);
+        }
+
+        HBox actions = new HBox(8);
+        actions.setAlignment(javafx.geometry.Pos.CENTER);
+
+        Button btnAddCart = new Button("Ajouter");
+        btnAddCart.getStyleClass().add("btn-cart-small");
+        boolean isOwn = p.getVendeurId() > 0 && p.getVendeurId() == getCurrentUserId();
+        if (isOwn) {
+            btnAddCart.setText("Mon offre");
+            btnAddCart.setDisable(true);
+        } else {
+            btnAddCart.setOnAction(e -> {
+                addToCart(p, 1);
+                e.consume();
+            });
+        }
+
+        Button btnView = new Button("Voir");
+        btnView.getStyleClass().add("btn-primary-small");
+        btnView.setOnAction(e -> {
+            closeRecommendations();
+            showProductDetails(p);
+            e.consume();
+        });
+
+        HBox.setHgrow(btnAddCart, Priority.ALWAYS);
+        HBox.setHgrow(btnView, Priority.ALWAYS);
+        btnAddCart.setMaxWidth(Double.MAX_VALUE);
+        btnView.setMaxWidth(Double.MAX_VALUE);
+        actions.getChildren().addAll(btnAddCart, btnView);
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        infoBox.getChildren().addAll(titre, categorieLib, spacer, priceRow, actions);
+        card.getChildren().addAll(imageContainer, infoBox);
+        card.setOnMouseClicked(e -> {
+            closeRecommendations();
+            showProductDetails(p);
+        });
+        attachCardHoverMotion(card);
+        return card;
+    }
+
+    // ─── Notification / Stock Alert Feature ──────────────────────────────
+
+    @FXML
+    public void openNotifications() {
+        if (notificationOverlay == null) return;
+        if (notificationListBox != null) notificationListBox.getChildren().clear();
+        if (notificationCountLabel != null) notificationCountLabel.setText("Chargement...");
+        animateOverlayIn(notificationOverlay);
+
+        Task<List<StockAlert>> task = new Task<>() {
+            @Override
+            protected List<StockAlert> call() throws Exception {
+                return stockAlertService.checkAlerts(getCurrentUserId());
+            }
+        };
+        task.setOnSucceeded(event -> Platform.runLater(() -> renderNotifications(task.getValue())));
+        task.setOnFailed(event -> Platform.runLater(() -> {
+            if (notificationCountLabel != null) notificationCountLabel.setText("Erreur");
+        }));
+        new Thread(task).start();
+    }
+
+    @FXML
+    public void closeNotifications() {
+        animateOverlayOut(notificationOverlay);
+    }
+
+    private void renderNotifications(List<StockAlert> alerts) {
+        if (notificationListBox == null) return;
+        notificationListBox.getChildren().clear();
+
+        if (alerts == null || alerts.isEmpty()) {
+            Label empty = new Label("Aucune alerte stock pour le moment.");
+            empty.setStyle("-fx-font-size: 15px; -fx-text-fill: #888; -fx-padding: 20;");
+            empty.setWrapText(true);
+            notificationListBox.getChildren().add(empty);
+            if (notificationCountLabel != null) notificationCountLabel.setText("0 alerte");
+            return;
+        }
+
+        if (notificationCountLabel != null)
+            notificationCountLabel.setText(alerts.size() + " alerte(s)");
+
+        for (StockAlert alert : alerts) {
+            VBox card = new VBox(6);
+            boolean isLow = alert.getType() == StockAlert.AlertType.LOW_STOCK;
+            card.setStyle("-fx-padding: 14; -fx-background-color: " +
+                    (isLow ? "#FEF3C7" : "#D1FAE5") + "; -fx-background-radius: 10;");
+
+            Label icon = new Label(isLow ? "\u26A0 Stock Faible" : "\u2705 Restocke");
+            icon.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: " +
+                    (isLow ? "#B45309" : "#047857") + ";");
+
+            Label msg = new Label(alert.getMessage());
+            msg.setWrapText(true);
+            msg.setStyle("-fx-font-size: 13px; -fx-text-fill: #374151;");
+
+            Label produit = new Label("Produit: " + safe(alert.getProduitNom()));
+            produit.setStyle("-fx-font-size: 12px; -fx-text-fill: #6B7280; -fx-font-style: italic;");
+
+            card.getChildren().addAll(icon, msg, produit);
+            notificationListBox.getChildren().add(card);
+        }
+
+        if (btnNotifications != null) {
+            btnNotifications.setText("\uD83D\uDD14 Alertes (" + alerts.size() + ")");
+        }
+    }
+
+    // ─── Review Feature ──────────────────────────────────────────────────
+
+    private int selectedReviewRating = 0;
+
+    private void loadReviews(Produit product) {
+        if (reviewsSection == null) return;
+
+        Task<Void> task = new Task<>() {
+            private List<Review> reviews;
+            private double avgRating;
+            private int count;
+            private boolean canReview;
+            private boolean hasReviewed;
+
+            @Override
+            protected Void call() throws Exception {
+                reviews = reviewService.getReviewsForProduct(product.getId());
+                avgRating = reviewService.getAverageRating(product.getId());
+                count = reviewService.getReviewCount(product.getId());
+                int uid = getCurrentUserId();
+                canReview = reviewService.hasUserPurchased(uid, product.getId());
+                hasReviewed = reviewService.hasUserReviewed(uid, product.getId());
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> renderReviews(product, reviews, avgRating, count, canReview, hasReviewed));
+            }
+        };
+        new Thread(task).start();
+    }
+
+    private void renderReviews(Produit product, List<Review> reviews, double avgRating,
+                               int count, boolean canReview, boolean hasReviewed) {
+        if (reviewsAvgLabel != null) {
+            if (count > 0) {
+                StringBuilder stars = new StringBuilder();
+                for (int i = 1; i <= 5; i++) stars.append(i <= Math.round(avgRating) ? "\u2605" : "\u2606");
+                reviewsAvgLabel.setText(stars + " " + String.format("%.1f", avgRating));
+            } else {
+                reviewsAvgLabel.setText("");
+            }
+        }
+        if (reviewsCountLabel != null) {
+            reviewsCountLabel.setText(count > 0 ? count + " avis" : "Aucun avis");
+        }
+
+        if (reviewFormBox != null) {
+            boolean showForm = canReview && !hasReviewed;
+            reviewFormBox.setVisible(showForm);
+            reviewFormBox.setManaged(showForm);
+            if (showForm) {
+                setupStarSelector();
+                if (reviewCommentField != null) reviewCommentField.clear();
+                selectedReviewRating = 0;
+            }
+        }
+
+        if (reviewsListBox != null) {
+            reviewsListBox.getChildren().clear();
+            for (Review r : reviews) {
+                VBox reviewCard = new VBox(4);
+                reviewCard.setStyle("-fx-padding: 12; -fx-background-color: #f9fafb; -fx-background-radius: 8;");
+
+                HBox header = new HBox(8);
+                header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                Label starsLbl = new Label(r.getStarsDisplay());
+                starsLbl.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 14px;");
+                Label userName = new Label(safe(r.getUserName()));
+                userName.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+                header.getChildren().addAll(starsLbl, userName);
+                reviewCard.getChildren().add(header);
+
+                if (r.getComment() != null && !r.getComment().trim().isEmpty()) {
+                    Label comment = new Label(r.getComment());
+                    comment.setWrapText(true);
+                    comment.setStyle("-fx-font-size: 13px; -fx-text-fill: #374151;");
+                    reviewCard.getChildren().add(comment);
+                }
+
+                if (r.getCreatedAt() != null) {
+                    Label date = new Label(r.getCreatedAt().toLocalDate().toString());
+                    date.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+                    reviewCard.getChildren().add(date);
+                }
+
+                reviewsListBox.getChildren().add(reviewCard);
+            }
+        }
+    }
+
+    private void setupStarSelector() {
+        if (reviewStarsBox == null) return;
+        reviewStarsBox.getChildren().clear();
+        for (int i = 1; i <= 5; i++) {
+            final int star = i;
+            Button btn = new Button("\u2606");
+            btn.setStyle("-fx-font-size: 22px; -fx-background-color: transparent; -fx-text-fill: #f59e0b; -fx-cursor: hand; -fx-padding: 0 4;");
+            btn.setOnAction(e -> {
+                selectedReviewRating = star;
+                updateStarDisplay();
+            });
+            reviewStarsBox.getChildren().add(btn);
+        }
+    }
+
+    private void updateStarDisplay() {
+        if (reviewStarsBox == null) return;
+        for (int i = 0; i < reviewStarsBox.getChildren().size(); i++) {
+            if (reviewStarsBox.getChildren().get(i) instanceof Button btn) {
+                btn.setText(i < selectedReviewRating ? "\u2605" : "\u2606");
+            }
+        }
+    }
+
+    @FXML
+    public void submitReview() {
+        if (currentDetailsProduit == null || selectedReviewRating == 0) {
+            showToast("Veuillez selectionner une note (etoiles).", false);
+            return;
+        }
+        Review review = new Review(
+                currentDetailsProduit.getId(),
+                getCurrentUserId(),
+                selectedReviewRating,
+                reviewCommentField != null ? reviewCommentField.getText() : ""
+        );
+        try {
+            reviewService.addReview(review);
+            showToast("Avis publie avec succes !", true);
+            loadReviews(currentDetailsProduit);
+        } catch (java.sql.SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Duplicate")) {
+                showToast("Vous avez deja donne votre avis.", false);
+            } else {
+                showToast("Erreur: " + e.getMessage(), false);
+            }
+        }
+    }
+
+    // ─── Proximity / Geocoding Feature ───────────────────────────────────
+
+    private double[] userCoords = null;
+
+    private void sortByProximity() {
+        if (filteredProduits == null || filteredProduits.isEmpty()) return;
+
+        if (userCoords == null) {
+            entities.User currentUser = SessionManager.getInstance().getCurrentUser();
+            String userAddress = currentUser != null ? currentUser.getAddress() : null;
+            if (userAddress != null && !userAddress.trim().isEmpty()) {
+                Task<double[]> geoTask = new Task<>() {
+                    @Override
+                    protected double[] call() { return geocodingService.geocode(userAddress); }
+                };
+                geoTask.setOnSucceeded(e -> {
+                    userCoords = geoTask.getValue();
+                    Platform.runLater(() -> {
+                        if (userCoords != null) {
+                            applySortByProximity();
+                        } else {
+                            showToast("Impossible de geolocaliser votre adresse.", false);
+                        }
+                    });
+                });
+                new Thread(geoTask).start();
+                showToast("Geolocalisation en cours...", true);
+                return;
+            } else {
+                showToast("Adresse utilisateur non definie.", false);
+                return;
+            }
+        }
+        applySortByProximity();
+    }
+
+    private void applySortByProximity() {
+        if (userCoords == null || filteredProduits == null) return;
+
+        for (Produit p : filteredProduits) {
+            if (p.getLatitude() == null && p.getLocationAddress() != null && !p.getLocationAddress().trim().isEmpty()) {
+                double[] coords = geocodingService.geocode(p.getLocationAddress());
+                if (coords != null) {
+                    p.setLatitude(coords[0]);
+                    p.setLongitude(coords[1]);
+                }
+            }
+        }
+
+        filteredProduits.sort((a, b) -> {
+            double distA = getDistance(a);
+            double distB = getDistance(b);
+            return Double.compare(distA, distB);
+        });
+
+        currentPage = 0;
+        renderCurrentPage();
+        showToast("Produits tries par proximite.", true);
+    }
+
+    private double getDistance(Produit p) {
+        if (userCoords == null || p.getLatitude() == null || p.getLongitude() == null) {
+            return Double.MAX_VALUE;
+        }
+        return GeocodingService.haversineDistance(userCoords[0], userCoords[1], p.getLatitude(), p.getLongitude());
     }
 }
 
