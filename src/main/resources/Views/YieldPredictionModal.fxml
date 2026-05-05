@@ -8,7 +8,7 @@
 
     <!-- En-tête -->
     <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="📈 Prédiction de Rendement IA (Hugging Face)" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <Label text="📈 Prédiction de Rendement IA" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblContext" text="-" style="-fx-text-fill: #7f8c8d; -fx-font-size: 14px; -fx-font-style: italic;"/>
     </HBox>
@@ -18,8 +18,8 @@
     <!-- Zone de statut de l'analyse -->
     <VBox fx:id="loadingBox" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS">
         <ProgressIndicator prefWidth="50" prefHeight="50" style="-fx-progress-color: #3498db;"/>
-        <Label text="Analyse globale en cours via Hugging Face..." style="-fx-font-size: 15px; -fx-text-fill: #3498db; -fx-font-weight: bold;"/>
-        <Label text="Étude des données de la parcelle, de la culture et des consommations..." style="-fx-text-fill: #7f8c8d;"/>
+        <Label fx:id="lblLoadingStatus" text="Analyse globale en cours par l'IA..." style="-fx-font-size: 15px; -fx-text-fill: #3498db; -fx-font-weight: bold;"/>
+        <Label fx:id="lblLoadingDetail" text="Étude des données de la parcelle, de la culture et des consommations..." style="-fx-text-fill: #7f8c8d;"/>
     </VBox>
 
     <!-- Zone des Résultats -->

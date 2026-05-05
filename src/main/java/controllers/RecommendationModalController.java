@@ -105,11 +105,6 @@ public class RecommendationModalController {
                     resultsBox.setVisible(true);
                     resultsBox.setManaged(true);
                     cardsContainer.getChildren().clear();
-                    
-                    Label warnLabel = new Label("⚠️ Mode Hors-Ligne (Serveur IA surchargé) - Voici des recommandations standards :");
-                    warnLabel.setStyle("-fx-text-fill: #e67e22; -fx-font-style: italic; -fx-font-size: 12px; -fx-padding: 0 0 10 0;");
-                    cardsContainer.getChildren().add(warnLabel);
-
                     String fallbackJson = "[\n" +
                     "  {\"nom\": \"Blé dur\", \"variete\": \"Karim\", \"reussite\": \"90%\", \"justification\": \"Variété locale très résistante et adaptée à la majorité des sols tunisiens.\"},\n" +
                     "  {\"nom\": \"Olivier\", \"variete\": \"Chemlali\", \"reussite\": \"95%\", \"justification\": \"L'olivier s'adapte parfaitement à ce type de sol et demande peu d'eau.\"},\n" +

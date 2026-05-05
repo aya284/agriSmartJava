@@ -15,7 +15,7 @@ import java.util.Base64;
 
 public class PlantIdService {
 
-    private static final String API_KEY = "qcL7ft5XRbTUJz8vxafCi9i7njTKQUsFvJl8eDW89swzt4XKGy";
+    private static final String API_KEY = ConfigService.getPlantIdKey();
     private static final String API_URL = "https://api.plant.id/v2/health_assessment";
 
     public JSONObject analyzePlantImage(File imageFile) throws Exception {

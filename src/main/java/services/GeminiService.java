@@ -11,9 +11,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class GeminiService {
-    private static final String API_KEY = "AIzaSyASoSPaSFMkzLdhO8qcM5WxxBf1PR684Sg";
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key="
-            + API_KEY;
+    private static final String API_KEY = ConfigService.getGeminiKey();
+    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=" + API_KEY;
 
     public String generateRecommendation(String prompt) throws Exception {
         JSONObject requestJson = new JSONObject();
