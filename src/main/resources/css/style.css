@@ -1289,7 +1289,6 @@
 .subtitle-label { -fx-font-size: 14px; -fx-text-fill: #718096; }
 .search-field { -fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #cbd5e0; -fx-border-radius: 8; -fx-padding: 10 15; -fx-font-size: 13px; }
 .search-field:focused { -fx-border-color: #2ecc71; -fx-effect: dropshadow(three-pass-box, rgba(46,204,113,0.1), 10, 0, 0, 0); }
-=======
 .text-field,
 .combo-box {
     -fx-background-color: #ffffff;

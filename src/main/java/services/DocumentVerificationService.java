@@ -108,9 +108,9 @@ public class DocumentVerificationService {
                 result.getQualityScore()
             );
 
-            System.out.println("✅ Decision applied: " + result.getDecision() + " -> " + status);
+            System.out.println("Decision applied: " + result.getDecision() + " -> " + status);
         } catch (Exception e) {
-            System.err.println("❌ Error finalizing verification: " + e.getMessage());
+            System.err.println(" Error finalizing verification: " + e.getMessage());
         }
     }
 

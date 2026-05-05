@@ -15,11 +15,7 @@ public class AdminAiService {
     private final UserService userService;
     private final ObjectMapper mapper;
 
-    /**
-     * Each intent maps to a list of keyword synonyms (FR + EN + common typos).
-     * Longer matches score higher, so "en attente" beats "attente" alone.
-     * Order matters: email is checked before this map (it has its own regex).
-     */
+
     private static final Map<String, List<String>> INTENTS = new LinkedHashMap<>();
     static {
         INTENTS.put("suspicious", List.of(

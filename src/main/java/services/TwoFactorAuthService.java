@@ -131,11 +131,19 @@ public class TwoFactorAuthService {
      * Check if 2FA should be triggered for this login attempt.
      */
     public boolean is2faRequired(User user, int failedAttempts, boolean isFirstLogin) {
-        // Admins bypass 2FA — direct login to dashboard
-        if ("admin".equalsIgnoreCase(user.getRole()))
-            return false;
 
-        // All other roles always require 2FA
-        return true;
+        // Admin bypass 2FA completely
+        if ("admin".equalsIgnoreCase(user.getRole())) {
+            return false;
+        }
+        // Other users: apply security rules
+        if (failedAttempts >= 3) {
+            return true;
+        }
+        if (isFirstLogin) {
+            return true;
+        }
+        // default: no 2FA
+        return false;
     }
 }
