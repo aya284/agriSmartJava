@@ -15,6 +15,8 @@ import services.DocumentVerificationService;
 import services.GoogleAuthService;
 import utils.FileStorageUtils;
 import utils.Validator;
+import javafx.scene.shape.SVGPath;
+import javafx.scene.paint.Color;
 
 import java.io.File;
 
@@ -25,7 +27,11 @@ public class RegisterController {
     @FXML private TextField       lastNameField;
     @FXML private TextField       emailField;
     @FXML private PasswordField   passwordField;
+    @FXML private TextField       passwordVisibleField;
+    @FXML private Button          togglePasswordBtn;
     @FXML private PasswordField   confirmPasswordField;
+    @FXML private TextField       confirmPasswordVisibleField;
+    @FXML private Button          toggleConfirmPasswordBtn;
     @FXML private TextField       phoneField;
     @FXML private TextField       addressField;
     @FXML private TextField       cinField;
@@ -66,10 +72,44 @@ public class RegisterController {
     public void initialize() {
         roleComboBox.getItems().addAll("agriculteur", "fournisseur", "employee");
         roleComboBox.setValue("agriculteur");
+        
+        passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
+        confirmPasswordVisibleField.textProperty().bindBidirectional(confirmPasswordField.textProperty());
+        updatePasswordIcon(togglePasswordBtn, false);
+        updatePasswordIcon(toggleConfirmPasswordBtn, false);
+
         setupRealtimeValidation();
     }
 
-    // ── Validation en temps réel ──────────────────────────────
+    @FXML
+    public void togglePasswordVisibility() {
+        boolean isVisible = passwordField.isVisible();
+        passwordField.setVisible(!isVisible);
+        passwordVisibleField.setVisible(isVisible);
+        updatePasswordIcon(togglePasswordBtn, isVisible);
+    }
+
+    @FXML
+    public void toggleConfirmPasswordVisibility() {
+        boolean isVisible = confirmPasswordField.isVisible();
+        confirmPasswordField.setVisible(!isVisible);
+        confirmPasswordVisibleField.setVisible(isVisible);
+        updatePasswordIcon(toggleConfirmPasswordBtn, isVisible);
+    }
+
+    private void updatePasswordIcon(Button btn, boolean isVisible) {
+        SVGPath svg = new SVGPath();
+        if (isVisible) {           
+             svg.setContent("M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z");
+
+        } else {
+                  svg.setContent("M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z");
+ } 
+        svg.setFill(Color.web("#6b7280"));
+        btn.setGraphic(svg);
+        btn.setText("");
+    }
+
     private void setupRealtimeValidation() {
         firstNameField.focusedProperty().addListener((o, was, focused) -> {
             if (!focused) showInline(errFirstName,
@@ -87,11 +127,21 @@ public class RegisterController {
             if (!focused) showInline(errPassword,
                     Validator.validatePassword(passwordField.getText()));
         });
+        passwordVisibleField.focusedProperty().addListener((o, was, focused) -> {
+            if (!focused) showInline(errPassword,
+                    Validator.validatePassword(passwordVisibleField.getText()));
+        });
         confirmPasswordField.focusedProperty().addListener((o, was, focused) -> {
             if (!focused) showInline(errConfirm,
                     Validator.validateConfirmPassword(
                             passwordField.getText(),
                             confirmPasswordField.getText()));
+        });
+        confirmPasswordVisibleField.focusedProperty().addListener((o, was, focused) -> {
+            if (!focused) showInline(errConfirm,
+                    Validator.validateConfirmPassword(
+                            passwordField.getText(),
+                            confirmPasswordVisibleField.getText()));
         });
         phoneField.focusedProperty().addListener((o, was, focused) -> {
             if (!focused) showInline(errPhone,
@@ -382,22 +432,34 @@ public class RegisterController {
         clearInline(errConfirm);
         clearInline(errPhone);
         clearInline(errAddress);
+        clearInline(errCin);
         clearInline(errImage);
         clearInline(errDocument);
         successLabel.setVisible(false);
     }
 
     private void highlightField(Label errLabel, boolean hasError) {
-        String border = hasError
-                ? "-fx-border-color:#e74c3c;-fx-border-radius:4;-fx-border-width:1.5;"
-                : "";
-        if      (errLabel == errFirstName) firstNameField.setStyle(border);
-        else if (errLabel == errLastName)  lastNameField.setStyle(border);
-        else if (errLabel == errEmail)     emailField.setStyle(border);
-        else if (errLabel == errRole)      roleComboBox.setStyle(border);
-        else if (errLabel == errPassword)  passwordField.setStyle(border);
-        else if (errLabel == errConfirm)   confirmPasswordField.setStyle(border);
-        else if (errLabel == errPhone)     phoneField.setStyle(border);
-        else if (errLabel == errAddress)   addressField.setStyle(border);
+        String baseStyleNormal = "-fx-background-radius: 12; -fx-padding: 13 16; -fx-font-size: 15px;";
+        String baseStylePwd    = "-fx-background-radius: 12; -fx-padding: 13 45 13 16; -fx-font-size: 15px;";
+        
+        String border = hasError 
+                ? " -fx-border-color:#e74c3c;-fx-border-radius:12;-fx-border-width:1.5;"
+                : " -fx-border-color:transparent;"; // Default border transparent or predefined color
+
+        if      (errLabel == errFirstName) firstNameField.setStyle(baseStyleNormal + border);
+        else if (errLabel == errLastName)  lastNameField.setStyle(baseStyleNormal + border);
+        else if (errLabel == errEmail)     emailField.setStyle(baseStyleNormal + border);
+        else if (errLabel == errRole)      roleComboBox.setStyle("-fx-background-radius: 12; -fx-padding: 8;" + border);
+        else if (errLabel == errPassword) {
+             passwordField.setStyle(baseStylePwd + border);
+             passwordVisibleField.setStyle(baseStylePwd + border);
+        }
+        else if (errLabel == errConfirm) {
+             confirmPasswordField.setStyle(baseStylePwd + border);
+             confirmPasswordVisibleField.setStyle(baseStylePwd + border);
+        }
+        else if (errLabel == errPhone)     phoneField.setStyle(baseStyleNormal + border);
+        else if (errLabel == errAddress)   addressField.setStyle(baseStyleNormal + border);
+        else if (errLabel == errCin)       cinField.setStyle(baseStyleNormal + border);
     }
 }

@@ -105,13 +105,21 @@
                     <HBox spacing="16">
                         <VBox spacing="6" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #2a5438; -fx-font-size: 13.5px;" text="Mot de passe *" />
-                            <PasswordField fx:id="passwordField" promptText="Mot de passe" style="-fx-background-radius: 12; -fx-padding: 13 16; -fx-font-size: 15px;" />
+                            <StackPane alignment="CENTER_RIGHT">
+                                <TextField fx:id="passwordVisibleField" promptText="Mot de passe" style="-fx-background-radius: 12; -fx-padding: 13 45 13 16; -fx-font-size: 15px;" visible="false" />
+                                <PasswordField fx:id="passwordField" promptText="Mot de passe" style="-fx-background-radius: 12; -fx-padding: 13 45 13 16; -fx-font-size: 15px;" />
+                                <Button fx:id="togglePasswordBtn" onAction="#togglePasswordVisibility" style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0 12 0 0;" />
+                            </StackPane>
                             <Label fx:id="errPassword" style="-fx-text-fill:#e74c3c; -fx-font-size:12px;" visible="false" />
                         </VBox>
 
                         <VBox spacing="6" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #2a5438; -fx-font-size: 13.5px;" text="Confirmation *" />
-                            <PasswordField fx:id="confirmPasswordField" promptText="Confirmer" style="-fx-background-radius: 12; -fx-padding: 13 16; -fx-font-size: 15px;" />
+                            <StackPane alignment="CENTER_RIGHT">
+                                <TextField fx:id="confirmPasswordVisibleField" promptText="Confirmer" style="-fx-background-radius: 12; -fx-padding: 13 45 13 16; -fx-font-size: 15px;" visible="false" />
+                                <PasswordField fx:id="confirmPasswordField" promptText="Confirmer" style="-fx-background-radius: 12; -fx-padding: 13 45 13 16; -fx-font-size: 15px;" />
+                                <Button fx:id="toggleConfirmPasswordBtn" onAction="#toggleConfirmPasswordVisibility" style="-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0 12 0 0;" />
+                            </StackPane>
                             <Label fx:id="errConfirm" style="-fx-text-fill:#e74c3c; -fx-font-size:12px;" visible="false" />
                         </VBox>
                     </HBox>
