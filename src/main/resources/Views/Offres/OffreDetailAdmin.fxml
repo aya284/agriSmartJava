@@ -2,6 +2,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
 
 <VBox spacing="20.0" style="-fx-background-color: #f8f9fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.OffreDetailAdminController">
     <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
@@ -21,9 +22,19 @@
             <HBox alignment="CENTER_LEFT">
                 <Label fx:id="countL" style="-fx-font-size: 18; -fx-font-weight: bold;" text="Candidatures (0)" />
                 <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnTopIA" text="⭐ Voir Top 5 IA" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-cursor: hand;" />
             </HBox>
 
-            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: white;">
+            <VBox spacing="10" style="-fx-background-color: #f1f8f5; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #d1e7dd; -fx-border-radius: 8;">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label style="-fx-text-fill: #198754; -fx-font-weight: bold;" text="★ Classement Élite (IA)" />
+                </HBox>
+                <HBox fx:id="topCandidatsIA" spacing="15" alignment="CENTER_LEFT">
+                    <Label text="Analyse en attente..." style="-fx-text-fill: #6c757d; -fx-font-style: italic;" />
+                </HBox>
+            </VBox>
+
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: white;" VBox.vgrow="ALWAYS">
                 <VBox fx:id="demandesContainer" spacing="10.0" />
             </ScrollPane>
         </VBox>
