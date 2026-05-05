@@ -30,6 +30,13 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Locale;
+import java.net.URL;
+import javafx.util.Duration;
+import javafx.animation.PauseTransition;
+import javafx.geometry.Orientation;
+import javafx.application.Platform;
+import javafx.concurrent.Worker.State;
 import utils.NotificationUtil;
 import utils.SessionManager;
 import entities.User;
@@ -169,7 +176,7 @@ public class ParcelleController {
 
     private void loadMap() {
         webViewMap.getEngine().getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-            if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+            if (newState == State.SUCCEEDED) {
                 isMapLoaded = true;
                 if (pendingParcelle != null) {
                     afficherDetails(pendingParcelle);
@@ -178,10 +185,10 @@ public class ParcelleController {
             }
         });
 
-        javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(300));
+        PauseTransition pause = new PauseTransition(Duration.millis(300));
         pause.setOnFinished(e -> {
-            java.net.URL cssResource = getClass().getResource("/leaflet/leaflet.css");
-            java.net.URL jsResource = getClass().getResource("/leaflet/leaflet.js");
+            URL cssResource = getClass().getResource("/leaflet/leaflet.css");
+            URL jsResource = getClass().getResource("/leaflet/leaflet.js");
             String cssUrl = cssResource != null ? cssResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
             String jsUrl = jsResource != null ? jsResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 
@@ -271,7 +278,7 @@ public class ParcelleController {
         Thread thread = new Thread(() -> {
             try {
                 JSONObject weatherData = weatherS.getWeatherData(p.getLatitude(), p.getLongitude());
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     weatherContainer.getChildren().clear();
                     if (weatherData != null) {
                         displayWeather(weatherData);
@@ -537,7 +544,7 @@ public class ParcelleController {
         VBox plantCol = createDateCol("Plantation",
                 c.getDatePlantation().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         Separator sep = new Separator();
-        sep.setOrientation(javafx.geometry.Orientation.VERTICAL);
+        sep.setOrientation(Orientation.VERTICAL);
         VBox harvestCol = createDateCol("Récolte",
                 c.getDateRecoltePrevue().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
 
@@ -825,9 +832,6 @@ public class ParcelleController {
         alert.setContentText(content);
         alert.showAndWait();
     }
-<<<<<<< HEAD
-}
-=======
 
     @FXML
     private void analyzeSoil() {
@@ -902,11 +906,11 @@ public class ParcelleController {
 
                     // 4. Affichage des résultats
                     lblSoilType.setText(typeSol + (apiSuccess ? " (API)" : " (Simulé)"));
-                    lblSoilPh.setText(String.format(java.util.Locale.US, "%.1f", ph) + (apiSuccess ? " (API)" : " (Simulé)"));
-                    lblSoilHumidity.setText(String.format(java.util.Locale.US, "%.1f", realHumidityPercent) + " %");
+                    lblSoilPh.setText(String.format(Locale.US, "%.1f", ph) + (apiSuccess ? " (API)" : " (Simulé)"));
+                    lblSoilHumidity.setText(String.format(Locale.US, "%.1f", realHumidityPercent) + " %");
                     lblSoilFertility.setText(fertility + " %");
 
-                    lblSoilResult.setText("📌 Résultat : \"Cette parcelle a un sol " + typeSol + " avec pH " + String.format(java.util.Locale.US, "%.1f", ph) + "\"");
+                    lblSoilResult.setText("📌 Résultat : \"Cette parcelle a un sol " + typeSol + " avec pH " + String.format(Locale.US, "%.1f", ph) + "\"");
 
                     // 5. Recommandations
                     String reco = "🌾 Action recommandée :\n";
@@ -922,7 +926,7 @@ public class ParcelleController {
                 });
             } catch (Exception e) {
                 e.printStackTrace();
-                javafx.application.Platform.runLater(() -> {
+                Platform.runLater(() -> {
                     lblSoilResult.setText("❌ Erreur lors de l'analyse : " + e.getMessage());
                 });
             }
@@ -958,4 +962,3 @@ public class ParcelleController {
         }
     }
 }
->>>>>>> parcelle

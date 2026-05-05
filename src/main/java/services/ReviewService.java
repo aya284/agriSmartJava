@@ -53,7 +53,7 @@ public class ReviewService {
         List<Review> reviews = new ArrayList<>();
         String sql = "SELECT r.*, CONCAT(u.first_name, ' ', u.last_name) AS user_name " +
                 "FROM review r " +
-                "LEFT JOIN user u ON u.id = r.user_id " +
+                "LEFT JOIN users u ON u.id = r.user_id " +
                 "WHERE r.produit_id = ? " +
                 "ORDER BY r.created_at DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

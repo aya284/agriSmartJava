@@ -11,6 +11,44 @@ import java.util.List;
 
 public class ProduitService implements IService<Produit> {
     private final Connection conn = MyConnection.getInstance().getConn();
+    private static boolean schemaVerified = false;
+
+    public ProduitService() {
+        if (!schemaVerified) {
+            ensureColumnsExist();
+            schemaVerified = true;
+        }
+    }
+
+    private void ensureColumnsExist() {
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            checkAndAddColumn(dbmd, "banned", "TINYINT(1) DEFAULT 0");
+            checkAndAddColumn(dbmd, "is_promotion", "TINYINT(1) DEFAULT 0");
+            checkAndAddColumn(dbmd, "promotion_price", "DOUBLE DEFAULT 0");
+            checkAndAddColumn(dbmd, "location_address", "VARCHAR(255)");
+            checkAndAddColumn(dbmd, "location_start", "DATETIME");
+            checkAndAddColumn(dbmd, "location_end", "DATETIME");
+            checkAndAddColumn(dbmd, "vendeur_id", "INT DEFAULT 0");
+            checkAndAddColumn(dbmd, "latitude", "DOUBLE");
+            checkAndAddColumn(dbmd, "longitude", "DOUBLE");
+            checkAndAddColumn(dbmd, "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+            checkAndAddColumn(dbmd, "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+        } catch (SQLException e) {
+            System.err.println("Could not verify/add columns to 'produit': " + e.getMessage());
+        }
+    }
+
+    private void checkAndAddColumn(DatabaseMetaData dbmd, String columnName, String type) throws SQLException {
+        try (ResultSet rs = dbmd.getColumns(null, null, "produit", columnName)) {
+            if (!rs.next()) {
+                try (Statement st = conn.createStatement()) {
+                    st.execute("ALTER TABLE produit ADD COLUMN " + columnName + " " + type);
+                    System.out.println("Column '" + columnName + "' added to 'produit' table.");
+                }
+            }
+        }
+    }
 
     @Override
     public void ajouter(Produit p) throws SQLException {

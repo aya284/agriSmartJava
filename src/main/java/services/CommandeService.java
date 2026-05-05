@@ -23,6 +23,78 @@ public class CommandeService implements IService<Commande> {
     }
 
     private final Connection conn = MyConnection.getInstance().getConn();
+    private static boolean schemaVerified = false;
+
+    public CommandeService() {
+        if (!schemaVerified) {
+            ensureSchema();
+            schemaVerified = true;
+        }
+    }
+
+    private void ensureSchema() {
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            
+            // Check 'commande' table
+            try (ResultSet rs = dbmd.getTables(null, null, "commande", null)) {
+                if (!rs.next()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.execute("CREATE TABLE commande (" +
+                                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                                "statut VARCHAR(50) NOT NULL, " +
+                                "mode_paiement VARCHAR(50), " +
+                                "adresse_livraison TEXT, " +
+                                "montant_total DOUBLE NOT NULL, " +
+                                "payment_ref VARCHAR(255), " +
+                                "paid_at DATETIME, " +
+                                "email_sent_at DATETIME, " +
+                                "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                                "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " +
+                                "client_id INT NOT NULL" +
+                                ")");
+                        System.out.println("Table 'commande' created.");
+                    }
+                } else {
+                    // Table exists, check for missing columns (e.g. client_id might have been added later)
+                    checkAndAddColumn(dbmd, "commande", "client_id", "INT NOT NULL");
+                    checkAndAddColumn(dbmd, "commande", "payment_ref", "VARCHAR(255)");
+                    checkAndAddColumn(dbmd, "commande", "paid_at", "DATETIME");
+                    checkAndAddColumn(dbmd, "commande", "email_sent_at", "DATETIME");
+                }
+            }
+
+            // Check 'commande_item' table
+            try (ResultSet rs = dbmd.getTables(null, null, "commande_item", null)) {
+                if (!rs.next()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.execute("CREATE TABLE commande_item (" +
+                                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                                "commande_id INT NOT NULL, " +
+                                "produit_id INT NOT NULL, " +
+                                "quantite INT NOT NULL, " +
+                                "prix_unitaire DOUBLE NOT NULL, " +
+                                "FOREIGN KEY (commande_id) REFERENCES commande(id) ON DELETE CASCADE" +
+                                ")");
+                        System.out.println("Table 'commande_item' created.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Could not verify/add schema for CommandeService: " + e.getMessage());
+        }
+    }
+
+    private void checkAndAddColumn(DatabaseMetaData dbmd, String tableName, String columnName, String type) throws SQLException {
+        try (ResultSet rs = dbmd.getColumns(null, null, tableName, columnName)) {
+            if (!rs.next()) {
+                try (Statement st = conn.createStatement()) {
+                    st.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + type);
+                    System.out.println("Column '" + columnName + "' added to '" + tableName + "' table.");
+                }
+            }
+        }
+    }
 
     @Override
     public void ajouter(Commande c) throws SQLException {
