@@ -78,9 +78,8 @@ public class FormulaireParcelleController {
                 JSObject window = (JSObject) engine.executeScript("window");
                 window.setMember("app", mapBridge);
                 isMapLoaded = true;
-                // Si des données attendaient le chargement de la carte
                 if (pendingParcelle != null) {
-                    updateMapLocation(pendingParcelle.getLatitude(), pendingParcelle.getLongitude());
+                    updateMapLocation(pendingParcelle.getLatitude(), pendingParcelle.getLongitude(), pendingParcelle.getCoordonnees());
                     pendingParcelle = null;
                 }
             }
@@ -90,31 +89,96 @@ public class FormulaireParcelleController {
         pause.setOnFinished(ev -> {
             java.net.URL cssResource = getClass().getResource("/leaflet/leaflet.css");
             java.net.URL jsResource = getClass().getResource("/leaflet/leaflet.js");
-            String cssUrl = cssResource != null ? cssResource.toExternalForm()
-                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-            String jsUrl = jsResource != null ? jsResource.toExternalForm()
-                    : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+            String cssUrl = cssResource != null ? cssResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+            String jsUrl = jsResource != null ? jsResource.toExternalForm() : "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 
-            String content = "<html><head><link rel='stylesheet' href='" + cssUrl + "'/><script src='" + jsUrl
-                    + "'></script></head>"
+            String content = "<html><head><link rel='stylesheet' href='" + cssUrl + "'/><script src='" + jsUrl + "'></script>"
+                    + "<style>"
+                    + ".reset-btn { background: white; padding: 5px 10px; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; cursor: pointer; font-family: sans-serif; font-weight: bold; }"
+                    + ".reset-btn:hover { background: #f4f4f4; }"
+                    + "</style></head>"
                     + "<body style='margin:0;'><div id='map' style='height:100%; cursor:crosshair;'></div>"
                     + "<script>"
                     + "var customIcon = L.divIcon({ className: 'custom-icon', html: '<svg viewBox=\"0 0 24 24\" width=\"36\" height=\"36\" fill=\"#2D6A4F\"><path d=\"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\"/></svg>', iconSize: [36, 36], iconAnchor: [18, 36] });"
                     + "var map = L.map('map').setView([36.8065, 10.1815], 10);"
                     + "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);"
-                    + "var marker;"
+                    + "var markers = []; var polygon; var points = [];"
+                    + "function calculateArea(latlngs) {"
+                    + "  var area = 0; if (latlngs.length > 2) {"
+                    + "    var coords = latlngs.map(p => ({ x: p.lng * 111319.9 * Math.cos(p.lat * Math.PI / 180), y: p.lat * 111319.9 }));"
+                    + "    for (var i = 0; i < coords.length; i++) {"
+                    + "      var p1 = coords[i]; var p2 = coords[(i + 1) % coords.length];"
+                    + "      area += (p1.x * p2.y) - (p2.x * p1.y);"
+                    + "    }"
+                    + "    area = Math.abs(area) / 2.0;"
+                    + "  }"
+                    + "  return area;"
+                    + "}"
                     + "map.on('click', function(e) {"
-                    + "  if(marker) map.removeLayer(marker);"
-                    + "  marker = L.marker(e.latlng, {icon: customIcon}).addTo(map);"
-                    + "  app.onMapClick(e.latlng.lat, e.latlng.lng);"
+                    + "  addPoint(e.latlng.lat, e.latlng.lng);"
                     + "});"
+                    + "function addPoint(lat, lon) {"
+                    + "  var index = markers.length + 1;"
+                    + "  var iconWithNumber = L.divIcon({ "
+                    + "    className: 'custom-icon', "
+                    + "    html: '<div style=\"position:relative;\">' + "
+                    + "          '<svg viewBox=\"0 0 24 24\" width=\"36\" height=\"36\" fill=\"#2D6A4F\"><path d=\"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\"/></svg>' + "
+                    + "          '<b style=\"position:absolute; top:8px; left:0; width:36px; text-align:center; color:white; font-size:12px; font-family:sans-serif;\">' + index + '</b>' + "
+                    + "          '</div>', "
+                    + "    iconSize: [36, 36], "
+                    + "    iconAnchor: [18, 36] "
+                    + "  });"
+                    + "  var m = L.marker([lat, lon], {icon: iconWithNumber, draggable: true}).addTo(map);"
+                    + "  markers.push(m); "
+                    + "  m.on('drag', updateShape);"
+                    + "  m.on('dragend', function() { app.onMapClick(m.getLatLng().lat, m.getLatLng().lng); });"
+                    + "  updateShape();"
+                    + "  app.onMapClick(lat, lon);"
+                    + "}"
+                    + "function updateShape() {"
+                    + "  var rawPoints = markers.map(m => m.getLatLng());"
+                    + "  if(rawPoints.length > 2) {"
+                    + "    var center = rawPoints.reduce((acc, p) => ({ lat: acc.lat + p.lat/rawPoints.length, lng: acc.lng + p.lng/rawPoints.length }), { lat: 0, lng: 0 });"
+                    + "    rawPoints.sort((a, b) => Math.atan2(a.lat - center.lat, a.lng - center.lng) - Math.atan2(b.lat - center.lat, b.lng - center.lng));"
+                    + "  }"
+                    + "  points = rawPoints;"
+                    + "  if(polygon) map.removeLayer(polygon);"
+                    + "  if(points.length > 1) {"
+                    + "    polygon = L.polygon(points, {color: '#2D6A4F', fillOpacity: 0.3, interactive: false}).addTo(map);"
+                    + "    if(points.length > 2) {"
+                    + "      app.onSurfaceCalculated(calculateArea(points));"
+                    + "    }"
+                    + "  }"
+                    + "}"
                     + "function setLocation(lat, lon) {"
-                    + "  if(marker) map.removeLayer(marker);"
-                    + "  marker = L.marker([lat, lon], {icon: customIcon}).addTo(map);"
+                    + "  resetMap(true); addPoint(lat, lon);"
                     + "  map.setView([lat, lon], 13);"
                     + "}"
+                    + "function resetMap(updateUI) {"
+                    + "  markers.forEach(m => map.removeLayer(m)); markers = [];"
+                    + "  if(polygon) map.removeLayer(polygon); polygon = null; points = [];"
+                    + "  if(updateUI) app.onReset();"
+                    + "}"
+                    + "function getCoordinates() { return JSON.stringify(markers.map(m => m.getLatLng())); }"
+                    + "function setCoordinates(json) {"
+                    + "  resetMap(false); if(!json) return;"
+                    + "  try {"
+                    + "    var pts = JSON.parse(json);"
+                    + "    pts.forEach(p => addPoint(p.lat, p.lng));"
+                    + "    if(markers.length > 1) map.fitBounds(polygon.getBounds());"
+                    + "  } catch(e) { console.error(e); }"
+                    + "}"
+                    + "var ResetControl = L.Control.extend({"
+                    + "  options: { position: 'topright' },"
+                    + "  onAdd: function (map) {"
+                    + "    var btn = L.DomUtil.create('button', 'reset-btn');"
+                    + "    btn.innerHTML = 'Réinitialiser';"
+                    + "    btn.onclick = function(e) { L.DomEvent.stopPropagation(e); resetMap(true); };"
+                    + "    return btn;"
+                    + "  }"
+                    + "});"
+                    + "map.addControl(new ResetControl());"
                     + "</script></body></html>";
-
             engine.loadContent(content);
         });
         pause.play();
@@ -131,7 +195,25 @@ public class FormulaireParcelleController {
                 reverseGeocode(lat, lon);
             });
         }
+
+        public void onSurfaceCalculated(double areaInM2) {
+            Platform.runLater(() -> {
+                if (areaInM2 > 0) {
+                    double hectares = areaInM2 / 10000.0;
+                    txtSurface.setText(String.format(Locale.US, "%.2f", hectares));
+                }
+            });
+        }
+
+        public void onReset() {
+            Platform.runLater(() -> {
+                txtSurface.clear();
+                txtLat.clear();
+                txtLon.clear();
+            });
+        }
     }
+
 
     private void reverseGeocode(double lat, double lon) {
         new Thread(() -> {
@@ -186,16 +268,20 @@ public class FormulaireParcelleController {
         txtLon.setText(String.valueOf(p.getLongitude()));
 
         if (isMapLoaded) {
-            updateMapLocation(p.getLatitude(), p.getLongitude());
+            updateMapLocation(p.getLatitude(), p.getLongitude(), p.getCoordonnees());
         } else {
             pendingParcelle = p;
         }
     }
 
-    private void updateMapLocation(double lat, double lon) {
+    private void updateMapLocation(double lat, double lon, String coords) {
         Platform.runLater(() -> {
             try {
-                engine.executeScript("setLocation(" + lat + ", " + lon + ")");
+                if (coords != null && !coords.isEmpty() && !coords.equals("[]")) {
+                    engine.executeScript("setCoordinates('" + coords + "')");
+                } else {
+                    engine.executeScript("setLocation(" + lat + ", " + lon + ")");
+                }
             } catch (Exception e) {
                 System.err.println("Map script failed: " + e.getMessage());
             }
@@ -215,13 +301,21 @@ public class FormulaireParcelleController {
                 finalType = txtTypeAutre.getText().trim();
             }
 
+            String coords = "[]";
+            try {
+                coords = (String) engine.executeScript("getCoordinates()");
+            } catch (Exception e) {
+                System.err.println("Could not get coordinates: " + e.getMessage());
+            }
+
             Parcelle p = new Parcelle(
                     txtNom.getText().trim(),
                     Double.parseDouble(txtSurface.getText().replace(",", ".")),
                     Double.parseDouble(txtLat.getText().replace(",", ".")),
                     Double.parseDouble(txtLon.getText().replace(",", ".")),
                     finalType,
-                    SessionManager.getInstance().getCurrentUser().getId());
+                    SessionManager.getInstance().getCurrentUser().getId(),
+                    coords);
 
             if (currentId == -1) {
                 ps.ajouter(p);

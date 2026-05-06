@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-background: #f4f7f6;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.OffreController">
+    <content>
+        <VBox spacing="20.0" style="-fx-background-color: #f4f7f6;">
+            <padding>
+                <Insets bottom="30.0" left="50.0" right="50.0" top="20.0" />
+            </padding>
+            <children>
+
+                <Hyperlink onAction="#showListPage" style="-fx-text-fill: #2c3e50; -fx-font-weight: bold; -fx-underline: false;" text="← Retour à la liste" />
+
+                <Label fx:id="formTitle" style="-fx-font-weight: bold; -fx-text-fill: #1a3323;" text="+ Nouvelle offre d'emploi">
+                    <font>
+                        <Font size="26.0" />
+                    </font>
+                </Label>
+
+                <VBox spacing="15.0" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10; -fx-border-color: #27ae60; -fx-border-width: 5 0 0 0; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+                    <children>
+
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-weight: bold;" text="Titre de l'offre *" />
+                            <TextField fx:id="titleF" prefHeight="40.0" promptText="Min. 3 caractères" style="-fx-background-radius: 5;" />
+                            <Label fx:id="titleError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                        </VBox>
+
+                        <HBox spacing="20.0">
+                            <children>
+                                <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Type poste *" />
+                                    <TextField fx:id="typePosteF" prefHeight="40.0" promptText="Min. 5 caractères" style="-fx-background-radius: 5;" />
+                                    <Label fx:id="typePosteError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                                <VBox prefWidth="250.0" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Type contrat *" />
+                                    <ComboBox fx:id="typeContratC" maxWidth="Infinity" prefHeight="40.0" promptText="Choisir" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 5;" />
+                                    <Label fx:id="typeContratError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <VBox spacing="5.0">
+                            <Label style="-fx-font-weight: bold;" text="Description *" />
+                            <TextArea fx:id="descF" prefHeight="100.0" promptText="Décrivez l'offre (Min. 12 caractères)..." style="-fx-background-radius: 5;" wrapText="true" />
+                            <Label fx:id="descError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                        </VBox>
+
+                        <HBox spacing="20.0">
+                            <children>
+                                <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Lieu *" />
+                                    <TextField fx:id="lieuF" prefHeight="40.0" promptText="Min. 5 caractères (ex: Tunis)" style="-fx-background-radius: 5;" />
+                                    <Label fx:id="lieuError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                                <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Salaire (TND) *" />
+                                    <TextField fx:id="salaireF" prefHeight="40.0" promptText="Ex: 1500" style="-fx-background-radius: 5;" />
+                                    <Label fx:id="salaireError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <HBox spacing="20.0">
+                            <children>
+                                <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Date Début *" />
+                                    <DatePicker fx:id="dateDebutP" maxWidth="Infinity" prefHeight="40.0" style="-fx-background-color: white; -fx-border-color: #ddd;" />
+                                    <Label fx:id="dateDebutError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                                <VBox HBox.hgrow="ALWAYS" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Date Fin *" />
+                                    <DatePicker fx:id="dateFinP" maxWidth="Infinity" prefHeight="40.0" style="-fx-background-color: white; -fx-border-color: #ddd;" />
+                                    <Label fx:id="dateFinError" style="-fx-font-size: 11;" textFill="#e74c3c" />
+                                </VBox>
+                                <VBox prefWidth="150.0" spacing="5.0">
+                                    <Label style="-fx-font-weight: bold;" text="Statut" />
+                                    <ComboBox fx:id="statutC" maxWidth="Infinity" prefHeight="40.0" style="-fx-background-color: white; -fx-border-color: #ddd;" />
+                                </VBox>
+                            </children>
+                        </HBox>
+
+                        <VBox alignment="CENTER" spacing="10.0">
+                            <children>
+                                <Button fx:id="submitBtn" maxWidth="Infinity" onAction="#handleSave" prefHeight="50.0" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-background-radius: 8; -fx-cursor: hand;" text="Enregistrer l'offre" />
+                                <Button onAction="#showListPage" style="-fx-background-color: transparent; -fx-text-fill: #95a5a6; -fx-cursor: hand;" text="Annuler" />
+                            </children>
+                            <padding>
+                                <Insets top="20.0" />
+                            </padding>
+                        </VBox>
+
+                    </children>
+                </VBox>
+            </children>
+        </VBox>
+    </content>
+</ScrollPane>

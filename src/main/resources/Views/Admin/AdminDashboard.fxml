@@ -62,6 +62,7 @@
         </VBox>
     </HBox>
 
+
     <!-- ── Charts + role stats ── -->
     <HBox spacing="14" VBox.vgrow="ALWAYS">
         <VBox spacing="10" HBox.hgrow="ALWAYS" styleClass="admin-chart-card"

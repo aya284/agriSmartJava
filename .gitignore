@@ -33,9 +33,24 @@ build/
 !**/src/test/**/build/
 # Google OAuth secret
 src/main/resources/client_secret.json
+src/main/client_secret.json
 ### VS Code ###
 .vscode/
 src/main/resources/config.properties
 
 ### Mac OS ###
 .DS_Store
+
+# intelij
+.idea/workspace.xml
+
+# Local runtime secrets
+local.secrets.properties
+config/local.secrets.properties
+
+# User-uploaded voice messages (marketplace)
+uploads/messages/
+
+# Secrets
+src/main/resources/config.properties
+TestHF.*

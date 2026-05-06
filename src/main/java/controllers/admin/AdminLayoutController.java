@@ -28,8 +28,15 @@ public class AdminLayoutController {
 
     private final services.AdminNotificationService notificationService = new services.AdminNotificationService();
 
+    private static AdminLayoutController instance;
+
+    public static AdminLayoutController getInstance() {
+        return instance;
+    }
+
     @FXML
     public void initialize() {
+        instance = this;
         // Nom de l'admin connecté
         if (SessionManager.getInstance().getCurrentUser() != null)
             adminNameLabel.setText(
@@ -45,6 +52,7 @@ public class AdminLayoutController {
         // Page par défaut
         openDashboard();
     }
+
 
     private void updateNotificationCount() {
         new Thread(() -> {
@@ -126,6 +134,10 @@ public class AdminLayoutController {
         }
     }
 
+    public void navigateTo(String fxmlPath, String title, String breadcrumb) {
+        loadContent(fxmlPath, title, breadcrumb);
+    }
+
     @FXML public void openDashboard() {
         loadContent("/Views/Admin/AdminDashboard.fxml",
                 "Tableau de bord", "Admin / Dashboard");
@@ -147,13 +159,13 @@ public class AdminLayoutController {
     }
 
     @FXML public void openTaches() {
-        loadContent("/Views/TachesView.fxml",
-                "Tâches", "Admin / Tâches");
+        loadContent("/Views/Admin/AdminTaskView.fxml",
+                "Statistiques des Tâches", "Admin / Statistiques Tâches");
     }
 
     @FXML public void openEmployes() {
-        loadContent("/Views/EmployesView.fxml",
-                "Employés", "Admin / Employés");
+        loadContent("/Views/Offres/AdminOffreList.fxml",
+                "Gestion des Offres", "Admin / Offres");
     }
 
     @FXML public void openRessources() {
@@ -208,7 +220,6 @@ public class AdminLayoutController {
             showError("Erreur de chargement", "Impossible d'ouvrir la page [" + title + "] :\n" + errorMsg);
         }
     }
-
     private void showError(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);

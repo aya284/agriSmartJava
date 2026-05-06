@@ -83,7 +83,6 @@
 
             <!-- Personal info card -->
             <VBox spacing="16" styleClass="admin-panel-card">
-
                 <Label text="INFORMATIONS PERSONNELLES"
                        styleClass="admin-section-title"/>
 
@@ -121,6 +120,9 @@
 
             <!-- Account info card -->
             <VBox spacing="16" styleClass="admin-panel-card">
+
+                <Label text="INFORMATIONS DU COMPTE"
+                       styleClass="admin-section-title"/>
 
                 <Label text="INFORMATIONS DU COMPTE"
                        styleClass="admin-section-title"/>

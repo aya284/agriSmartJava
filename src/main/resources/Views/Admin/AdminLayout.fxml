@@ -102,7 +102,6 @@
                     <Label fx:id="pageBreadcrumb" text="Admin / Tableau de bord" styleClass="admin-topbar-breadcrumb"/>
                 </VBox>
                 <HBox HBox.hgrow="ALWAYS"/>
-                
                 <!-- Notification Bell -->
                 <StackPane onMouseClicked="#showNotifications"
                            style="-fx-cursor: hand;"

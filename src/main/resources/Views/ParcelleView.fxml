@@ -52,14 +52,55 @@
                 <Tab text="Cultures">
                     <VBox spacing="10" style="-fx-padding: 15 0 0 0;">
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Label text="Historiques des cultures" styleClass="panel-title" style="-fx-font-size: 14px;"/>
+                            <Label text="Cultures" styleClass="panel-title" style="-fx-font-size: 14px;"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button text="+ Ajouter Culture" onAction="#openAddCultureModal" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
+                            <Button text="🪄 Recommander (IA)" onAction="#recommanderCultureIA" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10; -fx-background-color: #8e44ad;"/>
+                            <Button text="➕ Ajouter" onAction="#openAddCultureModal" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
                         </HBox>
                         
                         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
                             <VBox fx:id="cultureListContainer" spacing="12"/>
                         </ScrollPane>
+                    </VBox>
+                </Tab>
+                <Tab text="Météo Direct">
+                    <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
+                        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
+                            <VBox fx:id="weatherContainer" spacing="15" styleClass="weather-container">
+                                <!-- Contenu généré dynamiquement par le contrôleur -->
+                                <Label text="Sélectionnez une parcelle pour voir la météo." styleClass="panel-muted"/>
+                            </VBox>
+                        </ScrollPane>
+                    </VBox>
+                </Tab>
+                <Tab text="Analyse Sol">
+                    <VBox spacing="15" style="-fx-padding: 15 0 0 0;">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="Analyse des caractéristiques du sol" styleClass="panel-title" style="-fx-font-size: 14px;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="Analyser le sol" onAction="#analyzeSoil" styleClass="btn-primary" style="-fx-font-size: 11px; -fx-padding: 5 10;"/>
+                        </HBox>
+                        
+                        <VBox fx:id="soilAnalysisContainer" spacing="12" style="-fx-background-color: #f8f9fa; -fx-padding: 15; -fx-border-color: #e0e0e0; -fx-border-radius: 5; -fx-background-radius: 5;" visible="false">
+                            <GridPane vgap="10" hgap="10">
+                                <Label text="Type de Sol:" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="panel-muted"/>
+                                <Label fx:id="lblSoilType" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="panel-value"/>
+                                
+                                <Label text="pH:" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="panel-muted"/>
+                                <Label fx:id="lblSoilPh" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="panel-value"/>
+                                
+                                <Label text="Humidité:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="panel-muted"/>
+                                <Label fx:id="lblSoilHumidity" text="-" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="panel-value"/>
+                                
+                                <Label text="Fertilité:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="panel-muted"/>
+                                <Label fx:id="lblSoilFertility" text="-" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="panel-value"/>
+                            </GridPane>
+                            <Separator/>
+                            <VBox spacing="5">
+                                <Label fx:id="lblSoilResult" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50; -fx-wrap-text: true;"/>
+                                <Label fx:id="lblSoilRecommendation" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2980b9; -fx-wrap-text: true;"/>
+                            </VBox>
+                        </VBox>
                     </VBox>
                 </Tab>
             </TabPane>

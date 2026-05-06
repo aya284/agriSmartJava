@@ -658,6 +658,7 @@ public Map<String, Object> getAdminStats() throws SQLException {
         }
     }
 
+
     /**
      * Supprime définitivement le compte après vérification du mot de passe.
      */
@@ -824,4 +825,16 @@ public Map<String, Object> getAdminStats() throws SQLException {
             ps.executeUpdate();
         }
     }
-}
+
+    // ── GET BY ROLE ──────────────────────────────────────────────
+    public List<User> getByRole(String role) throws SQLException {
+        List<User> users = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM users WHERE role = ?")) {
+            ps.setString(1, role);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) users.add(mapUser(rs));
+        }
+        return users;
+    }
+}
