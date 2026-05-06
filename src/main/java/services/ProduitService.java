@@ -11,13 +11,51 @@ import java.util.List;
 
 public class ProduitService implements IService<Produit> {
     private final Connection conn = MyConnection.getInstance().getConn();
+    private static boolean schemaVerified = false;
+
+    public ProduitService() {
+        if (!schemaVerified) {
+            ensureColumnsExist();
+            schemaVerified = true;
+        }
+    }
+
+    private void ensureColumnsExist() {
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            checkAndAddColumn(dbmd, "banned", "TINYINT(1) DEFAULT 0");
+            checkAndAddColumn(dbmd, "is_promotion", "TINYINT(1) DEFAULT 0");
+            checkAndAddColumn(dbmd, "promotion_price", "DOUBLE DEFAULT 0");
+            checkAndAddColumn(dbmd, "location_address", "VARCHAR(255)");
+            checkAndAddColumn(dbmd, "location_start", "DATETIME");
+            checkAndAddColumn(dbmd, "location_end", "DATETIME");
+            checkAndAddColumn(dbmd, "vendeur_id", "INT DEFAULT 0");
+            checkAndAddColumn(dbmd, "latitude", "DOUBLE");
+            checkAndAddColumn(dbmd, "longitude", "DOUBLE");
+            checkAndAddColumn(dbmd, "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP");
+            checkAndAddColumn(dbmd, "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+        } catch (SQLException e) {
+            System.err.println("Could not verify/add columns to 'produit': " + e.getMessage());
+        }
+    }
+
+    private void checkAndAddColumn(DatabaseMetaData dbmd, String columnName, String type) throws SQLException {
+        try (ResultSet rs = dbmd.getColumns(null, null, "produit", columnName)) {
+            if (!rs.next()) {
+                try (Statement st = conn.createStatement()) {
+                    st.execute("ALTER TABLE produit ADD COLUMN " + columnName + " " + type);
+                    System.out.println("Column '" + columnName + "' added to 'produit' table.");
+                }
+            }
+        }
+    }
 
     @Override
     public void ajouter(Produit p) throws SQLException {
         String req = "INSERT INTO produit (nom, description, type, prix, categorie, " +
                 "quantite_stock, image, is_promotion, promotion_price, " +
-                "location_address, location_start, location_end, created_at, updated_at, banned, vendeur_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?)";
+                "location_address, location_start, location_end, created_at, updated_at, banned, vendeur_id, latitude, longitude) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setString(1, p.getNom());
             ps.setString(2, p.getDescription());
@@ -33,6 +71,8 @@ public class ProduitService implements IService<Produit> {
             ps.setTimestamp(12, toTimestamp(p.getLocationEnd()));
             ps.setBoolean(13, p.isBanned());
             ps.setInt(14, p.getVendeurId());
+            if (p.getLatitude() != null) { ps.setDouble(15, p.getLatitude()); } else { ps.setNull(15, java.sql.Types.DOUBLE); }
+            if (p.getLongitude() != null) { ps.setDouble(16, p.getLongitude()); } else { ps.setNull(16, java.sql.Types.DOUBLE); }
             ps.executeUpdate();
         }
     }
@@ -53,7 +93,8 @@ public class ProduitService implements IService<Produit> {
     public void modifier(Produit p) throws SQLException {
         String req = "UPDATE produit SET nom=?, description=?, type=?, prix=?, " +
                 "categorie=?, quantite_stock=?, image=?, is_promotion=?, " +
-                "promotion_price=?, location_address=?, location_start=?, location_end=?, updated_at=NOW() WHERE id=?";
+                "promotion_price=?, location_address=?, location_start=?, location_end=?, " +
+                "latitude=?, longitude=?, updated_at=NOW() WHERE id=?";
         try (PreparedStatement ps = conn.prepareStatement(req)) {
             ps.setString(1, p.getNom());
             ps.setString(2, p.getDescription());
@@ -67,7 +108,9 @@ public class ProduitService implements IService<Produit> {
             ps.setString(10, p.getLocationAddress());
             ps.setTimestamp(11, toTimestamp(p.getLocationStart()));
             ps.setTimestamp(12, toTimestamp(p.getLocationEnd()));
-            ps.setInt(13, p.getId());
+            if (p.getLatitude() != null) { ps.setDouble(13, p.getLatitude()); } else { ps.setNull(13, java.sql.Types.DOUBLE); }
+            if (p.getLongitude() != null) { ps.setDouble(14, p.getLongitude()); } else { ps.setNull(14, java.sql.Types.DOUBLE); }
+            ps.setInt(15, p.getId());
             ps.executeUpdate();
         }
     }
@@ -172,6 +215,10 @@ public class ProduitService implements IService<Produit> {
         }
         p.setBanned(rs.getBoolean("banned"));
         p.setVendeurId(rs.getInt("vendeur_id"));
+        double lat = rs.getDouble("latitude");
+        p.setLatitude(rs.wasNull() ? null : lat);
+        double lon = rs.getDouble("longitude");
+        p.setLongitude(rs.wasNull() ? null : lon);
         return p;
     }
 

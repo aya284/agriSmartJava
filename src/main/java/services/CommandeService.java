@@ -23,6 +23,78 @@ public class CommandeService implements IService<Commande> {
     }
 
     private final Connection conn = MyConnection.getInstance().getConn();
+    private static boolean schemaVerified = false;
+
+    public CommandeService() {
+        if (!schemaVerified) {
+            ensureSchema();
+            schemaVerified = true;
+        }
+    }
+
+    private void ensureSchema() {
+        try {
+            DatabaseMetaData dbmd = conn.getMetaData();
+            
+            // Check 'commande' table
+            try (ResultSet rs = dbmd.getTables(null, null, "commande", null)) {
+                if (!rs.next()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.execute("CREATE TABLE commande (" +
+                                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                                "statut VARCHAR(50) NOT NULL, " +
+                                "mode_paiement VARCHAR(50), " +
+                                "adresse_livraison TEXT, " +
+                                "montant_total DOUBLE NOT NULL, " +
+                                "payment_ref VARCHAR(255), " +
+                                "paid_at DATETIME, " +
+                                "email_sent_at DATETIME, " +
+                                "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                                "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " +
+                                "client_id INT NOT NULL" +
+                                ")");
+                        System.out.println("Table 'commande' created.");
+                    }
+                } else {
+                    // Table exists, check for missing columns (e.g. client_id might have been added later)
+                    checkAndAddColumn(dbmd, "commande", "client_id", "INT NOT NULL");
+                    checkAndAddColumn(dbmd, "commande", "payment_ref", "VARCHAR(255)");
+                    checkAndAddColumn(dbmd, "commande", "paid_at", "DATETIME");
+                    checkAndAddColumn(dbmd, "commande", "email_sent_at", "DATETIME");
+                }
+            }
+
+            // Check 'commande_item' table
+            try (ResultSet rs = dbmd.getTables(null, null, "commande_item", null)) {
+                if (!rs.next()) {
+                    try (Statement st = conn.createStatement()) {
+                        st.execute("CREATE TABLE commande_item (" +
+                                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                                "commande_id INT NOT NULL, " +
+                                "produit_id INT NOT NULL, " +
+                                "quantite INT NOT NULL, " +
+                                "prix_unitaire DOUBLE NOT NULL, " +
+                                "FOREIGN KEY (commande_id) REFERENCES commande(id) ON DELETE CASCADE" +
+                                ")");
+                        System.out.println("Table 'commande_item' created.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Could not verify/add schema for CommandeService: " + e.getMessage());
+        }
+    }
+
+    private void checkAndAddColumn(DatabaseMetaData dbmd, String tableName, String columnName, String type) throws SQLException {
+        try (ResultSet rs = dbmd.getColumns(null, null, tableName, columnName)) {
+            if (!rs.next()) {
+                try (Statement st = conn.createStatement()) {
+                    st.execute("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + type);
+                    System.out.println("Column '" + columnName + "' added to '" + tableName + "' table.");
+                }
+            }
+        }
+    }
 
     @Override
     public void ajouter(Commande c) throws SQLException {
@@ -235,12 +307,20 @@ public class CommandeService implements IService<Commande> {
 
     public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
                                       List<CartItem> cartItems) throws SQLException {
+        return createCommandeFromCart(clientId, modePaiement, adresseLivraison, cartItems, null, null, "en_attente");
+    }
+
+    public int createCommandeFromCart(int clientId, String modePaiement, String adresseLivraison,
+                                      List<CartItem> cartItems, String paymentRef,
+                                      java.time.LocalDateTime paidAt, String initialStatus) throws SQLException {
         if (cartItems == null || cartItems.isEmpty()) {
             throw new SQLException("Le panier est vide.");
         }
 
+        String normalizedStatus = normalizeStatus(initialStatus);
+
         String insertCommande = "INSERT INTO commande (statut, mode_paiement, adresse_livraison, montant_total, " +
-                "created_at, updated_at, client_id) VALUES (?, ?, ?, ?, NOW(), NOW(), ?)";
+                "payment_ref, paid_at, created_at, updated_at, client_id) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)";
         String insertItem = "INSERT INTO commande_item (commande_id, produit_id, quantite, prix_unitaire) " +
             "VALUES (?, ?, ?, ?)";
         String lockProduit = "SELECT quantite_stock, prix, is_promotion, promotion_price, banned, vendeur_id " +
@@ -302,11 +382,13 @@ public class CommandeService implements IService<Commande> {
             }
 
             try (PreparedStatement psCommande = conn.prepareStatement(insertCommande, Statement.RETURN_GENERATED_KEYS)) {
-                psCommande.setString(1, "en_attente");
+                psCommande.setString(1, normalizedStatus);
                 psCommande.setString(2, modePaiement);
                 psCommande.setString(3, adresseLivraison);
                 psCommande.setDouble(4, total);
-                psCommande.setInt(5, clientId);
+                psCommande.setString(5, paymentRef);
+                psCommande.setTimestamp(6, toTimestamp(paidAt));
+                psCommande.setInt(7, clientId);
                 psCommande.executeUpdate();
 
                 try (ResultSet keys = psCommande.getGeneratedKeys()) {

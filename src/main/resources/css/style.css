@@ -226,6 +226,13 @@
     -fx-font-size: 18px;
 }
 
+.exchange-rate-hint {
+    -fx-text-fill: #2d4a3e;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-wrap-text: true;
+}
+
 .action-chip {
     -fx-background-color: #ffffff;
     -fx-background-insets: 0;
@@ -2119,10 +2126,116 @@
     -fx-background-color: linear-gradient(to right, #1a7248, #25875a);
 }
 
+/* Toggle mic while recording */
+.recording-active-toggle {
+    -fx-background-color: linear-gradient(to right, #fca5a5, #fecaca);
+    -fx-text-fill: #991b1b;
+    -fx-border-color: #ef4444;
+    -fx-border-radius: 20;
+}
+
 .chat-empty-label {
     -fx-text-fill: #8092a2;
     -fx-font-size: 13px;
     -fx-padding: 8;
+}
+
+/* Voice message bubbles */
+.voice-msg-card {
+    -fx-padding: 12 14;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+}
+.voice-msg-card-mine {
+    -fx-background-color: linear-gradient(to bottom right, rgba(20,95,61,0.14), rgba(26,114,72,0.08));
+    -fx-border-color: rgba(20,95,61,0.35);
+}
+.voice-msg-card-them {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d3e0d7;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 8, 0.2, 0, 2);
+}
+.voice-msg-mic {
+    -fx-font-size: 18px;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-alignment: center;
+    -fx-background-radius: 18;
+    -fx-background-color: linear-gradient(to bottom, #145f3d, #1a7248);
+    -fx-text-fill: #ffffff;
+}
+.voice-msg-mic-them {
+    -fx-background-color: #e8f0ec;
+    -fx-text-fill: #145f3d;
+}
+.voice-msg-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e3a2f;
+}
+.voice-msg-time-hint {
+    -fx-font-size: 10px;
+    -fx-text-fill: #6b7c72;
+}
+.voice-msg-progress .bar {
+    -fx-background-color: linear-gradient(to right, #145f3d, #2e9d62);
+    -fx-background-radius: 4;
+}
+.voice-msg-progress .track {
+    -fx-background-color: #d8e6dd;
+    -fx-background-radius: 4;
+}
+.voice-msg-play-btn {
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-background-radius: 20;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-cursor: hand;
+}
+.voice-msg-play-btn-mine {
+    -fx-background-color: linear-gradient(to bottom right, #145f3d, #1a7248);
+    -fx-text-fill: #ffffff;
+}
+.voice-msg-play-btn-them {
+    -fx-background-color: #f0faf4;
+    -fx-border-color: #cfe5d9;
+    -fx-border-radius: 20;
+    -fx-text-fill: #145f3d;
+}
+
+/* Recording strip above composer */
+.voice-recording-banner {
+    -fx-background-color: linear-gradient(to right, #fff8f8, #fffefe);
+    -fx-background-radius: 12;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 10 12;
+}
+.voice-recording-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #9f1239;
+}
+.voice-recording-timer {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-font-family: "Consolas", "Segoe UI Mono", monospace;
+    -fx-text-fill: #b91c1c;
+}
+.voice-recording-cancel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #fca5a5;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #b91c1c;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+.voice-recording-cancel:hover {
+    -fx-background-color: #fef2f2;
 }
 
 /* Wishlist center */
@@ -2790,92 +2903,162 @@
     -fx-border-color: #b3c8ec;
 }
 
-/* ===================== CALENDAR STYLES ===================== */
-.calendar-grid {
-    -fx-border-color: #dce8df;
-    -fx-border-width: 1;
-    -fx-background-color: #ffffff;
-}
-.calendar-header-cell {
-    -fx-padding: 10;
-    -fx-background-color: #f8fcf9;
-    -fx-text-fill: #2D6A4F;
-    -fx-font-weight: bold;
-    -fx-border-color: #dce8df;
-    -fx-border-width: 0 1 1 0;
-}
-.calendar-cell {
-    -fx-padding: 8;
-    -fx-min-height: 100;
-    -fx-background-color: #ffffff;
-    -fx-border-color: #f0f4f1;
-    -fx-border-width: 0 1 1 0;
-    -fx-cursor: hand;
-}
-.calendar-cell:hover {
-    -fx-background-color: #f9fdfb;
-}
-.calendar-cell.today {
-    -fx-background-color: #f0f9f4;
-}
-.calendar-day-number {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #5c7384;
-    -fx-padding: 0 0 5 0;
-}
-.today .calendar-day-number {
-    -fx-text-fill: #1b5c41;
-    -fx-font-size: 16px;
-}
-.calendar-task-chip {
-    -fx-background-radius: 4;
-    -fx-padding: 3 6;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: white;
-    -fx-margin: 2 0;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 2, 0, 0, 1);
-}
-.calendar-task-chip:hover {
-    -fx-opacity: 0.9;
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
-.priority-low { -fx-background-color: #2ecc71; }
-.priority-medium { -fx-background-color: #3498db; }
-.priority-high { -fx-background-color: #e74c3c; }
-.priority-urgent { -fx-background-color: #9b59b6; }
+/* ===================== WEATHER MODULE ===================== */
 
-/* Calendar Styles */
-.calendar-day-header {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #2D6A4F;
+.weather-container {
     -fx-padding: 10;
 }
-.calendar-day-cell {
-    -fx-min-height: 120;
-    -fx-padding: 10;
-    -fx-background-color: white;
-    -fx-border-color: #dce8df;
-    -fx-border-width: 0.5;
+
+.weather-card-current {
+    -fx-background-color: linear-gradient(to bottom right, #2D6A4F, #1B4332);
+    -fx-background-radius: 12;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 4);
 }
-.calendar-day-cell:hover {
-    -fx-background-color: #f4faf6;
-}
-.calendar-day-cell.today {
-    -fx-background-color: #e6f5ec;
-}
-.calendar-day-number {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #5c7384;
-}
-.calendar-task-label {
-    -fx-font-size: 11px;
-    -fx-padding: 3 6;
-    -fx-background-radius: 4;
+
+.weather-temp-main {
     -fx-text-fill: white;
+    -fx-font-size: 40px;
+    -fx-font-weight: 800;
+}
+
+.weather-desc-main {
+    -fx-text-fill: #b7e4c7;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+}
+
+.weather-icon-emoji {
+    -fx-font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    -fx-text-fill: white; /* For primary card */
+}
+
+.weather-icon-large {
+    -fx-font-size: 64px;
+}
+
+.weather-forecast-icon {
+    -fx-font-size: 32px;
+    -fx-text-fill: #2D6A4F; /* Dark green for visibility on white background */
+    -fx-padding: 5 0;
+}
+
+.weather-info-box {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 10;
+    -fx-padding: 10 15;
+}
+
+.weather-info-label {
+    -fx-text-fill: #d8f3dc;
+    -fx-font-size: 11px;
+}
+
+.weather-info-value {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.weather-card-forecast {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: #d8f3dc;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-alignment: CENTER;
+    -fx-min-width: 90;
+}
+
+.weather-forecast-day {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #2D6A4F;
+}
+
+.weather-forecast-temp {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1B4332;
+}
+
+.weather-alert-box {
+    -fx-background-radius: 10;
+    -fx-padding: 15;
+    -fx-border-radius: 10;
+}
+
+.weather-alert-warning {
+    -fx-background-color: #fff9e6;
+    -fx-border-color: #ffcc00;
+}
+
+.weather-alert-danger {
+    -fx-background-color: #fff5f5;
+    -fx-border-color: #ff4d4d;
+}
+
+.weather-alert-success {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #22c55e;
+}
+
+.weather-alert-info {
+    -fx-background-color: #f0f9ff;
+    -fx-border-color: #0ea5e9;
+}
+
+.weather-alert-title {
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+.weather-alert-msg {
+    -fx-font-size: 12px;
+    -fx-text-fill: #555;
+}
+
+/* ===================== NOTIFICATION POPUP ===================== */
+.notification-popup {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #dce8df;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);
+    -fx-padding: 0;
+}
+
+.notification-header {
+    -fx-padding: 12 15;
+    -fx-background-color: linear-gradient(to right, #2D6A4F, #1B4332);
+    -fx-background-radius: 12 12 0 0;
+}
+
+.notification-header-text {
+    -fx-text-fill: white;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+.notification-item {
+    -fx-padding: 12 15;
+    -fx-border-color: transparent transparent #f0f4f1 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cursor: hand;
+}
+
+.notification-item:hover {
+    -fx-background-color: #f5f9f6;
+}
+
+.notification-item-text {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 12px;
+}
+
+.notification-empty {
+    -fx-padding: 20;
+    -fx-text-fill: #95a5a6;
+    -fx-font-style: italic;
+    -fx-alignment: center;
 }

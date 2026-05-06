@@ -15,6 +15,7 @@ public class Demande {
     private int score; // Integer allows null as per your SQL (Oui NULL)
     private int users_id; // Integer allows null
     private int offre_id;
+    private int scoreIA;
 
     // --- Constructors ---
 
@@ -153,6 +154,12 @@ public class Demande {
     public void setOffre_id(int offre_id) {
         this.offre_id = offre_id;
     }
+    public int getScoreIA() {
+        return scoreIA;
+    }
+    public void setScoreIA(int scoreIA) {
+        this.scoreIA = scoreIA;
+    }
 
     // --- ToString ---
 
@@ -169,6 +176,7 @@ public class Demande {
                 ", lettre_motivation='" + lettre_motivation + '\'' +
                 ", statut='" + statut + '\'' +
                 ", score=" + score +
+                ", scoreIA=" + scoreIA +
                 ", users_id=" + users_id +
                 ", offre_id=" + offre_id +
                 '}';

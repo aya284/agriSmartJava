@@ -106,6 +106,63 @@ Option Maven (si Maven est installe globalement):
 mvn clean javafx:run
 ```
 
+### Configuration Stripe (paiement en ligne, sans redirection)
+
+Le checkout Marketplace supporte un paiement Stripe en mode `carte` directement dans l'app JavaFX.
+
+Modes disponibles:
+
+```text
+PAYMENT_API_MODE=mock     # simulation locale
+PAYMENT_API_MODE=stripe   # appel Stripe PaymentIntent
+```
+
+Configuration Stripe:
+
+```text
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+ADMIN_EMAIL=you@example.com
+```
+
+Equivalent JVM (optionnel):
+
+```text
+-Dmarketplace.payment.mode=stripe
+-Dmarketplace.payment.stripe.secret=sk_test_xxx
+-Dmarketplace.payment.admin.email=you@example.com
+```
+
+Notes importantes:
+
+- Aucun navigateur externe n'est ouvert: le flux est gere dans la fenetre checkout.
+- En mode test Stripe, utilisez par exemple `4242 4242 4242 4242`.
+- Le `payment_ref` en base correspond a l'ID `pi_...` du PaymentIntent Stripe.
+
+### IA Marketplace (suggestion description + chatbot)
+
+Le module Marketplace inclut:
+
+- Suggestion automatique de description lors de la publication d'un produit.
+- Chatbot assistant integre dans l'application (pas de redirection externe).
+
+Variables a definir:
+
+```text
+HUGGINGFACE_API_KEY=hf_xxx
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-7B-Instruct
+HUGGINGFACE_TASKS_MODEL=meta-llama/Llama-3.2-3B-Instruct
+```
+
+Options JVM equivalentes:
+
+```text
+-DHUGGINGFACE_API_KEY=hf_xxx
+-DHUGGINGFACE_MODEL=Qwen/Qwen2.5-7B-Instruct
+-DHUGGINGFACE_TASKS_MODEL=meta-llama/Llama-3.2-3B-Instruct
+```
+
 ---
 ## Equipe et modules
 

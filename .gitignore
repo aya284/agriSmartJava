@@ -43,3 +43,14 @@ src/main/resources/config.properties
 
 # intelij
 .idea/workspace.xml
+
+# Local runtime secrets
+local.secrets.properties
+config/local.secrets.properties
+
+# User-uploaded voice messages (marketplace)
+uploads/messages/
+
+# Secrets
+src/main/resources/config.properties
+TestHF.*

@@ -15,13 +15,20 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.control.ScrollPane;
+import javafx.stage.Popup;
+import javafx.geometry.Bounds;
 import javafx.util.Duration;
 import utils.SessionManager;
 import entities.User;
 
+import services.NotificationService;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainController {
@@ -39,10 +46,13 @@ public class MainController {
     @FXML private Button btnMarketplace;
     @FXML private Button btnCulture;
     @FXML private Button btnRessource;
+    @FXML private Button btnNotifications;
     @FXML private Button btnTaches;
     @FXML private Button btnTaskAssignment;
     @FXML private Button btnEmployes;
     @FXML private Button btnUsers;
+    
+    private final NotificationService notificationService = new NotificationService();
 
     private final Map<String, Parent> viewCache = new HashMap<>();
     private final PauseTransition headerAlertHide = new PauseTransition(Duration.seconds(2.6));
@@ -71,6 +81,22 @@ public class MainController {
             openUsers();
         } else {
             openMarketplace();
+            checkAndNotify();
+        }
+    }
+
+    private void checkAndNotify() {
+        List<String> notifications = notificationService.getNotificationsForCurrentUser();
+        if (!notifications.isEmpty()) {
+            // Show the first one as a quick alert
+            publishHeaderNotice(notifications.get(0));
+            
+            // If there are more, mention it
+            if (notifications.size() > 1) {
+                Platform.runLater(() -> {
+                    footerStatusLabel.setText("🔔 Vous avez " + notifications.size() + " nouvelles notifications.");
+                });
+            }
         }
     }
 
@@ -146,9 +172,63 @@ public class MainController {
         loadView("/Views/EditProfileView.fxml", "Profil", "Profile", null);
     }
 
+    public static void refreshNotifications() {
+        MainController instance = activeInstance;
+        if (instance != null) {
+            instance.checkAndNotify();
+        }
+    }
+
     @FXML
     public void showNotifications() {
-        publishHeaderNotice("Notifications - Aucune nouvelle notification.");
+        List<String> notifications = notificationService.getNotificationsForCurrentUser();
+        
+        Popup popup = new Popup();
+        popup.setAutoHide(true);
+        
+        VBox root = new VBox();
+        root.getStyleClass().add("notification-popup");
+        root.setPrefWidth(350);
+        root.setMaxHeight(400);
+        
+        // Header
+        VBox header = new VBox();
+        header.getStyleClass().add("notification-header");
+        Label title = new Label("Centre de Notifications");
+        title.getStyleClass().add("notification-header-text");
+        header.getChildren().add(title);
+        
+        // Content
+        VBox content = new VBox();
+        if (notifications.isEmpty()) {
+            Label empty = new Label("Aucune nouvelle notification.");
+            empty.getStyleClass().add("notification-empty");
+            empty.setMinWidth(350);
+            content.getChildren().add(empty);
+        } else {
+            for (String n : notifications) {
+                HBox item = new HBox();
+                item.getStyleClass().add("notification-item");
+                Label text = new Label(n);
+                text.getStyleClass().add("notification-item-text");
+                text.setWrapText(true);
+                text.setMaxWidth(300);
+                item.getChildren().add(text);
+                content.getChildren().add(item);
+            }
+        }
+        
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setPrefHeight(Math.min(notifications.size() * 60 + 50, 350));
+        scroll.setStyle("-fx-background-color:transparent; -fx-background:transparent;");
+        
+        root.getChildren().addAll(header, scroll);
+        popup.getContent().add(root);
+        
+        // Position
+        Bounds bounds = btnNotifications.localToScreen(btnNotifications.getBoundsInLocal());
+        popup.show(btnNotifications, bounds.getMinX() - 350 + btnNotifications.getWidth(), bounds.getMaxY() + 5);
     }
 
     @FXML

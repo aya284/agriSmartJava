@@ -13,6 +13,23 @@ public class ParcelleService implements IService<Parcelle> {
 
     public ParcelleService() {
         connection = MyConnection.getInstance().getConn();
+        ensureCoordonneesColumnExists();
+    }
+
+    private void ensureCoordonneesColumnExists() {
+        try {
+            DatabaseMetaData dbmd = connection.getMetaData();
+            try (ResultSet rs = dbmd.getColumns(null, null, "parcelle", "coordonnees")) {
+                if (!rs.next()) {
+                    try (Statement st = connection.createStatement()) {
+                        st.execute("ALTER TABLE parcelle ADD COLUMN coordonnees TEXT");
+                        System.out.println("Column 'coordonnees' added to 'parcelle' table.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Could not verify/add column 'coordonnees': " + e.getMessage());
+        }
     }
 
     private void validate(Parcelle p) throws ValidationException {
@@ -48,7 +65,7 @@ public class ParcelleService implements IService<Parcelle> {
             throw new RuntimeException(e.getMessage());
         }
 
-        String query = "INSERT INTO parcelle (nom, surface, latitude, longitude, type_sol, user_id) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO parcelle (nom, surface, latitude, longitude, type_sol, user_id, coordonnees) VALUES (?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement ps = connection.prepareStatement(query);
         ps.setString(1, p.getNom());
         ps.setDouble(2, p.getSurface());
@@ -56,6 +73,7 @@ public class ParcelleService implements IService<Parcelle> {
         ps.setDouble(4, p.getLongitude());
         ps.setString(5, p.getTypeSol());
         ps.setInt(6, p.getUserId());
+        ps.setString(7, p.getCoordonnees());
         ps.executeUpdate();
     }
 
@@ -67,14 +85,15 @@ public class ParcelleService implements IService<Parcelle> {
             throw new RuntimeException(e.getMessage());
         }
 
-        String query = "UPDATE parcelle SET nom=?, surface=?, latitude=?, longitude=?, type_sol=? WHERE id=?";
+        String query = "UPDATE parcelle SET nom=?, surface=?, latitude=?, longitude=?, type_sol=?, coordonnees=? WHERE id=?";
         PreparedStatement ps = connection.prepareStatement(query);
         ps.setString(1, p.getNom());
         ps.setDouble(2, p.getSurface());
         ps.setDouble(3, p.getLatitude());
         ps.setDouble(4, p.getLongitude());
         ps.setString(5, p.getTypeSol());
-        ps.setInt(6, p.getId());
+        ps.setString(6, p.getCoordonnees());
+        ps.setInt(7, p.getId());
         ps.executeUpdate();
     }
 
@@ -107,7 +126,8 @@ public class ParcelleService implements IService<Parcelle> {
                     rs.getDouble("latitude"),
                     rs.getDouble("longitude"),
                     rs.getString("type_sol"),
-                    rs.getInt("user_id")));
+                    rs.getInt("user_id"),
+                    rs.getString("coordonnees")));
         }
         return list;
     }
@@ -126,7 +146,8 @@ public class ParcelleService implements IService<Parcelle> {
                             rs.getDouble("latitude"),
                             rs.getDouble("longitude"),
                             rs.getString("type_sol"),
-                            rs.getInt("user_id")));
+                            rs.getInt("user_id"),
+                            rs.getString("coordonnees")));
                 }
             }
         }

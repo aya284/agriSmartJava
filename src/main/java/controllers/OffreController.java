@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import services.OffreService;
+import utils.SessionManager;
 
 import java.net.URL;
 import java.sql.SQLException;
@@ -24,8 +25,8 @@ public class OffreController implements Initializable {
     @FXML private DatePicker dateDebutP, dateFinP;
     @FXML private Button submitBtn;
 
-    // Labels pour l'affichage des erreurs sous les champs
-    @FXML private Label titleError, typePosteError, typeContratError, descError, lieuError, salaireError, dateDebutError, dateFinError;
+    @FXML private Label titleError, typePosteError, typeContratError, descError,
+            lieuError, salaireError, dateDebutError, dateFinError;
 
     private final OffreService service = new OffreService();
     private static Offre selectedOffre = null;
@@ -43,9 +44,7 @@ public class OffreController implements Initializable {
         if (typeContratC != null) {
             typeContratC.setItems(FXCollections.observableArrayList("CDI", "CDD", "Stage"));
             statutC.setItems(FXCollections.observableArrayList("Ouvert", "Clôturée"));
-
             setupValidationListeners();
-
             if (selectedOffre != null) {
                 fillForm(selectedOffre);
             } else {
@@ -54,9 +53,7 @@ public class OffreController implements Initializable {
         }
     }
 
-    // Gestion de la validation interactive (Style vidéo avec retouches Date et Contrat)
     private void setupValidationListeners() {
-        // Validation Titre (Min 3)
         if (titleF != null) {
             titleF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.trim().length() < 3) {
@@ -69,7 +66,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // Validation Type Poste (Min 3)
         if (typePosteF != null) {
             typePosteF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.trim().length() < 3) {
@@ -82,7 +78,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // Validation Lieu (Min 5)
         if (lieuF != null) {
             lieuF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.trim().length() < 5) {
@@ -95,7 +90,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // Validation Description (Min 12)
         if (descF != null) {
             descF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal.trim().length() < 12) {
@@ -108,7 +102,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // RETOUCHE : Validation Type Contrat
         if (typeContratC != null) {
             typeContratC.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal == null || newVal.isEmpty()) {
@@ -121,7 +114,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // Validation Salaire
         if (salaireF != null) {
             salaireF.textProperty().addListener((obs, oldVal, newVal) -> {
                 if (!newVal.matches("\\d*(\\.\\d*)?")) {
@@ -136,7 +128,6 @@ public class OffreController implements Initializable {
             });
         }
 
-        // RETOUCHE : Validation Date Début
         if (dateDebutP != null) {
             dateDebutP.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal == null) {
@@ -149,10 +140,10 @@ public class OffreController implements Initializable {
             });
         }
 
-        // Validation Date Fin
         if (dateFinP != null) {
             dateFinP.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (dateDebutP.getValue() != null && newVal != null && newVal.isBefore(dateDebutP.getValue())) {
+                if (dateDebutP.getValue() != null && newVal != null
+                        && newVal.isBefore(dateDebutP.getValue())) {
                     dateFinError.setText("La date de fin doit être après le début");
                     dateFinP.setStyle("-fx-border-color: #e74c3c;");
                 } else if (newVal != null) {
@@ -177,12 +168,18 @@ public class OffreController implements Initializable {
             o.setLieu(lieuF.getText().trim());
             o.setSalaire(Double.parseDouble(salaireF.getText().trim()));
             o.setStatut(statutC.getValue());
-
             o.setDate_debut(dateDebutP.getValue().atStartOfDay());
             o.setDate_fin(dateFinP.getValue().atTime(23, 59, 59));
-
-            o.setAgriculteur_id(2);
             o.setIs_active(true);
+
+            // ✅ ID agriculteur depuis la session — avec vérification null
+            if (SessionManager.getInstance().getCurrentUser() != null) {
+                o.setAgriculteur_id(SessionManager.getInstance().getCurrentUser().getId());
+            } else {
+                System.err.println("⚠️ Aucun user en session dans handleSave !");
+                showAlert("Erreur", "Session expirée. Reconnectez-vous.");
+                return;
+            }
 
             if (selectedOffre == null) {
                 o.setStatut_validation("en_attente");
@@ -202,23 +199,29 @@ public class OffreController implements Initializable {
 
     private boolean validateInputs() {
         boolean isValid = true;
-
-        if (titleF.getText().trim().length() < 3) { titleError.setText("Titre trop court"); isValid = false; }
+        if (titleF.getText().trim().length() < 3)    { titleError.setText("Titre trop court"); isValid = false; }
         if (typePosteF.getText().trim().length() < 3) { typePosteError.setText("Type poste trop court"); isValid = false; }
-        if (descF.getText().trim().length() < 12) { descError.setText("Description trop courte (min 12)"); isValid = false; }
-        if (lieuF.getText().trim().length() < 5) { lieuError.setText("Lieu trop court (min 5)"); isValid = false; }
-
-        if (typeContratC.getValue() == null) { typeContratError.setText("Sélectionnez"); isValid = false; }
-        if (salaireF.getText().isEmpty()) { salaireError.setText("Requis"); isValid = false; }
-        if (dateDebutP.getValue() == null) { dateDebutError.setText("Requis"); isValid = false; }
-        if (dateFinP.getValue() == null) { dateFinError.setText("Requis"); isValid = false; }
-
+        if (descF.getText().trim().length() < 12)    { descError.setText("Description trop courte (min 12)"); isValid = false; }
+        if (lieuF.getText().trim().length() < 5)     { lieuError.setText("Lieu trop court (min 5)"); isValid = false; }
+        if (typeContratC.getValue() == null)          { typeContratError.setText("Sélectionnez"); isValid = false; }
+        if (salaireF.getText().isEmpty())             { salaireError.setText("Requis"); isValid = false; }
+        if (dateDebutP.getValue() == null)            { dateDebutError.setText("Requis"); isValid = false; }
+        if (dateFinP.getValue() == null)              { dateFinError.setText("Requis"); isValid = false; }
         return isValid;
     }
 
     private void loadData() {
         try {
-            List<Offre> list = service.afficher();
+            // ✅ Vérification null avant d'utiliser la session
+            if (SessionManager.getInstance().getCurrentUser() == null) {
+                System.err.println("⚠️ Aucun user en session dans loadData !");
+                return;
+            }
+            int agriId = SessionManager.getInstance().getCurrentUser().getId();
+            List<Offre> list = service.afficher().stream()
+                    .filter(o -> o.getAgriculteur_id() == agriId)
+                    .collect(java.util.stream.Collectors.toList());
+
             cardsContainer.getChildren().clear();
             int approved = 0;
             for (Offre o : list) {
@@ -227,7 +230,9 @@ public class OffreController implements Initializable {
             }
             statTotalOffres.setText(String.valueOf(list.size()));
             statApprouve.setText(String.valueOf(approved));
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void fillForm(Offre o) {
@@ -241,12 +246,13 @@ public class OffreController implements Initializable {
         salaireF.setText(String.valueOf(o.getSalaire()));
         statutC.setValue(o.getStatut());
         if (o.getDate_debut() != null) dateDebutP.setValue(o.getDate_debut().toLocalDate());
-        if (o.getDate_fin() != null) dateFinP.setValue(o.getDate_fin().toLocalDate());
+        if (o.getDate_fin()   != null) dateFinP.setValue(o.getDate_fin().toLocalDate());
     }
 
     private VBox createCard(Offre o) {
         VBox card = new VBox(10);
-        card.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10; -fx-pref-width: 280; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);");
+        card.setStyle("-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 10;" +
+                "-fx-pref-width: 280; -fx-effect: dropshadow(three-pass-box,rgba(0,0,0,0.1),10,0,0,0);");
 
         Label type = new Label(o.getType_contrat());
         type.setStyle("-fx-background-color: #eee; -fx-padding: 2 8; -fx-background-radius: 5;");
@@ -262,7 +268,7 @@ public class OffreController implements Initializable {
         sal.setStyle("-fx-font-weight: bold; -fx-text-fill: #27ae60;");
 
         MenuButton options = new MenuButton("...");
-        MenuItem edit = new MenuItem("Modifier");
+        MenuItem edit   = new MenuItem("Modifier");
         MenuItem delete = new MenuItem("Supprimer");
         edit.setOnAction(e -> { selectedOffre = o; showAddPage(); });
         delete.setOnAction(e -> {
@@ -282,7 +288,7 @@ public class OffreController implements Initializable {
         });
 
         card.getChildren().addAll(
-                new HBox(type, new Region(){{HBox.setHgrow(this, Priority.ALWAYS);}}, options),
+                new HBox(type, new Region() {{ HBox.setHgrow(this, Priority.ALWAYS); }}, options),
                 title, loc, sal, validationStatus, voirBtn
         );
         return card;
@@ -307,17 +313,25 @@ public class OffreController implements Initializable {
         }
     }
 
-    @FXML public void handleSearch() {
+    @FXML
+    public void handleSearch() {
         String query = searchField.getText().toLowerCase().trim();
         try {
+            // ✅ Recherche filtrée par agriculteur connecté
+            if (SessionManager.getInstance().getCurrentUser() == null) return;
+            int agriId = SessionManager.getInstance().getCurrentUser().getId();
             List<Offre> allOffres = service.afficher();
             cardsContainer.getChildren().clear();
             for (Offre o : allOffres) {
-                if (o.getTitle().toLowerCase().contains(query) || o.getLieu().toLowerCase().contains(query)) {
+                if (o.getAgriculteur_id() == agriId &&
+                        (o.getTitle().toLowerCase().contains(query)
+                                || o.getLieu().toLowerCase().contains(query))) {
                     cardsContainer.getChildren().add(createCard(o));
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showAlert(String title, String content) {
@@ -328,7 +342,7 @@ public class OffreController implements Initializable {
         alert.showAndWait();
     }
 
-    @FXML public void showAddPage() { switchView("/Views/Offres/OffreForm.fxml"); }
+    @FXML public void showAddPage()  { switchView("/Views/Offres/OffreForm.fxml"); }
     @FXML public void showListPage() { selectedOffre = null; switchView("/Views/Offres/OffreList.fxml"); }
 
     private void switchView(String path) {
@@ -342,6 +356,8 @@ public class OffreController implements Initializable {
             } else {
                 anchor.getScene().setRoot(root);
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
