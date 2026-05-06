@@ -33,20 +33,10 @@ public class GoogleCalendarService {
             return envKey.trim();
         }
 
-        // 2. Fallback to config.properties
-        try (InputStream input = GoogleCalendarService.class.getResourceAsStream("/config.properties")) {
-            if (input == null) {
-                System.err.println("WARNING: config.properties not found for Google Calendar.");
-            } else {
-                Properties prop = new Properties();
-                prop.load(input);
-                String propKey = prop.getProperty("GOOGLE_CALENDAR_API_KEY");
-                if (propKey != null && !propKey.trim().isEmpty() && !propKey.contains("your_")) {
-                    return propKey.trim();
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error loading Google API key from config.properties: " + e.getMessage());
+        // 2. Fallback to ConfigService
+        String propKey = ConfigService.getGoogleCalendarKey();
+        if (propKey != null && !propKey.trim().isEmpty() && !propKey.contains("your_")) {
+            return propKey.trim();
         }
 
         System.err.println("WARNING: GOOGLE_CALENDAR_API_KEY not found in environment or config.properties.");

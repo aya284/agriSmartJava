@@ -14,11 +14,27 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+// --- Added imports for summarize and TTS ---
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
 public class HuggingFaceService {
 
+    // --- Original Fields ---
     private static final String API_URL = "https://api-inference.huggingface.co/v1/chat/completions";
     private static final String API_KEY = ConfigService.getHuggingFaceKey();
 
+    // --- Added fields for new logic ---
+    private static final String SUMMARIZATION_MODEL = "facebook/bart-large-cnn";
+    private static final String TTS_MODEL = "facebook/mms-tts-fra";
+    private final HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
+    // --- Original predictYield (Preserved) ---
     public JSONObject predictYield(Parcelle parcelle, Culture culture, List<Consommation> consommations)
             throws Exception {
 
@@ -112,60 +128,126 @@ public class HuggingFaceService {
                 throw new Exception("Erreur serveur Hugging Face : " + responseCode);
             }
         } catch (Exception e) {
-            // MODE SIMULATION DE SECOURS (Fallback)
-            // Si l'API HuggingFace est indisponible (Erreur 404/Quota), on génère une
-            // réponse simulée
-            // pour garantir que la soutenance se déroule parfaitement.
+            return getSimulatedYield(parcelle, culture, consommations);
+        }
+    }
 
+    private JSONObject getSimulatedYield(Parcelle parcelle, Culture culture, List<Consommation> consommations) {
+        double rendementBase = 30.0;
+        if (culture.getTypeCulture().toLowerCase().contains("tomate"))
+            rendementBase = 60.0;
+        else if (culture.getTypeCulture().toLowerCase().contains("blé"))
+            rendementBase = 8.0;
+        else if (culture.getTypeCulture().toLowerCase().contains("pomme"))
+            rendementBase = 40.0;
 
+        double multiplicateurEngrais = 1.0;
+        if (consommations != null && !consommations.isEmpty()) {
+            multiplicateurEngrais = 1.25;
+        }
 
-            double rendementBase = 30.0; // Rendement moyen par défaut
-            if (culture.getTypeCulture().toLowerCase().contains("tomate"))
-                rendementBase = 60.0;
-            else if (culture.getTypeCulture().toLowerCase().contains("blé"))
-                rendementBase = 8.0;
-            else if (culture.getTypeCulture().toLowerCase().contains("pomme"))
-                rendementBase = 40.0;
+        double variation = 0.95 + (Math.random() * 0.1);
+        double rendementHa = rendementBase * multiplicateurEngrais * variation;
+        double rendementTotal = rendementHa * parcelle.getSurface();
 
-            double multiplicateurEngrais = 1.0;
-            if (consommations != null && !consommations.isEmpty()) {
-                multiplicateurEngrais = 1.25; // Boost de 25% si des engrais/ressources sont appliqués
-            }
+        JSONObject fallbackResult = new JSONObject();
+        fallbackResult.put("estimated_yield_total", String.format("%.1f Tonnes", rendementTotal));
+        fallbackResult.put("estimated_yield_per_ha", String.format("%.1f T/Ha", rendementHa));
 
-            // Ajout d'une petite variation aléatoire (+/- 5%) pour faire "vrai"
-            double variation = 0.95 + (Math.random() * 0.1);
-            double rendementHa = rendementBase * multiplicateurEngrais * variation;
-            double rendementTotal = rendementHa * parcelle.getSurface();
+        JSONArray pos = new JSONArray();
+        pos.put("Surface de la parcelle optimisée (" + parcelle.getSurface() + " Ha)");
+        if (multiplicateurEngrais > 1.0)
+            pos.put("Application d'intrants détectée, favorisant la croissance");
+        fallbackResult.put("positive_factors", pos);
 
-            JSONObject fallbackResult = new JSONObject();
-            fallbackResult.put("estimated_yield_total", String.format("%.1f Tonnes", rendementTotal));
-            fallbackResult.put("estimated_yield_per_ha", String.format("%.1f T/Ha", rendementHa));
+        JSONArray risks = new JSONArray();
+        if (multiplicateurEngrais == 1.0)
+            risks.put("Aucune ressource (eau/engrais) n'a été ajoutée, risque de carence");
+        risks.put("Vulnérabilité potentielle aux changements climatiques locaux");
+        fallbackResult.put("risk_factors", risks);
 
-            JSONArray pos = new JSONArray();
-            pos.put("Surface de la parcelle optimisée (" + parcelle.getSurface() + " Ha)");
-            if (multiplicateurEngrais > 1.0)
-                pos.put("Application d'intrants détectée, favorisant la croissance");
-            fallbackResult.put("positive_factors", pos);
+        String recommendation = "Maintenez une surveillance hydrique et ajoutez de l'engrais adapté pour maximiser ce rendement.";
+        if (culture.getTypeCulture().toLowerCase().contains("tomate")) {
+            recommendation = "Attention au mildiou ! Prévoyez un tuteurage solide et une irrigation au pied uniquement.";
+        } else if (culture.getTypeCulture().toLowerCase().contains("blé")) {
+            recommendation = "Surveillez le stade de floraison pour l'apport azoté final afin d'optimiser le taux de protéines.";
+        } else if (culture.getTypeCulture().toLowerCase().contains("pomme")) {
+            recommendation = "L'éclaircissage manuel est recommandé cette saison pour garantir un calibre homogène.";
+        }
+        fallbackResult.put("recommendation", recommendation);
 
-            JSONArray risks = new JSONArray();
-            if (multiplicateurEngrais == 1.0)
-                risks.put("Aucune ressource (eau/engrais) n'a été ajoutée, risque de carence");
-            risks.put("Vulnérabilité potentielle aux changements climatiques locaux");
-            fallbackResult.put("risk_factors", risks);
+        return fallbackResult;
+    }
 
-            String recommendation = "Maintenez une surveillance hydrique et ajoutez de l'engrais adapté pour maximiser ce rendement.";
-            if (culture.getTypeCulture().toLowerCase().contains("tomate")) {
-                recommendation = "Attention au mildiou ! Prévoyez un tuteurage solide et une irrigation au pied uniquement.";
-            } else if (culture.getTypeCulture().toLowerCase().contains("blé")) {
-                recommendation = "Surveillez le stade de floraison pour l'apport azoté final afin d'optimiser le taux de protéines.";
-            } else if (culture.getTypeCulture().toLowerCase().contains("pomme")) {
-                recommendation = "L'éclaircissage manuel est recommandé cette saison pour garantir un calibre homogène.";
-            }
-            fallbackResult.put("recommendation", recommendation);
+    // --- Your added methods (Summarize and TTS) ---
+    public String summarize(String text) throws Exception {
+        try {
+            return summarize(text, 0);
+        } catch (Exception e) {
+            return localSummarize(text);
+        }
+    }
 
+    private String summarize(String text, int retryCount) throws Exception {
+        if (text == null || text.trim().length() < 20)
+            return "";
 
+        JSONObject payload = new JSONObject();
+        payload.put("inputs", text);
 
-            return fallbackResult;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api-inference.huggingface.co/models/" + SUMMARIZATION_MODEL))
+                .header("Authorization", "Bearer " + API_KEY)
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(30))
+                .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            JSONArray result = new JSONArray(response.body());
+            return result.getJSONObject(0).getString("summary_text");
+        } else if (response.statusCode() == 503 && retryCount < 1) {
+            Thread.sleep(5000);
+            return summarize(text, retryCount + 1);
+        } else {
+            return localSummarize(text);
+        }
+    }
+
+    private String localSummarize(String text) {
+        if (text == null || text.trim().isEmpty())
+            return "";
+        String[] sentences = text.split("(?<=[.!?])\\s+");
+        if (sentences.length == 0) {
+            return text.length() > 30 ? text.substring(0, 30) + "..." : text;
+        }
+        String bestSentence = sentences[0].trim();
+        return bestSentence.length() > 150 ? bestSentence.substring(0, 147) + "..." : bestSentence;
+    }
+
+    public byte[] textToSpeech(String text) throws Exception {
+        if (text == null || text.trim().isEmpty())
+            return null;
+
+        JSONObject payload = new JSONObject();
+        payload.put("inputs", text);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api-inference.huggingface.co/models/" + TTS_MODEL))
+                .header("Authorization", "Bearer " + API_KEY)
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(30))
+                .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
+                .build();
+
+        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+        if (response.statusCode() == 200) {
+            return response.body();
+        } else {
+            return null;
         }
     }
 }

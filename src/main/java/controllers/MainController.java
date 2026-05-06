@@ -35,6 +35,10 @@ public class MainController {
 
     private static MainController activeInstance;
 
+    public static MainController getInstance() {
+        return activeInstance;
+    }
+
     @FXML private StackPane contentArea;
     @FXML private TextField globalSearchField;
     @FXML private Label footerStatusLabel;
@@ -142,6 +146,11 @@ public class MainController {
             return;
         }
         loadView("/Views/TachesView.fxml", "Tasks module loaded", "Gestion Taches", btnTaches);
+    }
+
+    @FXML
+    public void openCalendar() {
+        loadView("/Views/CalendarView.fxml", "Calendar loaded", "Calendrier", btnTaches);
     }
 
     @FXML

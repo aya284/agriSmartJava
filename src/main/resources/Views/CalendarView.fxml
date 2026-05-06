@@ -29,7 +29,7 @@
     </top>
     <center>
         <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;">
-            <GridPane fx:id="calendarGrid" hgap="2" vgap="2" style="-fx-padding: 0 20 20 20;" VBox.vgrow="ALWAYS">
+            <GridPane fx:id="calendarGrid" hgap="0" vgap="0" style="-fx-padding: 0 20 20 20;" VBox.vgrow="ALWAYS">
                 <columnConstraints>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="14.28"/>
                     <ColumnConstraints hgrow="ALWAYS" percentWidth="14.28"/>

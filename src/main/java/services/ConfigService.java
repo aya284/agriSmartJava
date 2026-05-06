@@ -24,4 +24,8 @@ public class ConfigService {
     public static String getPlantIdKey() {
         return properties.getProperty("plantid.key", "");
     }
+
+    public static String getGoogleCalendarKey() {
+        return properties.getProperty("GOOGLE_CALENDAR_API_KEY", "");
+    }
 }
