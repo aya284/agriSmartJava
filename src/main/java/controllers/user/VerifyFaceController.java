@@ -193,6 +193,7 @@ public class VerifyFaceController {
         Parent root = FXMLLoader.load(getClass().getResource(view));
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.setScene(new Scene(root));
+        stage.setMaximized(true);
     }
 
     private void showError(String msg) {

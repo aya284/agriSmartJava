@@ -185,18 +185,14 @@ public class TaskController {
 
     @FXML
     public void showCalendar(javafx.event.ActionEvent event) {
-        if (MainController.getInstance() != null) {
-            MainController.getInstance().openCalendar();
-        } else {
-            try {
-                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/Views/CalendarView.fxml"));
-                javafx.scene.Parent root = loader.load();
-                javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
-                scene.setRoot(root);
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-                showWarning("Navigation Error", "Could not load calendar view.");
-            }
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/Views/CalendarView.fxml"));
+            javafx.scene.Parent root = loader.load();
+            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
+            scene.setRoot(root);
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            showWarning("Navigation Error", "Could not load calendar view.");
         }
     }
 

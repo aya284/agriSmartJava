@@ -170,16 +170,12 @@ public class CalendarController {
 
     @FXML
     void goBack(ActionEvent event) {
-        if (MainController.getInstance() != null) {
-            MainController.getInstance().openTaches();
-        } else {
-            try {
-                Parent root = FXMLLoader.load(getClass().getResource("/Views/TachesView.fxml"));
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.getScene().setRoot(root);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/Views/TachesView.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

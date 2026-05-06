@@ -465,17 +465,23 @@ public class MarketplaceController implements Initializable {
     }
 
     private void showToast(String title, String message, boolean success) {
-        String safeTitle = title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title.trim();
-        String safeMessage = message == null ? "" : message.trim();
-        String payload = safeMessage.isEmpty() ? safeTitle : safeTitle + " - " + safeMessage;
-        MainController.publishHeaderAlert(payload, success);
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(success ? javafx.scene.control.Alert.AlertType.INFORMATION : javafx.scene.control.Alert.AlertType.WARNING);
+            alert.setTitle(title == null || title.isBlank() ? (success ? "Succes" : "Attention") : title.trim());
+            alert.setHeaderText(null);
+            alert.setContentText(message == null ? "" : message.trim());
+            alert.show();
+        });
     }
 
     private void showNotice(String title, String message) {
-        String safeTitle = title == null || title.isBlank() ? "Information" : title.trim();
-        String safeMessage = message == null ? "" : message.trim();
-        String payload = safeMessage.isEmpty() ? safeTitle : safeTitle + " - " + safeMessage;
-        MainController.publishHeaderNotice(payload);
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle(title == null || title.isBlank() ? "Information" : title.trim());
+            alert.setHeaderText(null);
+            alert.setContentText(message == null ? "" : message.trim());
+            alert.show();
+        });
     }
 
     private void setupFilters() {

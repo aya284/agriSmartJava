@@ -138,13 +138,14 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/MarketplaceController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/ParcelleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/ParcelleController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminLayoutController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUserDetailController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUserDetailController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUsersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/admin/AdminUsersController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/EditProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/EditProfileController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/ForgotPasswordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ForgotPasswordController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/LoginController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/RegisterController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/ResetPasswordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/ResetPasswordController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/VerifyFaceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/VerifyFaceController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/controllers/user/VerifyOtpController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/controllers/user/VerifyOtpController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/entities/Parcelle.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/Parcelle.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/entities/Produit.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/entities/Produit.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/main/AppLauncher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main/AppLauncher.java" afterDir="false" />
@@ -159,12 +160,10 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/services/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/services/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/utils/FileStorageUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/FileStorageUtils.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/utils/MarketplaceValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MarketplaceValidator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/MyConnection.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/utils/Validator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/utils/Validator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminDashboard.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminDashboard.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminLayout.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUserDetailView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUserDetailView.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUsersView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Admin/AdminUsersView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/MainView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/Marketplace/MarketplaceView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/Marketplace/MarketplaceView.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Views/ParcelleView.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Views/ParcelleView.fxml" afterDir="false" />
@@ -319,7 +318,7 @@
       <workItem from="1777372690193" duration="4271000" />
       <workItem from="1777402877936" duration="11434000" />
       <workItem from="1777468981115" duration="9893000" />
-      <workItem from="1778098345755" duration="5727000" />
+      <workItem from="1778098345755" duration="6371000" />
     </task>
     <task id="LOCAL-00001" summary="login and register">
       <option name="closed" value="true" />

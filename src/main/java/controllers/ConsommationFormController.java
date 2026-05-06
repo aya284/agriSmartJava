@@ -117,7 +117,6 @@ public class ConsommationFormController {
                 cs.modifier(currentConsommation);
                 NotificationUtil.showSuccess(null, "Consommation mise à jour !");
             }
-            MainController.refreshNotifications();
             close();
         } catch (SQLException e) {
             showAlert(Alert.AlertType.ERROR, "Erreur", e.getMessage());
