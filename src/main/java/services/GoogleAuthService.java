@@ -42,10 +42,10 @@ public class GoogleAuthService {
                 .setAccessType("online")
                 .build();
 
-        // Use a random available port so it never conflicts
+        // Use -1 to let the OS assign a random available port
         var receiver = new LocalServerReceiver.Builder()
                 .setHost("localhost")
-                .setPort(8888)
+                .setPort(-1)
                 .build();
 
         Credential cred = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");

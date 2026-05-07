@@ -979,8 +979,9 @@ public class CandidatOffreController implements Initializable {
 
     private boolean isVisibleForCandidate(Offre offre) {
         return offre != null
-                && Boolean.TRUE.equals(offre.getIs_active())
-                && "approuvée".equalsIgnoreCase(offre.getStatut_validation());
+                && Boolean.TRUE.equals(offre.getIs_active());
+                // Pour le test local, on ignore la validation admin :
+                // && "approuvée".equalsIgnoreCase(offre.getStatut_validation());
     }
 
     private void setContent(Parent root, Node anchor) {

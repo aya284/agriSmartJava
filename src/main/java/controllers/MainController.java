@@ -71,7 +71,16 @@ public class MainController {
 
     @FXML
     public void openEmployes() {
-        loadView("/Views/EmployesView.fxml", "Gestion Employés", "Gestion Employes");
+        if (SessionManager.getInstance().getCurrentUser() != null) {
+            String role = SessionManager.getInstance().getCurrentUser().getRole();
+            if ("employe".equalsIgnoreCase(role) || "candidat".equalsIgnoreCase(role)) {
+                loadView("/Views/Offres/CandidatOffreList.fxml", "Offres d'emploi disponibles", "Candidatures");
+            } else {
+                loadView("/Views/Offres/OffreList.fxml", "Gestion des Offres et Candidatures", "Candidatures");
+            }
+        } else {
+            loadView("/Views/Offres/CandidatOffreList.fxml", "Offres d'emploi disponibles", "Candidatures");
+        }
     }
 
     @FXML

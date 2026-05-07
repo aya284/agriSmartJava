@@ -110,6 +110,8 @@ public class TaskController {
     private final ObservableList<SelectionOption> parcelleOptions = FXCollections.observableArrayList();
     private final ObservableList<SelectionOption> cultureOptions = FXCollections.observableArrayList();
     private final ObservableList<SelectionOption> userOptions = FXCollections.observableArrayList();
+    
+    private boolean isPopulatingForm = false;
 
     @FXML
     public void initialize() {
@@ -249,7 +251,7 @@ public class TaskController {
 
         // AI Summarization
         descriptionArea.textProperty().addListener((obs, old, val) -> {
-            if (val != null && val.trim().length() > 50) {
+            if (!isPopulatingForm && val != null && val.trim().length() > 50) {
                 // Show immediate feedback that AI is thinking
                 resumeArea.setPromptText("L'IA prépare un résumé..."); 
                 
@@ -553,6 +555,7 @@ public class TaskController {
     }
 
     private void populateForm(Task task) {
+        isPopulatingForm = true;
         resetErrorStates();
         titreField.setText(task.getTitre());
         descriptionArea.setText(task.getDescription() == null ? "" : task.getDescription());
@@ -567,6 +570,7 @@ public class TaskController {
         loadCulturesForParcelle(task.getParcelleId());
         selectOptionById(cultureIdComboBox, task.getCultureId());
         selectOptionById(createdByComboBox, task.getCreatedBy());
+        isPopulatingForm = false;
     }
 
     private void clearForm() {
