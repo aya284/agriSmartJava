@@ -1,4 +1,4 @@
-# 🌿 AgriSmart - Système Intégré de Gestion Agricole (Desktop)
+# 🌿 AgriSmart - Client Desktop (PIDEV 3A)
 
 <div align="center">
   <img src="https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
@@ -7,49 +7,53 @@
   <img src="https://img.shields.io/badge/Maven-3.x-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" />
 </div>
 
-## 📖 Vue d'ensemble
-**AgriSmart** est une application Desktop robuste conçue pour moderniser le secteur agricole. Ce projet se distingue par son architecture **hybride**, partageant une base de données MySQL avec un écosystème Web (Symfony), garantissant une continuité de service entre les bureaux administratifs et les utilisateurs web.
+---
+
+## 📝 Présentation du Projet
+**AgriSmart** est une plateforme desktop intelligente dédiée à la modernisation de la gestion agricole. Développée en **JavaFX**, elle s'intègre avec un écosystème web via une base de données **MySQL** centralisée, permettant une synchronisation en temps réel des ressources, des cultures et du capital humain.
 
 ---
 
-## 🚀 Modules & Détails Techniques
+## 🚀 Fonctionnalités par Module
 
-### 📂 Gestion RH & Recrutement (Candidatures)
-* **Cycle de vie complet** : CRUD complet des offres d'emploi et des demandes.
-* **Validation de données** : Contrôle strict du format des champs (ex: **CIN à 8 chiffres**).
-* **Reporting** : Génération automatique de contrats ou de récapitulatifs au format **PDF** via `PDFBox`.
-* **Interface Responsive** : Design optimisé avec `AtlantaFX` pour une expérience utilisateur moderne.
+### 💼 RH, Offres d'emploi & Candidatures
+* **Cycle de vie complet** : CRUD des offres d'emploi et des demandes de candidature.
+* **Validation Intelligente** : Formulaires sécurisés (ex: CIN à 8 chiffres) et analyse de CV par **IA**.
+* **Reporting & Email** : Génération de documents **PDF** (PDFBox/OpenPDF) et notifications via **Jakarta Mail**.
 
-### 🤖 Intelligence Artificielle & Marketplace
-* **Génération de contenu** : Intégration de l'API **Hugging Face** (Modèle Qwen/Llama) pour suggérer automatiquement des descriptions de produits agricoles.
-* **Système de Paiement** : Intégration de l'API **Stripe** pour les transactions sécurisées par carte bancaire directement dans l'interface JavaFX.
-* **Messagerie** : Système de communication entre acheteurs et vendeurs.
+### 🛒 Marketplace & Intelligence Artificielle
+* **Commerce Connecté** : Panier, Wishlist et messagerie instantanée via **WebSocket**.
+* **IA Générative** : Assistant basé sur **Google Gemini** et **Hugging Face** pour les descriptions de produits.
+* **Paiement Sécurisé** : Tunnel d'achat intégré avec l'API **Stripe**.
 
-### 🛠️ Gestion des Opérations
-* **Suivi des Cultures** : Monitoring des parcelles, suivi de la croissance et consommation des ressources.
-* **Gestion des Tâches** : Attribution dynamique des travaux aux employés avec suivi d'avancement.
-* **Sécurité** : Authentification centralisée avec chiffrement des mots de passe via **BCrypt**.
-
----
-
-## 🛠️ Architecture & Stack Technique
-
-* **Langage** : Java 17 (LTS)
-* **Interface Graphique** : JavaFX avec le thème **AtlantaFX** (Thème sombre/clair).
-* **Gestionnaire de dépendances** : Maven.
-* **Base de données** : MySQL 8.0 (Connecteur JDBC).
-* **Bibliothèques Clés** :
-    * `jbcrypt` : Sécurité des accès.
-    * `Stripe-java` : Flux financier.
-    * `Jackson` / `JSON` : Parsing des données API.
-    * `SikuliLibrary` : Automatisation des tests UI via Robot Framework.
+### 🚜 Gestion Technique & RH
+* **Cultures** : Monitoring des parcelles, diagnostic agricole et prédiction de rendement.
+* **Tâches & Planning** : Affectation dynamique et synchronisation avec **Google Calendar**.
+* **Sécurité** : Authentification **BCrypt**, Double facteur (**OTP**) et vérification faciale.
 
 ---
 
-## 🔧 Installation & Configuration
+## 🛠️ Stack Technique
+* **Interface** : JavaFX 17 (FXML, CSS), AtlantaFX.
+* **Moteur** : Java 17, Maven.
+* **Données** : MySQL 8.0, JDBC.
+* **APIs Tierces** : Stripe, Google Gemini, Hugging Face, Google Calendar.
+* **Outils Avancés** : Tess4J (OCR), WebSockets, Jakarta Mail.
 
-### 1. Configuration de la Base de Données
-Assurez-vous que votre serveur MySQL est actif et exécutez le script suivant pour mettre à jour la structure :
-```sql
--- Ajout de la colonne CIN indispensable au module Candidature
-ALTER TABLE users ADD cin_number VARCHAR(8) AFTER email;
+---
+
+## 📂 Structure du Projet
+```text
+agriSmartJava/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   ├── controllers/   # Logique des interfaces
+│   │   │   ├── entities/      # Modèles de données
+│   │   │   ├── services/      # Logique métier (CRUD)
+│   │   │   └── utils/         # Connexion DB & API Handlers
+│   │   └── resources/
+│   │       ├── Views/         # Fichiers FXML
+│   │       ├── css/           # Design & Thèmes
+│   │       └── config.properties # Configuration (API Keys)
+└── pom.xml                    # Dépendances Maven
