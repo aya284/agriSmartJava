@@ -137,12 +137,10 @@ public class TwoFactorAuthService {
             return false;
         }
         // Other users: apply security rules
-        if (failedAttempts >= 3) {
+        if (failedAttempts > 3) {
             return true;
         }
-        if (isFirstLogin) {
-            return true;
-        }
+      
         // default: no 2FA
         return false;
     }

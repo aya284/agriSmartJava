@@ -47,10 +47,27 @@ public class LoginHistoryService {
      * Get number of failed attempts in the last X minutes.
      */
     public int getRecentFailedAttempts(int userId, int minutes) {
+        Timestamp since = Timestamp.valueOf(LocalDateTime.now().minusMinutes(minutes));
+        
+        // Find last success
+        String sqlSuccess = "SELECT MAX(login_time) FROM loginhistory WHERE user_id = ? AND status = 'SUCCESS'";
+        try (PreparedStatement ps = conn.prepareStatement(sqlSuccess)) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Timestamp lastSuccess = rs.getTimestamp(1);
+                if (lastSuccess != null && lastSuccess.after(since)) {
+                    since = lastSuccess;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         String sql = "SELECT COUNT(*) FROM loginhistory WHERE user_id = ? AND status = 'FAILED' AND login_time > ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now().minusMinutes(minutes)));
+            ps.setTimestamp(2, since);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) {

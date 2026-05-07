@@ -133,7 +133,7 @@ public class LoginController {
         loadView("/Views/RegisterView.fxml");
     }
 
-    private void navigateByRole(String role) {
+      private void navigateByRole(String role) {
         String normalizedRole = role == null ? "" : role.trim().toLowerCase();
         String view = switch (normalizedRole) {
             case "admin" -> "/Views/Admin/AdminLayout.fxml";

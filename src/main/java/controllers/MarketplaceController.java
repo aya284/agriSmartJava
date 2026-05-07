@@ -250,6 +250,9 @@ public class MarketplaceController implements Initializable {
     @FXML private VBox cartItemsBox;
     @FXML private Label cartCountLabel;
     @FXML private Label cartTotalLabel;
+
+    @FXML private StackPane notificationOverlay;
+    @FXML private StackPane recommendationOverlay;
     
     private Produit currentEditProduit = null;
     private Produit currentDetailsProduit = null;
@@ -262,6 +265,46 @@ public class MarketplaceController implements Initializable {
         animateOverlayOut(modalOverlay);
         currentEditProduit = null;
         clearProductFieldErrors();
+    }
+
+    @FXML
+    public void refreshExchangeRates() {
+        showToast("Info", "Actualisation des taux en cours de developpement", true);
+    }
+
+    @FXML
+    public void openRecommendations() {
+        if (recommendationOverlay != null) animateOverlayIn(recommendationOverlay);
+    }
+
+    @FXML
+    public void closeRecommendations() {
+        if (recommendationOverlay != null) animateOverlayOut(recommendationOverlay);
+    }
+
+    @FXML
+    public void openNotifications() {
+        if (notificationOverlay != null) animateOverlayIn(notificationOverlay);
+    }
+
+    @FXML
+    public void closeNotifications() {
+        if (notificationOverlay != null) animateOverlayOut(notificationOverlay);
+    }
+
+    @FXML
+    public void suggestDescriptionForProduct() {
+        showToast("Info", "Suggestion IA en cours de developpement", true);
+    }
+
+    @FXML
+    public void submitReview() {
+        showToast("Info", "Ajout d'avis en cours de developpement", true);
+    }
+
+    @FXML
+    public void handleVoiceMessage() {
+        showToast("Info", "Message vocal en cours de developpement", true);
     }
 
     @FXML
