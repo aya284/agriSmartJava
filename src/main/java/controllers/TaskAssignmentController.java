@@ -117,7 +117,7 @@ public class TaskAssignmentController {
     public void initialize() {
         User currentUser = SessionManager.getInstance().getCurrentUser();
 
-        if (currentUser != null && "agriculteur".equals(currentUser.getRole())) {
+        if (currentUser != null && ("agriculteur".equals(currentUser.getRole()) || "admin".equals(currentUser.getRole()))) {
             initializeFarmerView();
             farmerView.setVisible(true);
             employeeView.setVisible(false);

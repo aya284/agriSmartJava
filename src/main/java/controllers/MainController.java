@@ -60,6 +60,11 @@ public class MainController {
     }
 
     @FXML
+    public void openTaskAssignment() {
+        loadView("/Views/TaskAssignment.fxml", "Affectation des taches", "Affectation Taches");
+    }
+
+    @FXML
     public void openParcelles() {
         // Redundant - Parcelle is now integrated into openCulture
     }

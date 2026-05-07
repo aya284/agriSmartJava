@@ -188,8 +188,14 @@ public class TaskController {
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/Views/CalendarView.fxml"));
             javafx.scene.Parent root = loader.load();
-            javafx.scene.Scene scene = ((javafx.scene.Node) event.getSource()).getScene();
-            scene.setRoot(root);
+            javafx.scene.Node sourceNode = (javafx.scene.Node) event.getSource();
+            javafx.scene.Scene scene = sourceNode.getScene();
+            javafx.scene.layout.StackPane contentArea = (javafx.scene.layout.StackPane) scene.lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(root);
+            } else {
+                scene.setRoot(root);
+            }
         } catch (java.io.IOException e) {
             e.printStackTrace();
             showWarning("Navigation Error", "Could not load calendar view.");

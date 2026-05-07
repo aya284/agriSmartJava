@@ -1,9 +1,13 @@
 package controllers;
 
+import controllers.marketplace.MarketplaceMessagingFeature;
+import controllers.marketplace.MarketplaceMessagingState;
 import entities.CartItem;
 import entities.Commande;
 import entities.MarketplaceMessage;
 import entities.Produit;
+import entities.Review;
+import entities.StockAlert;
 import entities.WishlistItem;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
@@ -11,6 +15,7 @@ import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -49,12 +54,17 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.HBox;
 import services.CommandeService;
 import services.CartSessionService;
+import services.ExchangeRateService;
 import services.MarketplaceCartViewFeature;
 import services.MarketplaceCheckoutFeature;
 import services.MarketplaceConversationService;
 import services.MarketplaceImageService;
 import services.MarketplaceMessageService;
+import services.HuggingFaceAiService;
 import services.ProduitService;
+import services.RecommendationService;
+import services.StockAlertService;
+import services.ReviewService;
 import services.UserService;
 import services.WishlistService;
 import javafx.scene.layout.StackPane;
@@ -73,6 +83,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -81,6 +92,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.UUID;
@@ -96,6 +108,7 @@ public class MarketplaceController implements Initializable {
     private static final String TYPE_VENTE = "Vente";
     private static final String TYPE_LOCATION = "Location";
     private static final int PAGE_SIZE = 8;
+    private static final int SIMILAR_PRODUCTS_LIMIT = 6;
     private static final int DEFAULT_GUEST_USER_ID = 1;
     private static final int DEFAULT_FALLBACK_SELLER_ID = 2;
     private static final DateTimeFormatter CHAT_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
@@ -113,6 +126,7 @@ public class MarketplaceController implements Initializable {
 
     @FXML private BorderPane mainContent;
     @FXML private Button btnMessagingCenter;
+    @FXML private ToggleButton btnVoiceMessage;
     @FXML private Button btnWishlistCenter;
 
     @FXML private TableView<Produit> produitTable;
@@ -188,7 +202,14 @@ public class MarketplaceController implements Initializable {
     private final MarketplaceImageService imageService = new MarketplaceImageService();
     private final WishlistService wishlistService = new WishlistService();
     private final MarketplaceMessageService messageService = new MarketplaceMessageService();
+    private final RecommendationService recommendationService = new RecommendationService();
+    private final ReviewService reviewService = new ReviewService();
+    private final HuggingFaceAiService huggingFaceService = new HuggingFaceAiService();
+    private final ExchangeRateService exchangeRateService = new ExchangeRateService();
+    private final StockAlertService stockAlertService = new StockAlertService();
     private final UserService userService = new UserService();
+    private final MarketplaceMessagingState messagingState = new MarketplaceMessagingState();
+    private MarketplaceMessagingFeature messagingFeature;
     private List<Produit> filteredProduits = new ArrayList<>();
     private final Set<Integer> wishlistProductIds = new HashSet<>();
     private final Map<Integer, String> productNameById = new HashMap<>();
@@ -197,6 +218,7 @@ public class MarketplaceController implements Initializable {
     private boolean showingBoughtOrders = false;
     private boolean openSellerOnBoughtOrders = false;
     private int currentPage = 0;
+    private int selectedReviewRating = 0;
 
     // Dynamic Modal Fields
     @FXML private StackPane modalOverlay;
@@ -245,6 +267,9 @@ public class MarketplaceController implements Initializable {
     @FXML private Label detailsTypePill;
     @FXML private ImageView detailsImageView;
     @FXML private Spinner<Integer> detailsQuantitySpinner;
+    @FXML private VBox similarProductsSection;
+    @FXML private FlowPane similarProductsGrid;
+    @FXML private Label similarProductsMetaLabel;
 
     @FXML private StackPane cartOverlay;
     @FXML private VBox cartItemsBox;
@@ -252,8 +277,21 @@ public class MarketplaceController implements Initializable {
     @FXML private Label cartTotalLabel;
 
     @FXML private StackPane notificationOverlay;
+    @FXML private Label exchangeRateLabel;
+    @FXML private Label notificationCountLabel;
+    @FXML private VBox notificationListBox;
     @FXML private StackPane recommendationOverlay;
-    
+    @FXML private Label recommendationMetaLabel;
+    @FXML private FlowPane recommendationGrid;
+
+    @FXML private VBox reviewsSection;
+    @FXML private Label reviewsAvgLabel;
+    @FXML private Label reviewsCountLabel;
+    @FXML private VBox reviewFormBox;
+    @FXML private HBox reviewStarsBox;
+    @FXML private TextArea reviewCommentField;
+    @FXML private VBox reviewsListBox;
+
     private Produit currentEditProduit = null;
     private Produit currentDetailsProduit = null;
     private entities.MarketplaceConversation selectedConversation = null;
@@ -269,22 +307,55 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void refreshExchangeRates() {
-        showToast("Info", "Actualisation des taux en cours de developpement", true);
+        loadExchangeRateHint(true);
     }
 
     @FXML
     public void openRecommendations() {
-        if (recommendationOverlay != null) animateOverlayIn(recommendationOverlay);
+        if (recommendationOverlay == null) {
+            return;
+        }
+
+        if (recommendationMetaLabel != null) {
+            recommendationMetaLabel.setText("Chargement...");
+        }
+        if (recommendationGrid != null) {
+            recommendationGrid.getChildren().clear();
+        }
+
+        animateOverlayIn(recommendationOverlay);
+
+        Task<List<Produit>> task = new Task<>() {
+            @Override
+            protected List<Produit> call() throws Exception {
+                return recommendationService.recommend(getCurrentUserId(), 12);
+            }
+        };
+        task.setOnSucceeded(event -> renderRecommendationGrid(task.getValue()));
+        task.setOnFailed(event -> {
+            if (recommendationMetaLabel != null) {
+                recommendationMetaLabel.setText("");
+            }
+            showToast("Recommandations", "Erreur lors du chargement des recommandations.", false);
+        });
+        new Thread(task, "MarketplaceRecommendations").start();
     }
 
     @FXML
     public void closeRecommendations() {
-        if (recommendationOverlay != null) animateOverlayOut(recommendationOverlay);
+        if (recommendationOverlay != null) {
+            animateOverlayOut(recommendationOverlay);
+        }
     }
 
     @FXML
     public void openNotifications() {
-        if (notificationOverlay != null) animateOverlayIn(notificationOverlay);
+        if (notificationOverlay == null) {
+            return;
+        }
+
+        loadStockAlerts();
+        animateOverlayIn(notificationOverlay);
     }
 
     @FXML
@@ -292,18 +363,212 @@ public class MarketplaceController implements Initializable {
         if (notificationOverlay != null) animateOverlayOut(notificationOverlay);
     }
 
+    private void loadExchangeRateHint(boolean forceRefresh) {
+        if (exchangeRateLabel == null) {
+            return;
+        }
+
+        if (!exchangeRateService.hasApiKey()) {
+            exchangeRateLabel.setText(exchangeRateService.missingKeyMessage());
+            return;
+        }
+
+        exchangeRateLabel.setText(forceRefresh ? "Actualisation des taux..." : "Chargement des taux...");
+
+        Task<Optional<ExchangeRateService.Snapshot>> task = new Task<>() {
+            @Override
+            protected Optional<ExchangeRateService.Snapshot> call() {
+                return exchangeRateService.getSnapshot(forceRefresh);
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            Optional<ExchangeRateService.Snapshot> snapshot = task.getValue();
+            if (snapshot != null && snapshot.isPresent()) {
+                exchangeRateLabel.setText(exchangeRateService.formatSnapshot(snapshot.get(), Locale.FRANCE));
+            } else {
+                exchangeRateLabel.setText(exchangeRateService.unavailableMessage());
+            }
+        });
+        task.setOnFailed(event -> exchangeRateLabel.setText(exchangeRateService.unavailableMessage()));
+        new Thread(task, forceRefresh ? "MarketplaceExchangeRatesRefresh" : "MarketplaceExchangeRatesLoad").start();
+    }
+
+    private void loadStockAlerts() {
+        Integer sessionUserId = getSessionUserId();
+        if (notificationListBox == null && notificationCountLabel == null) {
+            return;
+        }
+
+        if (sessionUserId == null) {
+            renderStockAlerts(Collections.emptyList(), false);
+            return;
+        }
+
+        if (notificationCountLabel != null) {
+            notificationCountLabel.setText("Chargement...");
+        }
+        if (notificationListBox != null) {
+            notificationListBox.getChildren().clear();
+        }
+
+        Task<List<StockAlert>> task = new Task<>() {
+            @Override
+            protected List<StockAlert> call() throws Exception {
+                return stockAlertService.checkAlerts(sessionUserId);
+            }
+        };
+
+        task.setOnSucceeded(event -> renderStockAlerts(task.getValue(), true));
+        task.setOnFailed(event -> {
+            if (notificationCountLabel != null) {
+                notificationCountLabel.setText("");
+            }
+            if (notificationListBox != null) {
+                notificationListBox.getChildren().setAll(buildNotificationMessage("Impossible de charger les alertes stock."));
+            }
+            showToast("Alertes stock", "Erreur lors du chargement des alertes stock.", false);
+        });
+        new Thread(task, "MarketplaceStockAlerts").start();
+    }
+
+    private void renderStockAlerts(List<StockAlert> alerts, boolean authenticated) {
+        if (notificationListBox == null && notificationCountLabel == null) {
+            return;
+        }
+
+        List<StockAlert> safeAlerts = alerts == null ? Collections.emptyList() : alerts;
+        long unreadCount = safeAlerts.stream().filter(alert -> !alert.isRead()).count();
+
+        if (notificationCountLabel != null) {
+            if (!authenticated) {
+                notificationCountLabel.setText("Connexion requise");
+            } else if (safeAlerts.isEmpty()) {
+                notificationCountLabel.setText("0 alerte");
+            } else {
+                notificationCountLabel.setText(unreadCount + " nouvelle(s) / " + safeAlerts.size());
+            }
+        }
+
+        if (notificationListBox == null) {
+            return;
+        }
+
+        notificationListBox.getChildren().clear();
+        if (!authenticated) {
+            notificationListBox.getChildren().add(buildNotificationMessage("Connectez-vous pour voir vos alertes stock."));
+            return;
+        }
+
+        if (safeAlerts.isEmpty()) {
+            notificationListBox.getChildren().add(buildNotificationMessage("Aucune alerte stock pour le moment."));
+            return;
+        }
+
+        for (StockAlert alert : safeAlerts) {
+            notificationListBox.getChildren().add(buildStockAlertCard(alert));
+        }
+    }
+
+    private VBox buildStockAlertCard(StockAlert alert) {
+        VBox card = new VBox(4);
+        card.getStyleClass().add("notification-item");
+        if (alert != null && !alert.isRead()) {
+            card.setStyle("-fx-background-color: rgba(45,106,79,0.05); -fx-background-radius: 8;");
+        }
+
+        Label type = new Label((alert != null && alert.getType() == StockAlert.AlertType.RESTOCK ? "Restock" : "Stock faible")
+                + " • " + normalizeText(safe(alert == null ? null : alert.getProduitNom())));
+        type.getStyleClass().add("notification-item-type");
+
+        Label message = new Label(safe(alert == null ? null : alert.getMessage()));
+        message.setWrapText(true);
+        message.getStyleClass().add("notification-item-msg");
+
+        Label date = new Label(formatDateTime(alert == null ? null : alert.getCreatedAt()));
+        date.getStyleClass().add("notification-item-date");
+
+        card.getChildren().addAll(type, message, date);
+        return card;
+    }
+
+    private VBox buildNotificationMessage(String text) {
+        VBox box = new VBox(4);
+        box.getStyleClass().add("notification-item");
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.getStyleClass().add("notification-item-msg");
+        box.getChildren().add(label);
+        return box;
+    }
+
     @FXML
     public void suggestDescriptionForProduct() {
-        showToast("Info", "Suggestion IA en cours de developpement", true);
+        String productName = safe(fldNom == null ? "" : fldNom.getText()).trim();
+        String category = fldCategorie == null ? "" : safe(fldCategorie.getValue()).trim();
+        String offerType = fldType == null ? "Vente" : safe(fldType.getValue()).trim();
+
+        if (productName.isBlank()) {
+            showToast("IA", "Ajoutez d'abord un nom de produit.", false);
+            return;
+        }
+
+        if (category.isEmpty() || CATEGORY_PLACEHOLDER.equals(category)) {
+            showToast("IA", "Selectionnez une categorie d'abord.", false);
+            return;
+        }
+
+        showToast("IA HuggingFace", "Generation de description en cours...", true);
+
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                return huggingFaceService.suggestProductDescription(productName, category, offerType);
+            }
+        };
+        task.setOnSucceeded(event -> {
+            if (fldDescription != null) {
+                fldDescription.setText(task.getValue());
+            }
+            showToast("IA HuggingFace", "Description suggeree avec succes.", true);
+        });
+        task.setOnFailed(event -> showToast("IA HuggingFace", "Erreur lors de la generation: "
+                + (task.getException() == null ? "Inconnue" : task.getException().getMessage()), false));
+        new Thread(task, "MarketplaceDescriptionAI").start();
     }
 
     @FXML
     public void submitReview() {
-        showToast("Info", "Ajout d'avis en cours de developpement", true);
+        if (currentDetailsProduit == null || selectedReviewRating == 0) {
+            showToast("Avis", "Veuillez selectionner une note (etoiles).", false);
+            return;
+        }
+
+        Review review = new Review(
+                currentDetailsProduit.getId(),
+                getCurrentUserId(),
+                selectedReviewRating,
+                reviewCommentField != null ? reviewCommentField.getText() : ""
+        );
+        try {
+            reviewService.addReview(review);
+            showToast("Avis", "Avis publie avec succes !", true);
+            loadReviews(currentDetailsProduit);
+        } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Duplicate")) {
+                showToast("Avis", "Vous avez deja donne votre avis.", false);
+            } else {
+                showToast("Avis", "Erreur: " + e.getMessage(), false);
+            }
+        }
     }
 
     @FXML
     public void handleVoiceMessage() {
+        if (messagingFeature != null) {
+            messagingFeature.handleVoiceToggle();
+            return;
+        }
         showToast("Info", "Message vocal en cours de developpement", true);
     }
 
@@ -390,6 +655,7 @@ public class MarketplaceController implements Initializable {
     public void closeDetails() {
         animateOverlayOut(detailsOverlay);
         currentDetailsProduit = null;
+        clearSimilarProductsSection();
     }
 
     @FXML
@@ -423,6 +689,7 @@ public class MarketplaceController implements Initializable {
         setupWishlistTable();
         setupMessageTable();
         setupFilters();
+        initializeMarketplaceFeatures();
         initializeOrderToggleState();
         configureToastUi();
 
@@ -435,6 +702,39 @@ public class MarketplaceController implements Initializable {
         updateCartStatus();
         refreshMessagingBadge();
         refreshWishlistState();
+    }
+
+    private void initializeMarketplaceFeatures() {
+        try {
+            reviewService.ensureTableExists();
+        } catch (SQLException e) {
+            System.err.println("Review table init: " + e.getMessage());
+        }
+
+        messagingFeature = new MarketplaceMessagingFeature(
+                messagingState,
+                conversationService,
+                messageService,
+                produitService,
+                userService,
+                btnMessagingCenter,
+                messagingOverlay,
+                conversationListBox,
+                messageListBox,
+                messagingTitleLabel,
+                messagingMetaLabel,
+                messageInputArea,
+                btnVoiceMessage,
+                this::animateOverlayIn,
+                this::animateOverlayOut,
+                this::getCurrentUserId,
+                this::getFallbackSellerId,
+                this::showAlert,
+                this::showSqlAlert,
+                this::showToast,
+                this::normalizeText
+        );
+        selectedReviewRating = 0;
     }
 
     private void configureToastUi() {
@@ -955,6 +1255,11 @@ public class MarketplaceController implements Initializable {
             return;
         }
 
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingCenter();
+            return;
+        }
+
         clearPendingMessageContext();
         loadConversationsAndRender(null);
         animateOverlayIn(messagingOverlay);
@@ -963,6 +1268,10 @@ public class MarketplaceController implements Initializable {
     @FXML
     public void closeMessagingCenter() {
         if (messagingOverlay == null) {
+            return;
+        }
+        if (messagingFeature != null) {
+            messagingFeature.closeMessagingCenter();
             return;
         }
         animateOverlayOut(messagingOverlay);
@@ -981,6 +1290,11 @@ public class MarketplaceController implements Initializable {
 
     @FXML
     public void sendCurrentMessage() {
+        if (messagingFeature != null) {
+            messagingFeature.sendCurrentMessage();
+            return;
+        }
+
         if (messageInputArea == null) {
             return;
         }
@@ -1026,6 +1340,12 @@ public class MarketplaceController implements Initializable {
         if (produit == null) {
             return;
         }
+
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingForProduct(produit);
+            return;
+        }
+
         try {
             int sellerId = resolveSellerIdForProduct(produit);
             entities.MarketplaceConversation existingConversation = conversationService.findConversation(
@@ -1363,6 +1683,12 @@ public class MarketplaceController implements Initializable {
         if (btnMessagingCenter == null) {
             return;
         }
+
+        if (messagingFeature != null) {
+            messagingFeature.refreshMessagingBadge();
+            return;
+        }
+
         try {
             int unread = messageService.countUnreadForUser(getCurrentUserId());
             if (unread <= 0) {
@@ -2188,7 +2514,279 @@ public class MarketplaceController implements Initializable {
             detailsConvertedPrice.setText(String.format("~ %.2f EUR | %.2f USD", p.getPrix() * 0.29, p.getPrix() * 0.32));
         }
 
+        loadSimilarProducts(p);
+        loadReviews(p);
+
         animateOverlayIn(detailsOverlay);
+    }
+
+    private void loadSimilarProducts(Produit product) {
+        if (similarProductsGrid == null || product == null) {
+            return;
+        }
+
+        similarProductsGrid.getChildren().clear();
+        if (similarProductsMetaLabel != null) {
+            similarProductsMetaLabel.setText("Chargement...");
+        }
+
+        Task<List<Produit>> task = new Task<>() {
+            @Override
+            protected List<Produit> call() throws Exception {
+                return recommendationService.findSimilar(product, SIMILAR_PRODUCTS_LIMIT);
+            }
+        };
+        task.setOnSucceeded(event -> renderSimilarProducts(task.getValue()));
+        task.setOnFailed(event -> {
+            if (similarProductsMetaLabel != null) {
+                similarProductsMetaLabel.setText("");
+            }
+            showToast("Produits similaires", "Erreur lors du chargement des produits similaires.", false);
+        });
+        new Thread(task, "MarketplaceSimilarProductsLoad").start();
+    }
+
+    private void renderSimilarProducts(List<Produit> similarProducts) {
+        if (similarProductsGrid == null) {
+            return;
+        }
+
+        similarProductsGrid.getChildren().clear();
+
+        if (similarProductsMetaLabel != null) {
+            similarProductsMetaLabel.setText(similarProducts.size() + " suggestion(s)");
+        }
+
+        if (similarProducts.isEmpty()) {
+            Label empty = new Label("Aucun produit similaire trouve pour le moment.");
+            empty.getStyleClass().add("wishlist-empty-label");
+            similarProductsGrid.getChildren().add(empty);
+            return;
+        }
+
+        for (Produit produit : similarProducts) {
+            similarProductsGrid.getChildren().add(buildSimilarProductCard(produit));
+        }
+    }
+
+    private VBox buildSimilarProductCard(Produit produit) {
+        VBox card = new VBox(8);
+        card.getStyleClass().add("wishlist-card");
+        card.setPrefWidth(240);
+        card.setMinWidth(240);
+        card.setMaxWidth(240);
+
+        ImageView imageView = new ImageView(imageService.resolveProductImage(produit.getImage(), getClass()));
+        imageView.setFitWidth(220);
+        imageView.setFitHeight(120);
+        imageView.setPreserveRatio(false);
+        imageView.setSmooth(true);
+
+        StackPane imageWrap = new StackPane(imageView);
+        imageWrap.getStyleClass().add("wishlist-image-wrap");
+
+        Label title = new Label(normalizeText(safe(produit.getNom())));
+        title.getStyleClass().add("wishlist-card-title");
+        title.setWrapText(true);
+
+        Label meta = new Label(normalizeText(safe(produit.getCategorie())) + " • " + normalizeTypeForDisplay(produit.getType()));
+        meta.getStyleClass().add("wishlist-chip");
+        meta.setWrapText(false);
+        meta.setTextOverrun(OverrunStyle.ELLIPSIS);
+        meta.setMaxWidth(220);
+
+        double displayPrice = (produit.isPromotion() && produit.getPromotionPrice() > 0)
+                ? produit.getPromotionPrice()
+                : produit.getPrix();
+        Label price = new Label(String.format("%.2f TND", displayPrice));
+        price.getStyleClass().add("wishlist-card-price");
+
+        Button viewBtn = new Button("Voir");
+        viewBtn.getStyleClass().add("wishlist-view-btn");
+        viewBtn.setOnAction(e -> showProductDetails(produit));
+
+        Button cartBtn = new Button("Panier");
+        cartBtn.getStyleClass().add("wishlist-remove-btn");
+        boolean isOwnOffer = produit.getVendeurId() > 0 && produit.getVendeurId() == getCurrentUserId();
+        if (isOwnOffer || produit.getQuantiteStock() <= 0) {
+            cartBtn.setDisable(true);
+            cartBtn.setText(isOwnOffer ? "Votre offre" : "Rupture");
+        } else {
+            cartBtn.setOnAction(e -> addToCart(produit, 1));
+        }
+
+        HBox actions = new HBox(8, viewBtn, cartBtn);
+        actions.getStyleClass().add("wishlist-actions");
+        actions.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(viewBtn, Priority.ALWAYS);
+        HBox.setHgrow(cartBtn, Priority.ALWAYS);
+        viewBtn.setMaxWidth(Double.MAX_VALUE);
+        cartBtn.setMaxWidth(Double.MAX_VALUE);
+
+        card.getChildren().addAll(imageWrap, title, meta, price, actions);
+        attachWishlistCardMotion(card);
+        return card;
+    }
+
+    private void clearSimilarProductsSection() {
+        if (similarProductsGrid != null) {
+            similarProductsGrid.getChildren().clear();
+        }
+        if (similarProductsMetaLabel != null) {
+            similarProductsMetaLabel.setText("");
+        }
+    }
+
+    private void renderRecommendationGrid(List<Produit> recommendations) {
+        if (recommendationGrid == null) {
+            return;
+        }
+
+        recommendationGrid.getChildren().clear();
+
+        if (recommendations == null || recommendations.isEmpty()) {
+            Label empty = new Label("Aucune recommandation disponible. Ajoutez des produits a votre wishlist ou effectuez des achats pour recevoir des suggestions personnalisees.");
+            empty.setWrapText(true);
+            empty.setStyle("-fx-font-size: 15px; -fx-text-fill: #888; -fx-padding: 30;");
+            recommendationGrid.getChildren().add(empty);
+            if (recommendationMetaLabel != null) {
+                recommendationMetaLabel.setText("0 suggestion");
+            }
+            return;
+        }
+
+        if (recommendationMetaLabel != null) {
+            recommendationMetaLabel.setText(recommendations.size() + " suggestion(s) basees sur vos donnees");
+        }
+
+        for (Produit produit : recommendations) {
+            recommendationGrid.getChildren().add(buildSimilarProductCard(produit));
+        }
+    }
+
+    private void loadReviews(Produit product) {
+        if (reviewsSection == null || product == null) {
+            return;
+        }
+
+        Task<Void> task = new Task<>() {
+            private List<Review> reviews;
+            private double avgRating;
+            private int count;
+            private boolean canReview;
+            private boolean hasReviewed;
+
+            @Override
+            protected Void call() throws Exception {
+                reviews = reviewService.getReviewsForProduct(product.getId());
+                avgRating = reviewService.getAverageRating(product.getId());
+                count = reviewService.getReviewCount(product.getId());
+                int uid = getCurrentUserId();
+                canReview = reviewService.hasUserPurchased(uid, product.getId());
+                hasReviewed = reviewService.hasUserReviewed(uid, product.getId());
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                renderReviews(product, reviews, avgRating, count, canReview, hasReviewed);
+            }
+        };
+        task.setOnFailed(event -> showToast("Avis", "Erreur lors du chargement des avis.", false));
+        new Thread(task, "MarketplaceReviewsLoad").start();
+    }
+
+    private void renderReviews(Produit product, List<Review> reviews, double avgRating,
+                               int count, boolean canReview, boolean hasReviewed) {
+        if (reviewsAvgLabel != null) {
+            if (count > 0) {
+                StringBuilder stars = new StringBuilder();
+                for (int i = 1; i <= 5; i++) {
+                    stars.append(i <= Math.round(avgRating) ? "★" : "☆");
+                }
+                reviewsAvgLabel.setText(stars + " " + String.format("%.1f", avgRating));
+            } else {
+                reviewsAvgLabel.setText("");
+            }
+        }
+        if (reviewsCountLabel != null) {
+            reviewsCountLabel.setText(count > 0 ? count + " avis" : "Aucun avis");
+        }
+
+        if (reviewFormBox != null) {
+            boolean showForm = canReview && !hasReviewed;
+            reviewFormBox.setVisible(showForm);
+            reviewFormBox.setManaged(showForm);
+            if (showForm) {
+                setupStarSelector();
+                if (reviewCommentField != null) {
+                    reviewCommentField.clear();
+                }
+                selectedReviewRating = 0;
+                updateStarDisplay();
+            }
+        }
+
+        if (reviewsListBox != null) {
+            reviewsListBox.getChildren().clear();
+            for (Review r : reviews) {
+                VBox reviewCard = new VBox(4);
+                reviewCard.setStyle("-fx-padding: 12; -fx-background-color: #f9fafb; -fx-background-radius: 8;");
+
+                HBox header = new HBox(8);
+                header.setAlignment(Pos.CENTER_LEFT);
+                Label starsLbl = new Label(r.getStarsDisplay());
+                starsLbl.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 14px;");
+                Label userName = new Label(safe(r.getUserName()));
+                userName.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+                header.getChildren().addAll(starsLbl, userName);
+                reviewCard.getChildren().add(header);
+
+                if (r.getComment() != null && !r.getComment().trim().isEmpty()) {
+                    Label comment = new Label(r.getComment());
+                    comment.setWrapText(true);
+                    comment.setStyle("-fx-font-size: 13px; -fx-text-fill: #374151;");
+                    reviewCard.getChildren().add(comment);
+                }
+
+                if (r.getCreatedAt() != null) {
+                    Label date = new Label(r.getCreatedAt().toLocalDate().toString());
+                    date.setStyle("-fx-font-size: 11px; -fx-text-fill: #9CA3AF;");
+                    reviewCard.getChildren().add(date);
+                }
+
+                reviewsListBox.getChildren().add(reviewCard);
+            }
+        }
+    }
+
+    private void setupStarSelector() {
+        if (reviewStarsBox == null) {
+            return;
+        }
+
+        reviewStarsBox.getChildren().clear();
+        for (int i = 1; i <= 5; i++) {
+            final int star = i;
+            Button btn = new Button("☆");
+            btn.setStyle("-fx-font-size: 22px; -fx-background-color: transparent; -fx-text-fill: #f59e0b; -fx-cursor: hand; -fx-padding: 0 4;");
+            btn.setOnAction(e -> {
+                selectedReviewRating = star;
+                updateStarDisplay();
+            });
+            reviewStarsBox.getChildren().add(btn);
+        }
+    }
+
+    private void updateStarDisplay() {
+        if (reviewStarsBox == null) {
+            return;
+        }
+        for (int i = 0; i < reviewStarsBox.getChildren().size(); i++) {
+            if (reviewStarsBox.getChildren().get(i) instanceof Button btn) {
+                btn.setText(i < selectedReviewRating ? "★" : "☆");
+            }
+        }
     }
 
     @FXML
@@ -2197,6 +2795,12 @@ public class MarketplaceController implements Initializable {
             openMessagingCenter();
             return;
         }
+
+        if (messagingFeature != null) {
+            messagingFeature.openMessagingForProduct(currentDetailsProduit);
+            return;
+        }
+
         openMessagingForProduct(currentDetailsProduit);
     }
 

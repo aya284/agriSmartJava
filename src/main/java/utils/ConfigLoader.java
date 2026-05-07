@@ -2,6 +2,9 @@ package utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -13,15 +16,43 @@ public class ConfigLoader {
     private static final Properties properties = new Properties();
 
     static {
-        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
-            if (input == null) {
-                System.err.println("CRITICAL: Unable to find " + CONFIG_FILE + " in the classpath.");
+        try {
+            loadConfiguration();
+            if (properties.isEmpty()) {
+                System.err.println("CRITICAL: Unable to find " + CONFIG_FILE + " in the classpath or filesystem.");
             } else {
-                properties.load(input);
                 System.out.println("ConfigLoader: Successfully loaded " + properties.size() + " properties.");
             }
         } catch (IOException ex) {
             System.err.println("ConfigLoader Error: Failed to load " + CONFIG_FILE + ": " + ex.getMessage());
+        }
+    }
+
+    private static void loadConfiguration() throws IOException {
+        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
+            if (input != null) {
+                properties.load(input);
+                return;
+            }
+        }
+
+        List<Path> candidates = List.of(
+                Path.of(CONFIG_FILE),
+                Path.of("src", "main", "resources", CONFIG_FILE),
+                Path.of("config", CONFIG_FILE),
+                Path.of("local.secrets.properties"),
+                Path.of("config", "local.secrets.properties"),
+                Path.of("src", "main", "resources", "local.secrets.properties")
+        );
+
+        for (Path candidate : candidates) {
+            if (!Files.exists(candidate) || !Files.isRegularFile(candidate)) {
+                continue;
+            }
+            try (InputStream input = Files.newInputStream(candidate)) {
+                properties.load(input);
+                return;
+            }
         }
     }
 

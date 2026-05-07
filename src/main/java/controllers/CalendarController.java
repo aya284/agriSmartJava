@@ -172,8 +172,14 @@ public class CalendarController {
     void goBack(ActionEvent event) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/Views/TachesView.fxml"));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.getScene().setRoot(root);
+            javafx.scene.Node sourceNode = (javafx.scene.Node) event.getSource();
+            javafx.scene.Scene scene = sourceNode.getScene();
+            javafx.scene.layout.StackPane contentArea = (javafx.scene.layout.StackPane) scene.lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(root);
+            } else {
+                scene.setRoot(root);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

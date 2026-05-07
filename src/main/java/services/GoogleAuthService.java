@@ -10,8 +10,11 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfo;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class GoogleAuthService {
@@ -26,8 +29,8 @@ public class GoogleAuthService {
         var transport   = GoogleNetHttpTransport.newTrustedTransport();
         var jsonFactory = GsonFactory.getDefaultInstance();
 
-        // Load credentials from resources
-        InputStream in = getClass().getResourceAsStream("/client_secret.json");
+                // Load credentials from classpath first, then filesystem fallback.
+                InputStream in = openClientSecretStream();
         if (in == null) {
             throw new Exception("Fichier client_secret.json introuvable dans les resources.");
         }
@@ -52,4 +55,25 @@ public class GoogleAuthService {
                 .build()
                 .userinfo().get().execute();
     }
+
+        private InputStream openClientSecretStream() throws IOException {
+                InputStream classpathStream = getClass().getResourceAsStream("/client_secret.json");
+                if (classpathStream != null) {
+                        return classpathStream;
+                }
+
+                List<Path> candidates = List.of(
+                                Path.of("client_secret.json"),
+                                Path.of("src", "main", "resources", "client_secret.json"),
+                                Path.of("src", "main", "client_secret.json")
+                );
+
+                for (Path candidate : candidates) {
+                        if (Files.exists(candidate) && Files.isRegularFile(candidate)) {
+                                return Files.newInputStream(candidate);
+                        }
+                }
+
+                return null;
+        }
 }

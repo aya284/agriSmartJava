@@ -1,9 +1,8 @@
 package services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import entities.User;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -13,7 +12,6 @@ public class AdminAiService {
 
     private final GrokService grokService;
     private final UserService userService;
-    private final ObjectMapper mapper;
 
 
     private static final Map<String, List<String>> INTENTS = new LinkedHashMap<>();
@@ -57,7 +55,6 @@ public class AdminAiService {
     public AdminAiService() {
         this.grokService = new GrokService();
         this.userService = new UserService();
-        this.mapper = new ObjectMapper();
     }
 
     // ── Entry Point ───────────────────────────────────────────
@@ -209,18 +206,18 @@ public class AdminAiService {
     // ── JSON Payload Builder ──────────────────────────────────
 
     private String buildJsonPayload(List<User> users, Map<String, Object> stats) {
-        ObjectNode root = mapper.createObjectNode();
+        JSONObject root = new JSONObject();
 
         if (stats != null && !stats.isEmpty()) {
-            ObjectNode statsNode = mapper.createObjectNode();
-            stats.forEach((k, v) -> statsNode.put(k, String.valueOf(v)));
-            root.set("platform_statistics", statsNode);
+            JSONObject statsNode = new JSONObject();
+            stats.forEach(statsNode::put);
+            root.put("platform_statistics", statsNode);
         }
 
         if (users != null && !users.isEmpty()) {
-            ArrayNode arr = mapper.createArrayNode();
+            JSONArray arr = new JSONArray();
             for (User u : users) {
-                ObjectNode node = mapper.createObjectNode();
+                JSONObject node = new JSONObject();
                 node.put("id",         u.getId());
                 node.put("name",       u.getFirstName() + " " + u.getLastName());
                 node.put("email",      u.getEmail() != null      ? u.getEmail()      : "N/A");
@@ -228,12 +225,12 @@ public class AdminAiService {
                 node.put("status",     u.getStatus() != null      ? u.getStatus()     : "N/A");
                 node.put("cin",        u.getCinNumber() != null   ? u.getCinNumber()  : "N/A");
                 node.put("created_at", u.getCreatedAt() != null   ? u.getCreatedAt().toString() : "N/A");
-                arr.add(node);
+                arr.put(node);
             }
-            root.set("users", arr);
+            root.put("users", arr);
         }
 
-        return root.toPrettyString();
+        return root.toString(2);
     }
 
     // ── Prompt Builder ────────────────────────────────────────

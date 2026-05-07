@@ -18,6 +18,10 @@ public class UserService {
     private final AdminNotificationService notificationService = new AdminNotificationService();
     private final LoginHistoryService historyService = new LoginHistoryService();
     private final TwoFactorAuthService tfaService = new TwoFactorAuthService();
+    private static final List<String> CIN_COLUMN_CANDIDATES = List.of("cin_number", "cin", "cinNumber");
+
+    private volatile String cinColumnName;
+    private volatile boolean cinColumnResolved;
 
     // ── REGISTER ──────────────────────────────────────────────
     public void register(User user) throws Exception {
@@ -32,13 +36,15 @@ public class UserService {
         if (emailExists(user.getEmail()))
             throw new Exception("Cet e-mail est déjà utilisé.");
 
+        String cinColumn = resolveCinColumnNameOrThrow();
+
         String sql = """
             INSERT INTO users
               (first_name, last_name, email, role, password,
                phone, address, document_file, image,
-               status, cin_number, created_at, updated_at)
+               status, %s, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
+            """.formatted(cinColumn);
 
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1,  user.getFirstName());
@@ -246,6 +252,81 @@ public class UserService {
         }
     }
 
+    private String findCinColumnName() throws SQLException {
+        if (cinColumnResolved) {
+            return cinColumnName;
+        }
+
+        synchronized (this) {
+            if (cinColumnResolved) {
+                return cinColumnName;
+            }
+
+            String sql = """
+                SELECT COLUMN_NAME
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND LOWER(table_name) = 'users'
+                  AND LOWER(column_name) IN ('cin_number', 'cin', 'cinnumber')
+                ORDER BY CASE LOWER(column_name)
+                    WHEN 'cin_number' THEN 1
+                    WHEN 'cin' THEN 2
+                    WHEN 'cinnumber' THEN 3
+                    ELSE 99
+                END
+                LIMIT 1
+                """;
+
+            try (PreparedStatement ps = conn.prepareStatement(sql);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    cinColumnName = rs.getString(1);
+                }
+            }
+
+            cinColumnResolved = true;
+            return cinColumnName;
+        }
+    }
+
+    private String resolveCinColumnNameOrThrow() throws SQLException {
+        String cinColumn = findCinColumnName();
+        if (cinColumn == null || cinColumn.isBlank()) {
+            throw new SQLException("Aucune colonne CIN trouvée dans la table users. Ajoutez cin_number (ou adaptez le mapping).");
+        }
+        return cinColumn;
+    }
+
+    private String readCinValue(ResultSet rs) throws SQLException {
+        if (cinColumnResolved && cinColumnName != null && hasResultSetColumn(rs, cinColumnName)) {
+            return rs.getString(cinColumnName);
+        }
+
+        for (String candidate : CIN_COLUMN_CANDIDATES) {
+            if (hasResultSetColumn(rs, candidate)) {
+                cinColumnName = candidate;
+                cinColumnResolved = true;
+                return rs.getString(candidate);
+            }
+        }
+
+        cinColumnResolved = true;
+        cinColumnName = null;
+        return null;
+    }
+
+    private boolean hasResultSetColumn(ResultSet rs, String columnName) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            String label = metaData.getColumnLabel(i);
+            String name = metaData.getColumnName(i);
+            if (columnName.equalsIgnoreCase(label) || columnName.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private User mapUser(ResultSet rs) throws SQLException {
         User u = new User();
         u.setId(rs.getInt("id"));
@@ -258,7 +339,7 @@ public class UserService {
         u.setImage(rs.getString("image"));
         u.setDocumentFile(rs.getString("document_file"));
         u.setStatus(rs.getString("status"));
-        u.setCinNumber(rs.getString("cin_number"));
+        u.setCinNumber(readCinValue(rs));
         u.setGoogleId(rs.getString("google_id"));
         u.setTwoFactorCode(rs.getString("two_factor_code"));
         Timestamp tfaExpiry = rs.getTimestamp("two_factor_expires_at");
@@ -523,20 +604,31 @@ public class UserService {
 
     public List<User> getSuspiciousUsers() throws SQLException {
         // Basic logic: inactive status OR duplicate CIN
+        String cinColumn = findCinColumnName();
+        if (cinColumn == null || cinColumn.isBlank()) {
+            String sql = "SELECT * FROM users WHERE status = 'inactive' ORDER BY created_at DESC";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ResultSet rs = ps.executeQuery();
+                List<User> users = new ArrayList<>();
+                while (rs.next()) users.add(mapUser(rs));
+                return users;
+            }
+        }
+
         String sql = """
             SELECT * FROM users u1
             WHERE status = 'inactive'
             OR (
-                cin_number IS NOT NULL 
-                AND cin_number != '' 
-                AND cin_number IN (
-                    SELECT cin_number FROM users 
-                    GROUP BY cin_number 
+                %1$s IS NOT NULL 
+                AND %1$s != '' 
+                AND %1$s IN (
+                    SELECT %1$s FROM users 
+                    GROUP BY %1$s 
                     HAVING COUNT(*) > 1
                 )
             )
             ORDER BY created_at DESC
-            """;
+            """.formatted(cinColumn);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             List<User> users = new ArrayList<>();
@@ -594,22 +686,45 @@ public List<User> getRecentUsers(int limit) throws SQLException {
 public Map<String, Object> getAdminStats() throws SQLException {
     Map<String, Object> stats = new LinkedHashMap<>();
 
-    String sql = """
-        SELECT
-            COUNT(*)                                            AS total,
-            SUM(status = 'active')                             AS active,
-            SUM(status = 'pending')                            AS pending,
-            SUM(status = 'flagged')                            AS flagged,
-            SUM(status = 'rejected')                           AS rejected,
-            SUM(status = 'inactive')                           AS inactive,
-            SUM(DATE(created_at) = CURDATE())                  AS today,
-            SUM(created_at >= NOW() - INTERVAL 7 DAY)          AS last_7_days,
-            SUM(role = 'agriculteur')                          AS agriculteurs,
-            SUM(role = 'admin')                                AS admins,
-            COUNT(DISTINCT cin_number)                         AS unique_cins,
-            SUM(cin_number IS NOT NULL AND cin_number != '')   AS with_cin
-        FROM users
-        """;
+    String cinColumn = findCinColumnName();
+    boolean hasCinColumn = cinColumn != null && !cinColumn.isBlank();
+
+    String sql;
+    if (hasCinColumn) {
+        sql = """
+            SELECT
+                COUNT(*)                                            AS total,
+                SUM(status = 'active')                             AS active,
+                SUM(status = 'pending')                            AS pending,
+                SUM(status = 'flagged')                            AS flagged,
+                SUM(status = 'rejected')                           AS rejected,
+                SUM(status = 'inactive')                           AS inactive,
+                SUM(DATE(created_at) = CURDATE())                  AS today,
+                SUM(created_at >= NOW() - INTERVAL 7 DAY)          AS last_7_days,
+                SUM(role = 'agriculteur')                          AS agriculteurs,
+                SUM(role = 'admin')                                AS admins,
+                COUNT(DISTINCT %1$s)                               AS unique_cins,
+                SUM(%1$s IS NOT NULL AND %1$s != '')               AS with_cin
+            FROM users
+            """.formatted(cinColumn);
+    } else {
+        sql = """
+            SELECT
+                COUNT(*)                                            AS total,
+                SUM(status = 'active')                             AS active,
+                SUM(status = 'pending')                            AS pending,
+                SUM(status = 'flagged')                            AS flagged,
+                SUM(status = 'rejected')                           AS rejected,
+                SUM(status = 'inactive')                           AS inactive,
+                SUM(DATE(created_at) = CURDATE())                  AS today,
+                SUM(created_at >= NOW() - INTERVAL 7 DAY)          AS last_7_days,
+                SUM(role = 'agriculteur')                          AS agriculteurs,
+                SUM(role = 'admin')                                AS admins,
+                0                                                  AS unique_cins,
+                0                                                  AS with_cin
+            FROM users
+            """;
+    }
 
     try (PreparedStatement ps = conn.prepareStatement(sql);
          ResultSet rs = ps.executeQuery()) {
@@ -630,16 +745,20 @@ public Map<String, Object> getAdminStats() throws SQLException {
     }
 
     // Duplicate CIN count (suspicious indicator)
-    String dupSql = """
-        SELECT COUNT(*) FROM (
-            SELECT cin_number FROM users
-            WHERE cin_number IS NOT NULL AND cin_number != ''
-            GROUP BY cin_number HAVING COUNT(*) > 1
-        ) AS dups
-        """;
-    try (PreparedStatement ps = conn.prepareStatement(dupSql);
-         ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) stats.put("duplicate_cin_groups", rs.getInt(1));
+    if (hasCinColumn) {
+        String dupSql = """
+            SELECT COUNT(*) FROM (
+                SELECT %1$s FROM users
+                WHERE %1$s IS NOT NULL AND %1$s != ''
+                GROUP BY %1$s HAVING COUNT(*) > 1
+            ) AS dups
+            """.formatted(cinColumn);
+        try (PreparedStatement ps = conn.prepareStatement(dupSql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) stats.put("duplicate_cin_groups", rs.getInt(1));
+        }
+    } else {
+        stats.put("duplicate_cin_groups", 0);
     }
 
     return stats;
@@ -837,4 +956,4 @@ public Map<String, Object> getAdminStats() throws SQLException {
         }
         return users;
     }
-}
+}

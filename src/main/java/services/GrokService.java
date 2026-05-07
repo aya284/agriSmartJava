@@ -1,9 +1,7 @@
 package services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import utils.ConfigLoader;
 
 import java.net.URI;
@@ -42,7 +40,6 @@ public class GrokService {
             : "grok-vision-beta";
     
     private final HttpClient httpClient;
-    private final ObjectMapper mapper;
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_DELAY = 2000; // 2 seconds
 
@@ -50,7 +47,6 @@ public class GrokService {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(20))
                 .build();
-        this.mapper = new ObjectMapper();
     }
 
     // ── Simple text prompts ────────────────────────────────
@@ -68,18 +64,18 @@ public class GrokService {
         System.out.println("Grok API: Sending prompt (" + 
                 prompt.length() + " chars)...");
 
-        ObjectNode body = mapper.createObjectNode();
+        JSONObject body = new JSONObject();
         body.put("model", MODEL);
         body.put("temperature", 0.2);
         body.put("max_tokens", maxTokens);
 
         // Messages array with user prompt
-        ArrayNode messages = mapper.createArrayNode();
-        ObjectNode message = mapper.createObjectNode();
+        JSONArray messages = new JSONArray();
+        JSONObject message = new JSONObject();
         message.put("role", "user");
         message.put("content", prompt);
-        messages.add(message);
-        body.set("messages", messages);
+        messages.put(message);
+        body.put("messages", messages);
 
         return sendRequest(body, "text");
     }
@@ -88,7 +84,7 @@ public class GrokService {
     /**
      * Ask Grok and expect JSON response
      */
-    public JsonNode askForJson(String prompt) throws Exception {
+    public JSONObject askForJson(String prompt) throws Exception {
         String fullPrompt = prompt +
                 "\n\n IMPORTANT: Respond ONLY with valid JSON. " +
                 "No markdown code fences (```), no explanation, just pure JSON.";
@@ -106,7 +102,7 @@ public class GrokService {
                 0, Math.min(200, cleaned.length())) + "...");
 
         try {
-            return mapper.readTree(cleaned);
+            return new JSONObject(cleaned);
         } catch (Exception e) {
             System.err.println("❌ JSON parse error: " + e.getMessage());
             System.err.println("Response was: " + cleaned);
@@ -118,7 +114,7 @@ public class GrokService {
     /**
      * Send request to Grok API with retry logic
      */
-    private String sendRequest(ObjectNode body, String operationType) 
+    private String sendRequest(JSONObject body, String operationType) 
             throws Exception {
         
         if (API_KEY == null || API_KEY.isEmpty()) {
@@ -138,8 +134,7 @@ public class GrokService {
                         .header("Content-Type", "application/json")
                         .header("Authorization", "Bearer " + API_KEY)
                         .timeout(Duration.ofSeconds(30))
-                        .POST(HttpRequest.BodyPublishers.ofString(
-                                mapper.writeValueAsString(body)))
+                    .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                         .build();
 
                 HttpResponse<String> response = httpClient.send(
@@ -159,11 +154,14 @@ public class GrokService {
 
                 // Handle errors
                 if (statusCode >= 400) {
-                    JsonNode errorNode = mapper.readTree(response.body());
-                    String errorMsg = errorNode
-                            .path("error")
-                            .path("message")
-                            .asText("Unknown error");
+                    String errorMsg = "Unknown error";
+                    try {
+                        JSONObject errorNode = new JSONObject(response.body());
+                        errorMsg = errorNode
+                                .optJSONObject("error")
+                                != null ? errorNode.optJSONObject("error").optString("message", "Unknown error") : errorMsg;
+                    } catch (Exception ignored) {
+                    }
                     
                     throw new Exception(
                             "Grok API Error (" + statusCode + "): " + errorMsg +
@@ -171,13 +169,18 @@ public class GrokService {
                 }
 
                 // Success - parse response
-                JsonNode root = mapper.readTree(response.body());
-                String content = root
-                        .path("choices")
-                        .get(0)
-                        .path("message")
-                        .path("content")
-                        .asText("");
+                JSONObject root = new JSONObject(response.body());
+                JSONArray choices = root.optJSONArray("choices");
+                String content = "";
+                if (choices != null && !choices.isEmpty()) {
+                    JSONObject firstChoice = choices.optJSONObject(0);
+                    if (firstChoice != null) {
+                        JSONObject message = firstChoice.optJSONObject("message");
+                        if (message != null) {
+                            content = message.optString("content", "");
+                        }
+                    }
+                }
 
                 if (content.isEmpty()) {
                     throw new Exception("Empty response from Grok API");

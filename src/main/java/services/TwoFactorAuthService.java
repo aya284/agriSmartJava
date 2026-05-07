@@ -10,14 +10,12 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONObject;
 
 public class TwoFactorAuthService {
 
     private final EmailService emailService;
     private final HttpClient httpClient;
-    private final ObjectMapper mapper;
 
     // In-memory storage for OTPs (userId -> code)
     // In production, this should probably be in DB with expiration
@@ -29,7 +27,6 @@ public class TwoFactorAuthService {
                 .connectTimeout(Duration.ofSeconds(10))
                 .version(HttpClient.Version.HTTP_1_1)
                 .build();
-        this.mapper = new ObjectMapper();
     }
 
     // ── OTP Logic ───────────────────────────────────────────
@@ -94,11 +91,11 @@ public class TwoFactorAuthService {
         System.out.println("  Captured: " + path2);
 
         // Build JSON body — FastAPI model: { "stored_path": ..., "captured_path": ... }
-        Map<String, String> body = new HashMap<>();
+        JSONObject body = new JSONObject();
         body.put("stored_path", path1);
         body.put("captured_path", path2);
 
-        String jsonBody = mapper.writeValueAsString(body);
+        String jsonBody = body.toString();
         System.out.println("[DEBUG] JSON SENT TO FASTAPI: " + jsonBody);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -115,10 +112,10 @@ public class TwoFactorAuthService {
             throw new Exception("Face ID Service Error: " + response.statusCode());
         }
 
-        JsonNode root = mapper.readTree(response.body());
-        boolean match = root.path("match").asBoolean();
-        double score = root.path("score").asDouble();
-        String message = root.path("message").asText();
+        JSONObject root = new JSONObject(response.body());
+        boolean match = root.optBoolean("match", false);
+        double score = root.optDouble("score", 0.0);
+        String message = root.optString("message", "");
 
         System.out.println("Face ID Result: Match=" + match + ", Score=" + score + ", Msg=" + message);
 
